@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ALL_COLORS, type ClueColor } from "@/types/puzzle";
 
 interface TapeCounterProps {
   total: number | null; // null = guest (show sign-in prompt)
   onClick: () => void;
+  dailyColors: ClueColor[];
 }
 
-export default function TapeCounter({ total, onClick }: TapeCounterProps) {
+export default function TapeCounter({ total, onClick, dailyColors }: TapeCounterProps) {
   const [pulse, setPulse] = useState(false);
   const prevTotal = useRef(total);
 
@@ -19,6 +21,8 @@ export default function TapeCounter({ total, onClick }: TapeCounterProps) {
     }
     prevTotal.current = total;
   }, [total]);
+
+  const gradient = dailyColors.map((c) => ALL_COLORS[c]).join(", ");
 
   return (
     <button
@@ -40,7 +44,7 @@ export default function TapeCounter({ total, onClick }: TapeCounterProps) {
           <span
             className="inline-block h-2.5 w-4"
             style={{
-              background: "linear-gradient(90deg, #ff2d8a, #bf5fff, #00d4ff, #39ff14, #faff00)",
+              background: `linear-gradient(90deg, ${gradient})`,
             }}
           />
           <span className="font-semibold tabular-nums">{total}</span>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TAPE_COLOR_MAP, type TapeColor } from "@/types/puzzle";
+import { ALL_COLORS, GLOW_COLOR, type TapeColor } from "@/types/puzzle";
 
 interface TapeResultProps {
   colorsEarned: TapeColor[];
@@ -37,7 +37,11 @@ export default function TapeResult({
 
   const regularColors = colorsEarned.filter((c) => c !== "glow");
   const hasGlow = colorsEarned.includes("glow");
-  const tapeCount = colorsEarned.length;
+
+  function getColorHex(color: TapeColor): string {
+    if (color === "glow") return GLOW_COLOR;
+    return ALL_COLORS[color] ?? "#ffffff";
+  }
 
   return (
     <div className="flex flex-col items-center gap-2 animate-fade-in mt-4">
@@ -51,7 +55,7 @@ export default function TapeResult({
                 color === "glow" ? "animate-glow-pulse" : ""
               }`}
               style={{
-                backgroundColor: TAPE_COLOR_MAP[color],
+                backgroundColor: getColorHex(color),
                 opacity: i < visibleCount ? 1 : 0,
                 transform: i < visibleCount ? "scale(1)" : "scale(0.5)",
               }}

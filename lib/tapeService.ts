@@ -1,24 +1,15 @@
 import { createClient } from "@/lib/supabase/client";
 import {
-  CLUE_COLORS,
+  type ClueColor,
   type TapeColor,
   type TapeStats,
   type TapeDayRecord,
 } from "@/types/puzzle";
 
-const ALL_TAPE_COLORS: TapeColor[] = [...CLUE_COLORS, "glow"];
-
-function defaultTapeByColor(): Record<TapeColor, number> {
-  return Object.fromEntries(ALL_TAPE_COLORS.map((c) => [c, 0])) as Record<
-    TapeColor,
-    number
-  >;
-}
-
 export function defaultTapeStats(): TapeStats {
   return {
     totalTape: 0,
-    tapeByColor: defaultTapeByColor(),
+    tapeByColor: {},
     currentStreak: 0,
     longestStreak: 0,
     lastPlayedDate: "",
@@ -54,14 +45,7 @@ export async function loadTapeStats(
 
   return {
     totalTape: stats.total_tape,
-    tapeByColor: {
-      pink: stats.tape_pink,
-      purple: stats.tape_purple,
-      blue: stats.tape_blue,
-      green: stats.tape_green,
-      yellow: stats.tape_yellow,
-      glow: stats.tape_glow,
-    },
+    tapeByColor: (stats.tape_colors as Record<string, number>) ?? {},
     currentStreak: stats.current_streak,
     longestStreak: stats.longest_streak,
     lastPlayedDate: stats.last_played_date,
@@ -90,7 +74,7 @@ export interface GameCompletionResult {
   colorsEarned: TapeColor[];
   newTotal: number;
   newStreak: number;
-  tapeByColor: Record<TapeColor, number>;
+  tapeByColor: Record<string, number>;
 }
 
 export async function recordGameCompletion(
@@ -98,7 +82,8 @@ export async function recordGameCompletion(
   date: string,
   puzzleId: number,
   score: number,
-  solved: boolean
+  solved: boolean,
+  dailyColors: ClueColor[]
 ): Promise<GameCompletionResult> {
   const supabase = createClient();
 
@@ -122,7 +107,7 @@ export async function recordGameCompletion(
   }
 
   // Load current stats (or create defaults)
-  let stats = await loadTapeStats(userId);
+  const stats = await loadTapeStats(userId);
 
   // Calculate streak
   let newStreak: number;
@@ -134,9 +119,9 @@ export async function recordGameCompletion(
     newStreak = 1;
   }
 
-  // Calculate colors earned
+  // Calculate colors earned — the unpeeled positions use daily colors
   const colorsEarned: TapeColor[] = solved
-    ? CLUE_COLORS.slice(5 - score)
+    ? dailyColors.slice(5 - score)
     : [];
 
   // Glow bonus on every 7th streak day
@@ -145,8 +130,8 @@ export async function recordGameCompletion(
     colorsEarned.push("glow");
   }
 
-  // Update tape counts
-  const newTapeByColor = { ...stats.tapeByColor };
+  // Update tape counts (JSONB)
+  const newTapeByColor: Record<string, number> = { ...stats.tapeByColor };
   for (const color of colorsEarned) {
     newTapeByColor[color] = (newTapeByColor[color] ?? 0) + 1;
   }
@@ -157,12 +142,7 @@ export async function recordGameCompletion(
   await supabase.from("tape_stats").upsert({
     user_id: userId,
     total_tape: newTotal,
-    tape_pink: newTapeByColor.pink,
-    tape_purple: newTapeByColor.purple,
-    tape_blue: newTapeByColor.blue,
-    tape_green: newTapeByColor.green,
-    tape_yellow: newTapeByColor.yellow,
-    tape_glow: newTapeByColor.glow,
+    tape_colors: newTapeByColor,
     current_streak: newStreak,
     longest_streak: newLongest,
     last_played_date: date,

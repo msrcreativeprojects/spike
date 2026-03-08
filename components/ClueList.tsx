@@ -1,24 +1,25 @@
 "use client";
 
-import { CLUE_COLOR_MAP, CLUE_COLORS } from "@/types/puzzle";
+import { ALL_COLORS, type ClueColor } from "@/types/puzzle";
 
 interface ClueListProps {
   clues: string[];
   revealedCount: number;
   onPeel?: () => void;
   completed?: boolean;
+  dailyColors: ClueColor[];
 }
 
 const ROTATIONS = [-1.5, 2, -1, 1.8, -0.8];
 
-export default function ClueList({ clues, revealedCount, onPeel, completed }: ClueListProps) {
+export default function ClueList({ clues, revealedCount, onPeel, completed, dailyColors }: ClueListProps) {
   return (
     <div className="relative flex flex-col items-center gap-2">
       {clues.map((clue, i) => {
         const isRevealed = i < revealedCount;
         const isNextTape = !isRevealed && i === revealedCount;
         const isUnrevealed = !isRevealed;
-        const color = CLUE_COLOR_MAP[CLUE_COLORS[i]];
+        const color = ALL_COLORS[dailyColors[i]];
 
         // Hide unrevealed tapes when game is complete
         if (completed && isUnrevealed) {

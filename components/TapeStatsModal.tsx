@@ -2,10 +2,12 @@
 
 import { useState, useCallback, useEffect } from "react";
 import {
-  CLUE_COLORS,
-  TAPE_COLOR_MAP,
+  ALL_COLORS,
+  ALL_COLOR_NAMES,
+  GLOW_COLOR,
   type TapeStats,
   type TapeColor,
+  type ClueColor,
 } from "@/types/puzzle";
 
 interface TapeStatsModalProps {
@@ -47,6 +49,17 @@ export default function TapeStatsModal({
 
   const recentHistory = stats.history.slice(-7).reverse();
 
+  // Only show colors that have been collected
+  const collectedColors = ALL_COLOR_NAMES.filter(
+    (c) => (stats.tapeByColor[c] ?? 0) > 0
+  );
+  const glowCount = stats.tapeByColor.glow ?? 0;
+
+  function getColorHex(color: string): string {
+    if (color === "glow") return GLOW_COLOR;
+    return ALL_COLORS[color as ClueColor] ?? "#ffffff";
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
@@ -87,29 +100,33 @@ export default function TapeStatsModal({
         </div>
 
         {/* Per-color breakdown */}
-        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mb-6">
-          {CLUE_COLORS.map((color) => (
-            <div key={color} className="flex items-center gap-1.5">
-              <div
-                className="h-2.5 w-4"
-                style={{ backgroundColor: TAPE_COLOR_MAP[color] }}
-              />
-              <span className="text-sm tabular-nums text-white/60">
-                {stats.tapeByColor[color] ?? 0}
-              </span>
-            </div>
-          ))}
-          {/* Glow */}
-          <div className="flex items-center gap-1.5">
-            <div
-              className="h-2.5 w-4 animate-glow-pulse"
-              style={{ backgroundColor: TAPE_COLOR_MAP.glow }}
-            />
-            <span className="text-sm tabular-nums text-white/60">
-              {stats.tapeByColor.glow ?? 0}
-            </span>
+        {(collectedColors.length > 0 || glowCount > 0) && (
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mb-6">
+            {collectedColors.map((color) => (
+              <div key={color} className="flex items-center gap-1.5">
+                <div
+                  className="h-2.5 w-4"
+                  style={{ backgroundColor: ALL_COLORS[color] }}
+                />
+                <span className="text-sm tabular-nums text-white/60">
+                  {stats.tapeByColor[color] ?? 0}
+                </span>
+              </div>
+            ))}
+            {/* Glow */}
+            {glowCount > 0 && (
+              <div className="flex items-center gap-1.5">
+                <div
+                  className="h-2.5 w-4 animate-glow-pulse"
+                  style={{ backgroundColor: GLOW_COLOR }}
+                />
+                <span className="text-sm tabular-nums text-white/60">
+                  {glowCount}
+                </span>
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 gap-2 mb-5">
@@ -169,7 +186,7 @@ export default function TapeStatsModal({
                                 color === "glow" ? "animate-glow-pulse" : ""
                               }`}
                               style={{
-                                backgroundColor: TAPE_COLOR_MAP[color],
+                                backgroundColor: getColorHex(color),
                               }}
                             />
                           )

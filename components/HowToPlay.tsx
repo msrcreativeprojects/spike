@@ -1,25 +1,29 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { CLUE_COLORS, CLUE_COLOR_MAP, TAPE_COLOR_MAP } from "@/types/puzzle";
+import { ALL_COLORS, ALL_COLOR_NAMES, GLOW_COLOR, type ClueColor } from "@/types/puzzle";
 
 interface HowToPlayProps {
   onClose: () => void;
+  dailyColors?: ClueColor[];
 }
 
 const TOTAL_STEPS = 5;
 const ROTATIONS = [-1.5, 2, -1, 1.8, -0.8];
 
-function StepSetup() {
+// Fallback colors if dailyColors not yet available
+const FALLBACK_COLORS: ClueColor[] = ["pink", "purple", "blue", "green", "yellow"];
+
+function StepSetup({ colors }: { colors: ClueColor[] }) {
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="flex flex-col items-center gap-1.5 py-2">
-        {CLUE_COLORS.map((c, i) => (
+        {colors.map((c, i) => (
           <div
             key={i}
             className="h-7 text-[10px] font-semibold text-transparent flex items-center justify-center"
             style={{
-              backgroundColor: CLUE_COLOR_MAP[c],
+              backgroundColor: ALL_COLORS[c],
               width: "180px",
               transform: `rotate(${ROTATIONS[i]}deg)`,
             }}
@@ -37,7 +41,7 @@ function StepSetup() {
   );
 }
 
-function StepPeel() {
+function StepPeel({ colors }: { colors: ClueColor[] }) {
   const [peeled, setPeeled] = useState(false);
 
   useEffect(() => {
@@ -71,7 +75,7 @@ function StepPeel() {
           <div
             className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-black/25 transition-all duration-700"
             style={{
-              backgroundColor: CLUE_COLOR_MAP.pink,
+              backgroundColor: ALL_COLORS[colors[0]],
               transform: peeled
                 ? `translateX(120%) rotate(${ROTATIONS[0] + 5}deg)`
                 : `rotate(${ROTATIONS[0]}deg)`,
@@ -82,12 +86,12 @@ function StepPeel() {
           </div>
         </div>
         {/* Remaining tapes */}
-        {CLUE_COLORS.slice(1).map((c, i) => (
+        {colors.slice(1).map((c, i) => (
           <div
             key={i}
             className="h-7 text-transparent text-[10px] flex items-center justify-center"
             style={{
-              backgroundColor: CLUE_COLOR_MAP[c],
+              backgroundColor: ALL_COLORS[c],
               width: "180px",
               transform: `rotate(${ROTATIONS[i + 1]}deg)`,
             }}
@@ -105,7 +109,7 @@ function StepPeel() {
   );
 }
 
-function StepCost() {
+function StepCost({ colors }: { colors: ClueColor[] }) {
   const [flash, setFlash] = useState(false);
   const [autoPeeled, setAutoPeeled] = useState(false);
 
@@ -166,7 +170,7 @@ function StepCost() {
         <div
           className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-black/25 transition-all duration-700"
           style={{
-            backgroundColor: CLUE_COLOR_MAP.purple,
+            backgroundColor: ALL_COLORS[colors[1]],
             transform: autoPeeled
               ? `translateX(120%) rotate(${ROTATIONS[1] + 5}deg)`
               : `rotate(${ROTATIONS[1]}deg)`,
@@ -183,16 +187,16 @@ function StepCost() {
   );
 }
 
-function StepKeepYourTape() {
+function StepKeepYourTape({ colors }: { colors: ClueColor[] }) {
   const letters = ["S", "P", "I", "K", "E"];
   // Show a 3/5 scenario: first 2 peeled (dim), last 3 kept (glowing)
-  const keptColors = CLUE_COLORS.slice(2); // blue, green, yellow
+  const keptColors = colors.slice(2);
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="font-title text-5xl tracking-wide py-2">
         {letters.map((letter, i) => {
           const isLit = i >= 2;
-          const color = CLUE_COLOR_MAP[CLUE_COLORS[i]];
+          const color = ALL_COLORS[colors[i]];
           return (
             <span
               key={i}
@@ -213,29 +217,31 @@ function StepKeepYourTape() {
           <div
             key={i}
             className="h-3 w-8"
-            style={{ backgroundColor: CLUE_COLOR_MAP[c] }}
+            style={{ backgroundColor: ALL_COLORS[c] }}
           />
         ))}
       </div>
       <p className="text-sm text-white/50 text-center leading-relaxed">
         Every tape you don&apos;t peel is
         <br />
-        yours to keep. Rarer colors
+        yours to keep. New colors
         <br />
-        live at the top.
+        every day.
       </p>
     </div>
   );
 }
 
 function StepTheQuest() {
+  // Build gradient from all 8 neon colors
+  const allHexes = ALL_COLOR_NAMES.map((c) => ALL_COLORS[c]).join(", ");
   return (
     <div className="flex flex-col items-center gap-3">
       {/* Glow tape pulsing */}
       <div className="flex flex-col items-center gap-2 py-2">
         <div
           className="h-5 w-20 animate-glow-pulse"
-          style={{ backgroundColor: TAPE_COLOR_MAP.glow }}
+          style={{ backgroundColor: GLOW_COLOR }}
         />
         <p className="text-[10px] uppercase tracking-widest text-white/30">
           glow tape
@@ -246,7 +252,7 @@ function StepTheQuest() {
         <span
           className="inline-block h-2.5 w-4"
           style={{
-            background: "linear-gradient(90deg, #ff2d8a, #bf5fff, #00d4ff, #39ff14, #faff00)",
+            background: `linear-gradient(90deg, ${allHexes})`,
           }}
         />
         <span className="text-xs font-semibold text-white/40 tabular-nums">47</span>
@@ -262,17 +268,19 @@ function StepTheQuest() {
   );
 }
 
-const STEPS = [
-  { title: "THE SETUP", component: StepSetup },
-  { title: "PEEL OR GUESS", component: StepPeel },
-  { title: "THE COST", component: StepCost },
-  { title: "KEEP YOUR TAPE", component: StepKeepYourTape },
-  { title: "THE QUEST", component: StepTheQuest },
+const STEP_TITLES = [
+  "THE SETUP",
+  "PEEL OR GUESS",
+  "THE COST",
+  "KEEP YOUR TAPE",
+  "THE QUEST",
 ];
 
-export default function HowToPlay({ onClose }: HowToPlayProps) {
+export default function HowToPlay({ onClose, dailyColors }: HowToPlayProps) {
   const [step, setStep] = useState(0);
   const [closing, setClosing] = useState(false);
+
+  const colors = dailyColors ?? FALLBACK_COLORS;
 
   const handleClose = useCallback(() => {
     if (closing) return;
@@ -303,7 +311,17 @@ export default function HowToPlay({ onClose }: HowToPlayProps) {
   }, [handleClose, next, prev]);
 
   const isLast = step === TOTAL_STEPS - 1;
-  const CurrentStep = STEPS[step].component;
+
+  const renderStep = () => {
+    switch (step) {
+      case 0: return <StepSetup colors={colors} />;
+      case 1: return <StepPeel colors={colors} />;
+      case 2: return <StepCost colors={colors} />;
+      case 3: return <StepKeepYourTape colors={colors} />;
+      case 4: return <StepTheQuest />;
+      default: return null;
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -327,12 +345,12 @@ export default function HowToPlay({ onClose }: HowToPlayProps) {
           key={step}
           className="text-center text-[10px] font-semibold uppercase tracking-[0.3em] text-white/40 mb-5 animate-fade-in"
         >
-          {STEPS[step].title}
+          {STEP_TITLES[step]}
         </h2>
 
         {/* Step content */}
         <div key={`content-${step}`} className="animate-fade-in">
-          <CurrentStep />
+          {renderStep()}
         </div>
 
         {/* Navigation */}
@@ -350,7 +368,7 @@ export default function HowToPlay({ onClose }: HowToPlayProps) {
 
           {/* Dots */}
           <div className="flex gap-1.5">
-            {STEPS.map((_, i) => (
+            {STEP_TITLES.map((_, i) => (
               <div
                 key={i}
                 className="h-1.5 w-1.5 transition-all duration-300"

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Puzzle, type TapeStats } from "@/types/puzzle";
 import { createClient } from "@/lib/supabase/client";
 import { loadTapeStats } from "@/lib/tapeService";
 import { hasSeenTutorial, markTutorialSeen } from "@/lib/tutorial";
+import { getDailyColors } from "@/lib/dailyColors";
 import Game from "./Game";
 import HowToPlay from "./HowToPlay";
 import AuthGate from "./AuthGate";
@@ -24,6 +25,9 @@ export default function GameShell({ puzzle }: GameShellProps) {
   const [tapeStats, setTapeStats] = useState<TapeStats | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showStats, setShowStats] = useState(false);
+
+  // Compute daily colors once from puzzle date
+  const dailyColors = useMemo(() => getDailyColors(puzzle.date), [puzzle.date]);
 
   // Check auth state on mount
   useEffect(() => {
@@ -105,7 +109,7 @@ export default function GameShell({ puzzle }: GameShellProps) {
   }
 
   if (screen === "tutorial") {
-    return <HowToPlay onClose={handleCloseTutorial} />;
+    return <HowToPlay onClose={handleCloseTutorial} dailyColors={dailyColors} />;
   }
 
   if (screen === "auth") {
@@ -126,11 +130,13 @@ export default function GameShell({ puzzle }: GameShellProps) {
         tapeStats={tapeStats}
         onTapeUpdate={handleTapeUpdate}
         onGuestSignIn={handleGuestSignIn}
+        dailyColors={dailyColors}
       />
 
       {showTutorial && (
         <HowToPlay
           onClose={() => setShowTutorial(false)}
+          dailyColors={dailyColors}
         />
       )}
 
@@ -147,6 +153,7 @@ export default function GameShell({ puzzle }: GameShellProps) {
           <TapeCounter
             total={isGuest ? null : (tapeStats?.totalTape ?? 0)}
             onClick={handleTapeCounterClick}
+            dailyColors={dailyColors}
           />
           <button
             onClick={() => setShowTutorial(true)}

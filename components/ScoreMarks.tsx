@@ -1,16 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CLUE_COLOR_MAP, CLUE_COLORS } from "@/types/puzzle";
+import { ALL_COLORS, type ClueColor } from "@/types/puzzle";
 
 const TOTAL = 5;
 
 interface ScoreMarksProps {
   score: number;
   animate?: boolean;
+  dailyColors: ClueColor[];
 }
 
-export default function ScoreMarks({ score, animate = true }: ScoreMarksProps) {
+export default function ScoreMarks({ score, animate = true, dailyColors }: ScoreMarksProps) {
   const [visibleCount, setVisibleCount] = useState(animate ? 0 : TOTAL);
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export default function ScoreMarks({ score, animate = true }: ScoreMarksProps) {
       {Array.from({ length: TOTAL }, (_, i) => {
         const isEarned = i < score;
         const isVisible = i < visibleCount;
-        const color = CLUE_COLOR_MAP[CLUE_COLORS[i]];
+        const color = ALL_COLORS[dailyColors[i]];
 
         return (
           <div

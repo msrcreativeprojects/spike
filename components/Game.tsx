@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Puzzle, GameState, CLUE_COLOR_MAP, CLUE_COLORS, type TapeStats, type TapeColor } from "@/types/puzzle";
+import { Puzzle, GameState, ALL_COLORS, type ClueColor, type TapeStats, type TapeColor } from "@/types/puzzle";
 import { createInitialState, submitGuess, revealNextClue } from "@/lib/gameLogic";
 import { loadGameState, saveGameState, clearGameState } from "@/lib/storage";
 import { copyShareText } from "@/lib/shareResult";
@@ -20,6 +20,7 @@ interface GameProps {
   tapeStats: TapeStats | null;
   onTapeUpdate: (stats: TapeStats) => void;
   onGuestSignIn: () => void;
+  dailyColors: ClueColor[];
 }
 
 export default function Game({
@@ -29,6 +30,7 @@ export default function Game({
   tapeStats,
   onTapeUpdate,
   onGuestSignIn,
+  dailyColors,
 }: GameProps) {
   const [state, setState] = useState<GameState | null>(null);
   const [wrongFlash, setWrongFlash] = useState(false);
@@ -70,7 +72,8 @@ export default function Game({
         puzzle.date,
         puzzle.id,
         state.score,
-        state.solved
+        state.solved,
+        dailyColors
       ).then((result) => {
         setTapeResult(result);
         // Refresh tape stats in parent
@@ -79,16 +82,16 @@ export default function Game({
     } else {
       // Guest: compute locally but don't persist
       const colorsEarned: TapeColor[] = state.solved
-        ? CLUE_COLORS.slice(5 - state.score)
+        ? dailyColors.slice(5 - state.score)
         : [];
       setTapeResult({
         colorsEarned,
         newTotal: 0,
         newStreak: 0,
-        tapeByColor: { pink: 0, purple: 0, blue: 0, green: 0, yellow: 0, glow: 0 },
+        tapeByColor: {},
       });
     }
-  }, [state?.completed, state?.score, state?.solved, userId, isGuest, puzzle, onTapeUpdate]);
+  }, [state?.completed, state?.score, state?.solved, userId, isGuest, puzzle, onTapeUpdate, dailyColors]);
 
   const handleGuess = useCallback(
     (guess: string) => {
@@ -130,7 +133,7 @@ export default function Game({
           totalTape: tapeResult.newTotal,
         }
       : undefined;
-    const success = await copyShareText(state, tapeInfo);
+    const success = await copyShareText(state, dailyColors, tapeInfo);
     if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -172,7 +175,7 @@ export default function Game({
             const isLit = state.completed
               ? i >= 5 - state.score
               : i >= state.revealedClues;
-            const color = CLUE_COLOR_MAP[CLUE_COLORS[i]];
+            const color = ALL_COLORS[dailyColors[i]];
             return (
               <span
                 key={i}
@@ -272,6 +275,7 @@ export default function Game({
           revealedCount={state.revealedClues}
           onPeel={canReveal ? handleReveal : undefined}
           completed={state.completed}
+          dailyColors={dailyColors}
         />
       )}
 
