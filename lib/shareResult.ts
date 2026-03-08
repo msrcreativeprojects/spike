@@ -3,19 +3,21 @@ import { CLUE_COLORS, SHARE_EMOJIS, GameState } from "@/types/puzzle";
 const TOTAL_CLUES = 5;
 
 export function generateShareText(state: GameState): string {
+  const puzzleNum = String(state.puzzleId).padStart(3, "0");
+  const cluesUsed = TOTAL_CLUES - state.score;
+
+  // White = peeled (revealed), colored = still sealed
   const marks = Array.from({ length: TOTAL_CLUES }, (_, i) => {
-    if (state.solved && i < state.score) {
-      return SHARE_EMOJIS[CLUE_COLORS[i]];
-    }
-    return SHARE_EMOJIS.empty;
+    const peeled = i < cluesUsed;
+    return peeled ? SHARE_EMOJIS.peeled : SHARE_EMOJIS[CLUE_COLORS[i]];
   });
 
   const marksLine = marks.join("");
   const resultLine = state.solved
-    ? `Solved in ${TOTAL_CLUES - state.score + 1} clue${TOTAL_CLUES - state.score + 1 === 1 ? "" : "s"}`
+    ? `Solved in ${cluesUsed} clue${cluesUsed === 1 ? "" : "s"}`
     : "Missed it";
 
-  return `SPIKE #${state.puzzleId}\n${marksLine}\n${resultLine}`;
+  return `SPIKE #${puzzleNum}\n${marksLine}\n${resultLine}`;
 }
 
 export async function copyShareText(state: GameState): Promise<boolean> {

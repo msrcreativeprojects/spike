@@ -20,9 +20,9 @@ export type ClueColor = "pink" | "green" | "yellow" | "orange" | "purple";
 
 export const CLUE_COLORS: ClueColor[] = [
   "pink",
-  "green",
-  "yellow",
   "orange",
+  "yellow",
+  "green",
   "purple",
 ];
 
@@ -34,11 +34,11 @@ export const CLUE_COLOR_MAP: Record<ClueColor, string> = {
   purple: "#bf5fff",
 };
 
-export const SHARE_EMOJIS: Record<ClueColor | "empty", string> = {
+export const SHARE_EMOJIS: Record<ClueColor | "peeled", string> = {
   pink: "\u{1FA77}",
   green: "\uD83D\uDFE9",
   yellow: "\uD83D\uDFE8",
   orange: "\uD83D\uDFE7",
   purple: "\uD83D\uDFEA",
-  empty: "\u2B1B",
+  peeled: "\u2B1C",
 };

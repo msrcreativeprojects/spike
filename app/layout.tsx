@@ -15,7 +15,24 @@ const caesarDressing = Caesar_Dressing({
 
 export const metadata: Metadata = {
   title: "SPIKE — Hit your mark.",
-  description: "A daily guessing game for show people.",
+  description: "A daily guessing game for show people. Peel the tape, guess the show.",
+  metadataBase: new URL("https://spike.quest"),
+  openGraph: {
+    title: "SPIKE",
+    description: "A daily guessing game for show people.",
+    type: "website",
+    siteName: "SPIKE",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SPIKE",
+    description: "A daily guessing game for show people.",
+  },
+  other: {
+    "theme-color": "#0a0a0c",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+  },
 };
 
 export default function RootLayout({

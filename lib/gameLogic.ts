@@ -5,7 +5,7 @@ const TOTAL_CLUES = 5;
 export function createInitialState(puzzleId: number): GameState {
   return {
     puzzleId,
-    revealedClues: 1,
+    revealedClues: 0,
     guesses: [],
     solved: false,
     completed: false,
@@ -39,7 +39,7 @@ export function submitGuess(state: GameState, guess: string, puzzle: Puzzle): Ga
       guesses: newGuesses,
       solved: true,
       completed: true,
-      score: TOTAL_CLUES - state.revealedClues + 1,
+      score: TOTAL_CLUES - state.revealedClues,
     };
   }
 
@@ -54,9 +54,11 @@ export function submitGuess(state: GameState, guess: string, puzzle: Puzzle): Ga
     };
   }
 
+  // Wrong guess: auto-peel next tape
   return {
     ...state,
     guesses: newGuesses,
+    revealedClues: state.revealedClues + 1,
   };
 }
 

@@ -25,13 +25,13 @@ export default function ScoreMarks({ score, animate = true }: ScoreMarksProps) {
       i++;
       setVisibleCount(i);
       if (i >= TOTAL) clearInterval(interval);
-    }, 120);
+    }, 140);
 
     return () => clearInterval(interval);
   }, [score, animate]);
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1">
       {Array.from({ length: TOTAL }, (_, i) => {
         const isEarned = i < score;
         const isVisible = i < visibleCount;
@@ -42,11 +42,9 @@ export default function ScoreMarks({ score, animate = true }: ScoreMarksProps) {
             key={i}
             className="transition-all duration-300 ease-out"
             style={{
-              width: 32,
-              height: 10,
-              borderRadius: 3,
+              width: 48,
+              height: 14,
               backgroundColor: isEarned ? color : "rgba(255,255,255,0.08)",
-              boxShadow: isEarned ? `0 0 12px ${color}40` : "none",
               opacity: isVisible ? 1 : 0,
               transform: isVisible ? "scaleX(1)" : "scaleX(0.3)",
             }}

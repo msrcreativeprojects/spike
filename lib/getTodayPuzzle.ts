@@ -9,10 +9,9 @@ function getLocalDateString(): string {
   return `${year}-${month}-${day}`;
 }
 
-export function getTodayPuzzle(): Puzzle {
+export function getTodayPuzzle(): Puzzle | null {
   const today = getLocalDateString();
-  const match = (puzzles as Puzzle[]).find((p) => p.date === today);
-  return match ?? (puzzles as Puzzle[])[0];
+  return (puzzles as Puzzle[]).find((p) => p.date === today) ?? null;
 }
 
 export function getPuzzleById(id: number): Puzzle | undefined {
