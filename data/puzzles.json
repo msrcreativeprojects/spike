@@ -3,7 +3,7 @@
     "id": 1,
     "date": "2026-03-07",
     "answer": "Hamilton",
-    "category": "musical",
+    "category": "Broadway Musical",
     "clues": [
       "Ten-dollar founding father",
       "Shot",
@@ -17,7 +17,7 @@
     "id": 2,
     "date": "2026-03-08",
     "answer": "Wicked",
-    "category": "musical",
+    "category": "Broadway Musical",
     "clues": [
       "Green",
       "Unlikely friendship at school",
@@ -31,7 +31,7 @@
     "id": 3,
     "date": "2026-03-09",
     "answer": "A Chorus Line",
-    "category": "musical",
+    "category": "Broadway Musical",
     "clues": [
       "One singular sensation",
       "Audition day",
@@ -45,7 +45,7 @@
     "id": 4,
     "date": "2026-03-10",
     "answer": "Sunset Boulevard",
-    "category": "musical",
+    "category": "Broadway Musical",
     "clues": [
       "\"I'm ready for my close-up\"",
       "A swimming pool narrates",
@@ -59,7 +59,7 @@
     "id": 5,
     "date": "2026-03-11",
     "answer": "Beetlejuice",
-    "category": "musical",
+    "category": "Broadway Musical",
     "clues": [
       "Say the name three times",
       "Sandworm",
@@ -73,7 +73,7 @@
     "id": 6,
     "date": "2026-03-12",
     "answer": "Death of a Salesman",
-    "category": "play",
+    "category": "Broadway Play",
     "clues": [
       "Attention must be paid",
       "Willy's sample cases",
@@ -87,7 +87,7 @@
     "id": 7,
     "date": "2026-03-13",
     "answer": "Chicago",
-    "category": "musical",
+    "category": "Broadway Musical",
     "clues": [
       "Razzle dazzle",
       "Cell Block Tango",
@@ -101,7 +101,7 @@
     "id": 8,
     "date": "2026-03-14",
     "answer": "Phantom of the Opera",
-    "category": "musical",
+    "category": "Broadway Musical",
     "clues": [
       "Half a mask",
       "Chandelier crash",
@@ -115,7 +115,7 @@
     "id": 9,
     "date": "2026-03-15",
     "answer": "Waiting for Godot",
-    "category": "play",
+    "category": "Broadway Play",
     "clues": [
       "He never shows up",
       "Two tramps under a tree",
@@ -129,7 +129,7 @@
     "id": 10,
     "date": "2026-03-16",
     "answer": "Cabaret",
-    "category": "musical",
+    "category": "Broadway Musical",
     "clues": [
       "Willkommen",
       "Kit Kat Club",

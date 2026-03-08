@@ -8,6 +8,7 @@ interface GuessFormProps {
   lockedValue?: string;
   solved?: boolean;
   failed?: boolean;
+  category?: string;
 }
 
 export default function GuessForm({
@@ -16,6 +17,7 @@ export default function GuessForm({
   lockedValue,
   solved,
   failed,
+  category,
 }: GuessFormProps) {
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -43,7 +45,7 @@ export default function GuessForm({
         onChange={(e) => setValue(e.target.value)}
         disabled={disabled || isLocked}
         readOnly={isLocked}
-        placeholder="Type your guess..."
+        placeholder={category ? `Guess a ${category}...` : "Type your guess..."}
         autoComplete="off"
         autoCorrect="off"
         spellCheck={false}

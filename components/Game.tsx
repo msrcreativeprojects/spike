@@ -161,6 +161,7 @@ export default function Game({ puzzle }: GameProps) {
             lockedValue={state.completed ? lastGuess : undefined}
             solved={state.solved}
             failed={state.completed && !state.solved}
+            category={puzzle.category}
           />
         )}
         <div className="flex items-center justify-center gap-2 py-3">
