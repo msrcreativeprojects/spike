@@ -1,22 +1,26 @@
 import { getTodayPuzzle } from "@/lib/getTodayPuzzle";
-import Game from "@/components/Game";
+import GameShell from "@/components/GameShell";
 
 export default function Home() {
   const puzzle = getTodayPuzzle();
 
-  const footer = (
-    <footer className="mt-auto pt-8 pb-4 text-center text-[10px] tracking-widest uppercase text-white/15">
-      a{" "}
-      <a
-        href="https://fourthwall.news"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-white/25 hover:text-white/40 transition-colors"
-      >
-        fourth wall
-      </a>{" "}
-      project
-    </footer>
+  const fwButton = (
+    <a
+      href="https://fourthwall.news"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Fourth Wall"
+      className="
+        fixed bottom-4 left-4 z-40
+        flex h-8 w-8 items-center justify-center
+        border border-white/15 bg-white/[0.04]
+        text-[10px] font-bold text-white/30
+        transition-all duration-200
+        hover:border-white/30 hover:bg-white/[0.08] hover:text-white/60
+      "
+    >
+      FW
+    </a>
   );
 
   if (!puzzle) {
@@ -31,15 +35,15 @@ export default function Home() {
         <p className="mt-6 text-sm text-white/40">
           No puzzle today. Come back tomorrow!
         </p>
-        {footer}
+        {fwButton}
       </main>
     );
   }
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-5 py-12">
-      <Game puzzle={puzzle} />
-      {footer}
+      <GameShell puzzle={puzzle} />
+      {fwButton}
     </main>
   );
 }

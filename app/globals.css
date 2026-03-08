@@ -62,3 +62,35 @@ body {
 .animate-spike-wave {
   animation: spike-wave 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
+
+/* Tutorial modal entrance */
+@keyframes curtain-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scaleY(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
+}
+
+.animate-curtain-up {
+  animation: curtain-up 0.35s ease-out forwards;
+}
+
+/* Tutorial modal exit */
+@keyframes curtain-down {
+  from {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scaleY(0.98);
+  }
+}
+
+.animate-curtain-down {
+  animation: curtain-down 0.2s ease-in forwards;
+}
