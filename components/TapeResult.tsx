@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ALL_COLORS, GLOW_COLOR, type TapeColor } from "@/types/puzzle";
+import { ALL_COLORS, GLOW_COLOR, WHITE_TAPE_COLOR, type TapeColor } from "@/types/puzzle";
 
 interface TapeResultProps {
   colorsEarned: TapeColor[];
@@ -35,13 +35,17 @@ export default function TapeResult({
     return () => clearInterval(interval);
   }, [colorsEarned]);
 
-  const regularColors = colorsEarned.filter((c) => c !== "glow");
+  const regularColors = colorsEarned.filter((c) => c !== "glow" && c !== "white");
   const hasGlow = colorsEarned.includes("glow");
+  const hasWhite = colorsEarned.includes("white");
 
   function getColorHex(color: TapeColor): string {
     if (color === "glow") return GLOW_COLOR;
+    if (color === "white") return WHITE_TAPE_COLOR;
     return ALL_COLORS[color] ?? "#ffffff";
   }
+
+  const tapeCount = colorsEarned.filter((c) => c !== "glow").length;
 
   return (
     <div className="flex flex-col items-center gap-2 animate-fade-in mt-4">
@@ -66,20 +70,20 @@ export default function TapeResult({
 
       {/* Tape earned text */}
       <div className="text-center">
-        {solved ? (
-          <p className="text-sm">
-            <span className="text-white/50">
-              +{regularColors.length} tape
-            </span>
-            {hasGlow && (
-              <span className="text-white/70 ml-2">
-                +1 glow
-              </span>
-            )}
-          </p>
+        {hasWhite && tapeCount === 1 ? (
+          <>
+            <p className="text-xs text-white/40">
+              You deserve a piece just for playing!
+            </p>
+            <p className="text-sm text-white/30 mt-0.5">
+              +1 tape
+            </p>
+          </>
         ) : (
           <p className="text-sm">
-            <span className="text-white/20">+0 tape</span>
+            <span className="text-white/50">
+              +{tapeCount} tape
+            </span>
             {hasGlow && (
               <span className="text-white/70 ml-2">
                 +1 glow
@@ -101,7 +105,7 @@ export default function TapeResult({
           onClick={onSignIn}
           className="text-xs text-white/30 hover:text-white/50 transition-colors underline underline-offset-2 decoration-white/15"
         >
-          Sign in to keep your tape
+          Sign in to save your tape
         </button>
       )}
     </div>

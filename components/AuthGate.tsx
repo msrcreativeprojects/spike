@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { GLOW_COLOR } from "@/types/puzzle";
 
 interface AuthGateProps {
   onAuth: () => void;
@@ -72,12 +73,23 @@ export default function AuthGate({ onAuth, onGuest }: AuthGateProps) {
     <div className="flex flex-col items-center justify-center gap-8 animate-fade-in">
       <div className="text-center">
         <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/40 mb-2">
-          {step === "email" ? "START COLLECTING" : "ENTER CODE"}
+          {step === "email" ? "SIGN IN" : "ENTER CODE"}
         </p>
         <p className="text-sm text-white/50">
-          {step === "email"
-            ? "Sign in to save your tape collection."
-            : `We sent a code to ${email}`}
+          {step === "email" ? (
+            <>
+              Play &amp; start your{" "}
+              <span
+                className="font-semibold animate-glow-text-pulse"
+                style={{ color: GLOW_COLOR }}
+              >
+                spike tape
+              </span>{" "}
+              collection.
+            </>
+          ) : (
+            `We sent a code to ${email}`
+          )}
         </p>
       </div>
 
@@ -95,7 +107,8 @@ export default function AuthGate({ onAuth, onGuest }: AuthGateProps) {
             <button
               type="submit"
               disabled={loading || !email.trim()}
-              className="px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest bg-white/90 text-black hover:bg-white active:scale-[0.97] transition-all disabled:opacity-40 disabled:hover:bg-white/90"
+              className="px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest bg-[#ff2d8a] text-white hover:bg-[#ff45a0] active:scale-[0.97] transition-all disabled:opacity-40 disabled:hover:bg-[#ff2d8a]"
+              style={{ boxShadow: "0 0 12px rgba(255,45,138,0.3)" }}
             >
               {loading ? "..." : "Go"}
             </button>
@@ -146,6 +159,12 @@ export default function AuthGate({ onAuth, onGuest }: AuthGateProps) {
       >
         Play as guest
       </button>
+
+      <p className="text-[11px] text-white/15 text-center leading-relaxed max-w-[260px]">
+        We keep your email private.
+        <br />
+        Your show business is your own business.
+      </p>
     </div>
   );
 }

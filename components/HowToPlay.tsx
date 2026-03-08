@@ -41,75 +41,7 @@ function StepSetup({ colors }: { colors: ClueColor[] }) {
   );
 }
 
-function StepPeel({ colors }: { colors: ClueColor[] }) {
-  const [peeled, setPeeled] = useState(false);
-
-  useEffect(() => {
-    const t1 = setTimeout(() => setPeeled(true), 800);
-    const t2 = setTimeout(() => setPeeled(false), 3000);
-    const interval = setInterval(() => {
-      setTimeout(() => setPeeled(true), 0);
-      setTimeout(() => setPeeled(false), 2200);
-    }, 3000);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearInterval(interval);
-    };
-  }, []);
-
-  return (
-    <div className="flex flex-col items-center gap-3 overflow-hidden">
-      <div className="flex flex-col items-center gap-1.5 py-2">
-        {/* First tape — peels */}
-        <div className="relative" style={{ width: "220px", height: "28px" }}>
-          <div
-            className="absolute inset-0 flex items-center justify-center text-xs text-white/60 transition-opacity duration-500"
-            style={{
-              backgroundColor: "rgba(255,255,255,0.06)",
-              opacity: peeled ? 1 : 0,
-            }}
-          >
-            A cryptic first clue...
-          </div>
-          <div
-            className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-black/25 transition-all duration-700"
-            style={{
-              backgroundColor: ALL_COLORS[colors[0]],
-              transform: peeled
-                ? `translateX(120%) rotate(${ROTATIONS[0] + 5}deg)`
-                : `rotate(${ROTATIONS[0]}deg)`,
-              opacity: peeled ? 0 : 1,
-            }}
-          >
-            PEEL
-          </div>
-        </div>
-        {/* Remaining tapes */}
-        {colors.slice(1).map((c, i) => (
-          <div
-            key={i}
-            className="h-7 text-transparent text-[10px] flex items-center justify-center"
-            style={{
-              backgroundColor: ALL_COLORS[c],
-              width: "180px",
-              transform: `rotate(${ROTATIONS[i + 1]}deg)`,
-            }}
-          >
-            ???
-          </div>
-        ))}
-      </div>
-      <p className="text-sm text-white/50 text-center leading-relaxed">
-        Peel tape to reveal a clue.
-        <br />
-        Or skip the clues and guess blind.
-      </p>
-    </div>
-  );
-}
-
-function StepCost({ colors }: { colors: ClueColor[] }) {
+function StepGuess({ colors }: { colors: ClueColor[] }) {
   const [flash, setFlash] = useState(false);
   const [autoPeeled, setAutoPeeled] = useState(false);
 
@@ -165,32 +97,81 @@ function StepCost({ colors }: { colors: ClueColor[] }) {
             opacity: autoPeeled ? 1 : 0,
           }}
         >
-          Next clue revealed
+          A clue appears...
         </div>
         <div
           className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-black/25 transition-all duration-700"
           style={{
-            backgroundColor: ALL_COLORS[colors[1]],
+            backgroundColor: ALL_COLORS[colors[0]],
             transform: autoPeeled
-              ? `translateX(120%) rotate(${ROTATIONS[1] + 5}deg)`
-              : `rotate(${ROTATIONS[1]}deg)`,
+              ? `translateX(120%) rotate(${ROTATIONS[0] + 5}deg)`
+              : `rotate(${ROTATIONS[0]}deg)`,
             opacity: autoPeeled ? 0 : 1,
           }}
         />
       </div>
       <p className="text-sm text-white/50 text-center leading-relaxed">
-        Wrong guess? The next piece of
+        Take a guess. Each wrong
         <br />
-        tape peels automatically.
+        answer reveals a clue.
+      </p>
+      <p className="text-[11px] text-white/30 text-center mt-2 italic">
+        Hint: the category is in the guess box
       </p>
     </div>
   );
 }
 
-function StepKeepYourTape({ colors }: { colors: ClueColor[] }) {
+function StepCost({ colors }: { colors: ClueColor[] }) {
+  // Show 5 tapes, then animate 3 fading out to show "cost"
+  const [lostCount, setLostCount] = useState(0);
+
+  useEffect(() => {
+    const run = () => {
+      setLostCount(0);
+      setTimeout(() => setLostCount(1), 600);
+      setTimeout(() => setLostCount(2), 1000);
+      setTimeout(() => setLostCount(3), 1400);
+    };
+    run();
+    const interval = setInterval(run, 3500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <div className="flex flex-col items-center gap-1.5 py-2">
+        {colors.map((c, i) => {
+          const lost = i < lostCount;
+          return (
+            <div
+              key={i}
+              className="h-7 text-[10px] font-semibold text-transparent flex items-center justify-center transition-all duration-500"
+              style={{
+                backgroundColor: ALL_COLORS[c],
+                width: "180px",
+                transform: `rotate(${ROTATIONS[i]}deg)`,
+                opacity: lost ? 0.15 : 1,
+              }}
+            >
+              ???
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-sm text-white/50 text-center leading-relaxed">
+        Each wrong guess costs you
+        <br />
+        a piece of tape.
+      </p>
+    </div>
+  );
+}
+
+function StepCollect({ colors }: { colors: ClueColor[] }) {
   const letters = ["S", "P", "I", "K", "E"];
-  // Show a 3/5 scenario: first 2 peeled (dim), last 3 kept (glowing)
-  const keptColors = colors.slice(2);
+  // Show a 3/5 scenario: first 2 peeled (dim), last 3 collected (glowing)
+  const collectedColors = colors.slice(2);
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="font-title text-5xl tracking-wide py-2">
@@ -211,9 +192,9 @@ function StepKeepYourTape({ colors }: { colors: ClueColor[] }) {
           );
         })}
       </div>
-      {/* Mini tape strips showing what you keep */}
+      {/* Mini tape strips showing what you collect */}
       <div className="flex gap-1.5 items-center">
-        {keptColors.map((c, i) => (
+        {collectedColors.map((c, i) => (
           <div
             key={i}
             className="h-3 w-8"
@@ -222,9 +203,9 @@ function StepKeepYourTape({ colors }: { colors: ClueColor[] }) {
         ))}
       </div>
       <p className="text-sm text-white/50 text-center leading-relaxed">
-        Every tape you don&apos;t peel is
+        Guess right and collect your
         <br />
-        yours to keep. New colors
+        remaining tape! New colors
         <br />
         every day.
       </p>
@@ -270,9 +251,9 @@ function StepTheQuest() {
 
 const STEP_TITLES = [
   "THE SETUP",
-  "PEEL OR GUESS",
+  "THE GUESS",
   "THE COST",
-  "KEEP YOUR TAPE",
+  "COLLECT YOUR TAPE",
   "THE QUEST",
 ];
 
@@ -315,9 +296,9 @@ export default function HowToPlay({ onClose, dailyColors }: HowToPlayProps) {
   const renderStep = () => {
     switch (step) {
       case 0: return <StepSetup colors={colors} />;
-      case 1: return <StepPeel colors={colors} />;
+      case 1: return <StepGuess colors={colors} />;
       case 2: return <StepCost colors={colors} />;
-      case 3: return <StepKeepYourTape colors={colors} />;
+      case 3: return <StepCollect colors={colors} />;
       case 4: return <StepTheQuest />;
       default: return null;
     }

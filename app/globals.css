@@ -115,3 +115,59 @@ body {
 .animate-glow-pulse {
   animation: glow-pulse 2s ease-in-out infinite;
 }
+
+/* Glow text pulse */
+@keyframes glow-text-pulse {
+  0%, 100% { text-shadow: 0 0 8px rgba(200,255,200,0.4), 0 0 20px rgba(200,255,200,0.2); }
+  50% { text-shadow: 0 0 12px rgba(200,255,200,0.8), 0 0 30px rgba(200,255,200,0.4), 0 0 50px rgba(200,255,200,0.15); }
+}
+
+.animate-glow-text-pulse {
+  animation: glow-text-pulse 2s ease-in-out infinite;
+}
+
+/* Tape fall — gravity drop off the bottom of the viewport */
+@keyframes tape-fall {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(120vh) rotate(8deg);
+  }
+}
+
+.animate-tape-fall {
+  animation: tape-fall 0.6s cubic-bezier(0.55, 0, 1, 0.45) both;
+}
+
+/* Guess box shimmer — single sweep across the border, then pause */
+@keyframes shimmer-border {
+  0%, 65% {
+    background-position: 0 0, -250% 0;
+  }
+  100% {
+    background-position: 0 0, 250% 0;
+  }
+}
+
+.guess-shimmer {
+  border-color: rgba(255, 255, 255, 0);
+  border-width: 1.5px;
+  border-right-width: 0;
+  background:
+    linear-gradient(#19191b, #19191b) padding-box,
+    linear-gradient(
+      70deg,
+      rgba(255, 255, 255, 0.08) 30%,
+      rgba(255, 255, 255, 0.3) 50%,
+      rgba(255, 255, 255, 0.08) 70%
+    ) border-box;
+  background-size: 100% 100%, 300% 100%;
+  animation: shimmer-border 6s ease-out infinite;
+}
+

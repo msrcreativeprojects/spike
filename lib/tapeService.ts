@@ -120,9 +120,11 @@ export async function recordGameCompletion(
   }
 
   // Calculate colors earned — the unpeeled positions use daily colors
-  const colorsEarned: TapeColor[] = solved
+  // Score > 0: earn colored tape from remaining positions
+  // Score 0 (solved on last guess or failed): earn 1 white consolation tape
+  const colorsEarned: TapeColor[] = score > 0
     ? dailyColors.slice(5 - score)
-    : [];
+    : ["white"];
 
   // Glow bonus on every 7th streak day
   const hasGlowBonus = newStreak > 0 && newStreak % 7 === 0;

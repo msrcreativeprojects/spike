@@ -14,7 +14,7 @@ const caesarDressing = Caesar_Dressing({
 });
 
 export const metadata: Metadata = {
-  title: "SPIKE — Hit your mark.",
+  title: "SPIKE — A daily guessing game for show people",
   description: "A daily guessing game for show people. Peel the tape, guess the show.",
   metadataBase: new URL("https://spike.quest"),
   openGraph: {

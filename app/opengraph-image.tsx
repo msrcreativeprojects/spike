@@ -23,16 +23,6 @@ export default function OGImage() {
           gap: "8px",
         }}
       >
-        <div
-          style={{
-            fontSize: "24px",
-            color: "rgba(255,255,255,0.35)",
-            letterSpacing: "0.2em",
-            textTransform: "uppercase",
-          }}
-        >
-          hit your
-        </div>
         <div style={{ display: "flex", gap: "4px" }}>
           {letters.map((letter, i) => (
             <span

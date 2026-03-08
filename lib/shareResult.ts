@@ -1,4 +1,5 @@
 import { SHARE_EMOJIS, GameState, type ClueColor, type TapeColor } from "@/types/puzzle";
+import { generateShareImage } from "./shareImage";
 
 const TOTAL_CLUES = 5;
 
@@ -22,9 +23,10 @@ export function generateShareText(
   });
 
   const marksLine = marks.join("");
+  const tapeCollected = state.score > 0 ? state.score : 1;
   const resultLine = state.solved
-    ? `Solved in ${cluesUsed} clue${cluesUsed === 1 ? "" : "s"}`
-    : "Missed it";
+    ? `Collected ${tapeCollected}/5 tape`
+    : `Collected 1/5 tape`;
 
   let text = `SPIKE #${puzzleNum}\n${marksLine}\n${resultLine}`;
 
@@ -38,16 +40,68 @@ export function generateShareText(
   return text;
 }
 
-export async function copyShareText(
+/** Download a blob as a file via temporary <a> element. */
+function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Generate a share image and share it via the Web Share API (mobile)
+ * or download + clipboard copy (desktop).
+ */
+export async function shareResult(
   state: GameState,
   dailyColors: ClueColor[],
   tapeInfo?: TapeInfo
-): Promise<boolean> {
-  const text = generateShareText(state, dailyColors, tapeInfo);
+): Promise<"shared" | "saved" | "failed"> {
+  const text = generateShareText(state, dailyColors, tapeInfo) + "\nspike.quest";
+
   try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    return false;
+    const blob = await generateShareImage({
+      puzzleId: state.puzzleId,
+      score: state.score,
+      solved: state.solved,
+      dailyColors,
+      tapeEarned: tapeInfo?.colorsEarned,
+      totalTape: tapeInfo?.totalTape,
+    });
+
+    const file = new File([blob], "spike-result.png", { type: "image/png" });
+
+    // Try native Web Share API with file support (mobile)
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], text });
+      return "shared";
+    }
+
+    // Fallback: download image + copy text to clipboard
+    const puzzleNum = String(state.puzzleId).padStart(3, "0");
+    downloadBlob(blob, `spike-${puzzleNum}.png`);
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // Clipboard failed silently — image was still downloaded
+    }
+    return "saved";
+  } catch (err) {
+    // User cancelled the share sheet — not an error
+    if (err instanceof DOMException && err.name === "AbortError") {
+      return "failed";
+    }
+
+    // Canvas or share failed — fall back to text-only clipboard
+    try {
+      await navigator.clipboard.writeText(text);
+      return "saved";
+    } catch {
+      return "failed";
+    }
   }
 }

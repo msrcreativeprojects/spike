@@ -22,6 +22,7 @@ export default function GuessForm({
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const isLocked = !!(solved || failed);
+  const showShimmer = !isLocked && !disabled;
 
   useEffect(() => {
     if (!disabled && !isLocked) {
@@ -58,7 +59,9 @@ export default function GuessForm({
               ? "border-green-500/30 bg-green-500/15 text-green-300 opacity-100"
               : failed
                 ? "border-red-500/30 bg-red-500/10 text-red-300 opacity-100"
-                : "border-white/10 bg-white/[0.06] text-white placeholder-white/30 focus:border-white/25 focus:bg-white/[0.08] disabled:opacity-40 disabled:cursor-not-allowed"
+                : showShimmer
+                  ? "guess-shimmer text-white placeholder-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                  : "border-white/10 bg-white/[0.06] text-white placeholder-white/30 focus:border-white/25 focus:bg-white/[0.08] disabled:opacity-40 disabled:cursor-not-allowed"
           }
         `}
       />

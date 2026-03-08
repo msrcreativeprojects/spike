@@ -25,7 +25,7 @@ export type ClueColor =
   | "orange"
   | "cyan"
   | "red";
-export type TapeColor = ClueColor | "glow";
+export type TapeColor = ClueColor | "glow" | "white";
 
 // All 8 neon colors in the pool (daily shuffle picks 5)
 export const ALL_COLORS: Record<ClueColor, string> = {
@@ -42,6 +42,7 @@ export const ALL_COLORS: Record<ClueColor, string> = {
 export const ALL_COLOR_NAMES: ClueColor[] = Object.keys(ALL_COLORS) as ClueColor[];
 
 export const GLOW_COLOR = "#c8ffc8";
+export const WHITE_TAPE_COLOR = "#e0e0e0";
 
 export const SHARE_EMOJIS: Record<ClueColor | "peeled", string> = {
   pink: "\uD83E\uDE77",   // 🩷
