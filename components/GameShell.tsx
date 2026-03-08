@@ -1,53 +1,169 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Puzzle } from "@/types/puzzle";
+import { useState, useEffect, useCallback } from "react";
+import { Puzzle, type TapeStats } from "@/types/puzzle";
+import { createClient } from "@/lib/supabase/client";
+import { loadTapeStats } from "@/lib/tapeService";
 import { hasSeenTutorial, markTutorialSeen } from "@/lib/tutorial";
 import Game from "./Game";
 import HowToPlay from "./HowToPlay";
+import AuthGate from "./AuthGate";
+import TapeCounter from "./TapeCounter";
+import TapeStatsModal from "./TapeStatsModal";
 
 interface GameShellProps {
   puzzle: Puzzle;
 }
 
-export default function GameShell({ puzzle }: GameShellProps) {
-  const [showTutorial, setShowTutorial] = useState(false);
-  const [ready, setReady] = useState(false);
+type Screen = "loading" | "tutorial" | "auth" | "game";
 
+export default function GameShell({ puzzle }: GameShellProps) {
+  const [screen, setScreen] = useState<Screen>("loading");
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
+  const [tapeStats, setTapeStats] = useState<TapeStats | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+
+  // Check auth state on mount
   useEffect(() => {
-    if (!hasSeenTutorial()) {
-      setShowTutorial(true);
-    }
-    setReady(true);
+    const supabase = createClient();
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUserId(user.id);
+        loadTapeStats(user.id).then((stats) => {
+          setTapeStats(stats);
+          setScreen("game");
+        });
+      } else if (!hasSeenTutorial()) {
+        setScreen("tutorial");
+      } else {
+        setScreen("auth");
+      }
+    });
   }, []);
 
-  const handleCloseTutorial = () => {
+  const handleCloseTutorial = useCallback(() => {
     markTutorialSeen();
-    setShowTutorial(false);
-  };
+    setScreen("auth");
+  }, []);
 
+  const handleAuth = useCallback(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUserId(user.id);
+        setIsGuest(false);
+        loadTapeStats(user.id).then((stats) => {
+          setTapeStats(stats);
+          setScreen("game");
+        });
+      }
+    });
+  }, []);
+
+  const handleGuest = useCallback(() => {
+    setIsGuest(true);
+    setScreen("game");
+  }, []);
+
+  const handleSignOut = useCallback(async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setUserId(null);
+    setTapeStats(null);
+    setIsGuest(false);
+    setShowStats(false);
+    setScreen("auth");
+  }, []);
+
+  const handleTapeUpdate = useCallback((stats: TapeStats) => {
+    setTapeStats(stats);
+  }, []);
+
+  const handleTapeCounterClick = useCallback(() => {
+    if (isGuest) {
+      // Guest clicking counter → show auth
+      setScreen("auth");
+    } else if (tapeStats) {
+      setShowStats(true);
+    }
+  }, [isGuest, tapeStats]);
+
+  // Trigger sign-in from guest mode (e.g., from TapeResult nudge)
+  const handleGuestSignIn = useCallback(() => {
+    setScreen("auth");
+  }, []);
+
+  if (screen === "loading") {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-white/60" />
+      </div>
+    );
+  }
+
+  if (screen === "tutorial") {
+    return <HowToPlay onClose={handleCloseTutorial} />;
+  }
+
+  if (screen === "auth") {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <AuthGate onAuth={handleAuth} onGuest={handleGuest} />
+      </div>
+    );
+  }
+
+  // screen === "game"
   return (
     <>
-      <Game puzzle={puzzle} />
+      <Game
+        puzzle={puzzle}
+        userId={userId}
+        isGuest={isGuest}
+        tapeStats={tapeStats}
+        onTapeUpdate={handleTapeUpdate}
+        onGuestSignIn={handleGuestSignIn}
+      />
 
-      {showTutorial && <HowToPlay onClose={handleCloseTutorial} />}
+      {showTutorial && (
+        <HowToPlay
+          onClose={() => setShowTutorial(false)}
+        />
+      )}
 
-      {ready && !showTutorial && (
-        <button
-          onClick={() => setShowTutorial(true)}
-          aria-label="How to play"
-          className="
-            fixed bottom-4 right-4 z-40
-            flex h-8 w-8 items-center justify-center
-            border border-white/15 bg-white/[0.04]
-            text-sm text-white/30
-            transition-all duration-200
-            hover:border-white/30 hover:bg-white/[0.08] hover:text-white/60
-            animate-fade-in
-          "
-        >
-          ?
-        </button>
+      {showStats && tapeStats && (
+        <TapeStatsModal
+          stats={tapeStats}
+          onClose={() => setShowStats(false)}
+          onSignOut={handleSignOut}
+        />
+      )}
+
+      {!showTutorial && (
+        <>
+          <TapeCounter
+            total={isGuest ? null : (tapeStats?.totalTape ?? 0)}
+            onClick={handleTapeCounterClick}
+          />
+          <button
+            onClick={() => setShowTutorial(true)}
+            aria-label="How to play"
+            className="
+              fixed bottom-4 right-4 z-40
+              flex h-8 w-8 items-center justify-center
+              border border-white/15 bg-white/[0.04]
+              text-sm text-white/30
+              transition-all duration-200
+              hover:border-white/30 hover:bg-white/[0.08] hover:text-white/60
+              animate-fade-in
+            "
+          >
+            ?
+          </button>
+        </>
       )}
     </>
   );

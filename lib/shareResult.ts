@@ -1,8 +1,16 @@
-import { CLUE_COLORS, SHARE_EMOJIS, GameState } from "@/types/puzzle";
+import { CLUE_COLORS, SHARE_EMOJIS, GameState, type TapeColor } from "@/types/puzzle";
 
 const TOTAL_CLUES = 5;
 
-export function generateShareText(state: GameState): string {
+interface TapeInfo {
+  colorsEarned: TapeColor[];
+  totalTape: number;
+}
+
+export function generateShareText(
+  state: GameState,
+  tapeInfo?: TapeInfo
+): string {
   const puzzleNum = String(state.puzzleId).padStart(3, "0");
   const cluesUsed = TOTAL_CLUES - state.score;
 
@@ -17,11 +25,23 @@ export function generateShareText(state: GameState): string {
     ? `Solved in ${cluesUsed} clue${cluesUsed === 1 ? "" : "s"}`
     : "Missed it";
 
-  return `SPIKE #${puzzleNum}\n${marksLine}\n${resultLine}`;
+  let text = `SPIKE #${puzzleNum}\n${marksLine}\n${resultLine}`;
+
+  if (tapeInfo) {
+    const hasGlow = tapeInfo.colorsEarned.includes("glow");
+    const earned = tapeInfo.colorsEarned.length;
+    text += `\n\uD83C\uDFAD +${earned} tape (${tapeInfo.totalTape} total)`;
+    if (hasGlow) text += " \u2728"; // ✨
+  }
+
+  return text;
 }
 
-export async function copyShareText(state: GameState): Promise<boolean> {
-  const text = generateShareText(state);
+export async function copyShareText(
+  state: GameState,
+  tapeInfo?: TapeInfo
+): Promise<boolean> {
+  const text = generateShareText(state, tapeInfo);
   try {
     await navigator.clipboard.writeText(text);
     return true;

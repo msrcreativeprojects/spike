@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { CLUE_COLORS, CLUE_COLOR_MAP } from "@/types/puzzle";
+import { CLUE_COLORS, CLUE_COLOR_MAP, TAPE_COLOR_MAP } from "@/types/puzzle";
 
 interface HowToPlayProps {
   onClose: () => void;
@@ -166,7 +166,7 @@ function StepCost() {
         <div
           className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-black/25 transition-all duration-700"
           style={{
-            backgroundColor: CLUE_COLOR_MAP.orange,
+            backgroundColor: CLUE_COLOR_MAP.purple,
             transform: autoPeeled
               ? `translateX(120%) rotate(${ROTATIONS[1] + 5}deg)`
               : `rotate(${ROTATIONS[1]}deg)`,
@@ -183,9 +183,10 @@ function StepCost() {
   );
 }
 
-function StepScore() {
+function StepKeepYourTape() {
   const letters = ["S", "P", "I", "K", "E"];
-  // Show a 3/5 scenario: first 2 used (dim), last 3 glowing
+  // Show a 3/5 scenario: first 2 peeled (dim), last 3 kept (glowing)
+  const keptColors = CLUE_COLORS.slice(2); // blue, green, yellow
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="font-title text-5xl tracking-wide py-2">
@@ -206,51 +207,56 @@ function StepScore() {
           );
         })}
       </div>
-      <div className="flex gap-1">
-        {CLUE_COLORS.map((c, i) => (
+      {/* Mini tape strips showing what you keep */}
+      <div className="flex gap-1.5 items-center">
+        {keptColors.map((c, i) => (
           <div
             key={i}
-            className="h-1.5 w-8 transition-all"
-            style={{
-              backgroundColor: i >= 2 ? CLUE_COLOR_MAP[c] : "rgba(255,255,255,0.1)",
-            }}
+            className="h-3 w-8"
+            style={{ backgroundColor: CLUE_COLOR_MAP[c] }}
           />
         ))}
       </div>
       <p className="text-sm text-white/50 text-center leading-relaxed">
-        Fewer tapes peeled = higher score.
+        Every tape you don&apos;t peel is
         <br />
-        Guess blind for a perfect 5.
+        yours to keep. Rarer colors
+        <br />
+        live at the top.
       </p>
     </div>
   );
 }
 
-function StepCurtainUp() {
+function StepTheQuest() {
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="font-title text-5xl tracking-wide py-2">
-        {["S", "P", "I", "K", "E"].map((letter, i) => {
-          const color = CLUE_COLOR_MAP[CLUE_COLORS[i]];
-          return (
-            <span
-              key={i}
-              className="inline-block animate-spike-wave"
-              style={{
-                color,
-                textShadow: `0 0 24px ${color}40`,
-                animationDelay: `${i * 100}ms`,
-              }}
-            >
-              {letter}
-            </span>
-          );
-        })}
+      {/* Glow tape pulsing */}
+      <div className="flex flex-col items-center gap-2 py-2">
+        <div
+          className="h-5 w-20 animate-glow-pulse"
+          style={{ backgroundColor: TAPE_COLOR_MAP.glow }}
+        />
+        <p className="text-[10px] uppercase tracking-widest text-white/30">
+          glow tape
+        </p>
+      </div>
+      {/* Mini tape counter mockup */}
+      <div className="flex items-center gap-1.5 border border-white/15 bg-white/[0.04] px-3 py-1.5">
+        <span
+          className="inline-block h-2.5 w-4"
+          style={{
+            background: "linear-gradient(90deg, #ff2d8a, #bf5fff, #00d4ff, #39ff14, #faff00)",
+          }}
+        />
+        <span className="text-xs font-semibold text-white/40 tabular-nums">47</span>
       </div>
       <p className="text-sm text-white/50 text-center leading-relaxed">
-        New puzzle every day.
+        Collect tape. Build streaks.
         <br />
-        Share your score.
+        Earn glow tape.
+        <br />
+        New puzzle every day.
       </p>
     </div>
   );
@@ -260,8 +266,8 @@ const STEPS = [
   { title: "THE SETUP", component: StepSetup },
   { title: "PEEL OR GUESS", component: StepPeel },
   { title: "THE COST", component: StepCost },
-  { title: "YOUR SCORE", component: StepScore },
-  { title: "CURTAIN UP", component: StepCurtainUp },
+  { title: "KEEP YOUR TAPE", component: StepKeepYourTape },
+  { title: "THE QUEST", component: StepTheQuest },
 ];
 
 export default function HowToPlay({ onClose }: HowToPlayProps) {
