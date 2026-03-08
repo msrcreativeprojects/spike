@@ -1,0 +1,142 @@
+[
+  {
+    "id": 1,
+    "date": "2026-03-07",
+    "answer": "Hamilton",
+    "category": "musical",
+    "clues": [
+      "Ten-dollar founding father",
+      "Shot",
+      "The room where it happens",
+      "King George sings about breakups",
+      "Lin-Manuel Miranda's hip-hop history lesson"
+    ],
+    "aliases": ["hamilton the musical", "hamilton an american musical"]
+  },
+  {
+    "id": 2,
+    "date": "2026-03-08",
+    "answer": "Wicked",
+    "category": "musical",
+    "clues": [
+      "Green",
+      "Unlikely friendship at school",
+      "Defying gravity",
+      "Before Dorothy arrived",
+      "Elphaba and Glinda's origin story"
+    ],
+    "aliases": ["wicked the musical"]
+  },
+  {
+    "id": 3,
+    "date": "2026-03-09",
+    "answer": "A Chorus Line",
+    "category": "musical",
+    "clues": [
+      "One singular sensation",
+      "Audition day",
+      "Mirrors and headshots",
+      "\"I hope I get it\"",
+      "17 dancers compete for 8 spots"
+    ],
+    "aliases": ["chorus line"]
+  },
+  {
+    "id": 4,
+    "date": "2026-03-10",
+    "answer": "Sunset Boulevard",
+    "category": "musical",
+    "clues": [
+      "\"I'm ready for my close-up\"",
+      "A swimming pool narrates",
+      "Faded silent-film star",
+      "Norma Desmond",
+      "Andrew Lloyd Webber's Hollywood noir"
+    ],
+    "aliases": ["sunset blvd"]
+  },
+  {
+    "id": 5,
+    "date": "2026-03-11",
+    "answer": "Beetlejuice",
+    "category": "musical",
+    "clues": [
+      "Say the name three times",
+      "Sandworm",
+      "A recently deceased couple haunts their own home",
+      "Day-O dinner party",
+      "Alex Brightman's chaotic afterlife comedy"
+    ],
+    "aliases": ["beetlejuice the musical"]
+  },
+  {
+    "id": 6,
+    "date": "2026-03-12",
+    "answer": "Death of a Salesman",
+    "category": "play",
+    "clues": [
+      "Attention must be paid",
+      "Willy's sample cases",
+      "Brooklyn, 1949",
+      "Two disappointing sons",
+      "Arthur Miller's American tragedy"
+    ],
+    "aliases": ["death of a salesmen"]
+  },
+  {
+    "id": 7,
+    "date": "2026-03-13",
+    "answer": "Chicago",
+    "category": "musical",
+    "clues": [
+      "Razzle dazzle",
+      "Cell Block Tango",
+      "Murderesses who became celebrities",
+      "Bob Fosse's jazz hands",
+      "Roxie Hart and Velma Kelly"
+    ],
+    "aliases": ["chicago the musical"]
+  },
+  {
+    "id": 8,
+    "date": "2026-03-14",
+    "answer": "Phantom of the Opera",
+    "category": "musical",
+    "clues": [
+      "Half a mask",
+      "Chandelier crash",
+      "An underground lake beneath the Paris opera house",
+      "\"The Music of the Night\"",
+      "Broadway's longest-running show until 2023"
+    ],
+    "aliases": ["phantom", "the phantom of the opera"]
+  },
+  {
+    "id": 9,
+    "date": "2026-03-15",
+    "answer": "Waiting for Godot",
+    "category": "play",
+    "clues": [
+      "He never shows up",
+      "Two tramps under a tree",
+      "Lucky and Pozzo",
+      "\"Nothing to be done\"",
+      "Samuel Beckett's absurdist masterpiece"
+    ],
+    "aliases": ["godot"]
+  },
+  {
+    "id": 10,
+    "date": "2026-03-16",
+    "answer": "Cabaret",
+    "category": "musical",
+    "clues": [
+      "Willkommen",
+      "Kit Kat Club",
+      "Berlin, 1931",
+      "The party ends when politics arrives",
+      "Sally Bowles and the Emcee"
+    ],
+    "aliases": ["cabaret the musical"]
+  }
+]
