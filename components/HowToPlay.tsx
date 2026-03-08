@@ -8,49 +8,62 @@ interface HowToPlayProps {
   dailyColors?: ClueColor[];
 }
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 4;
 const ROTATIONS = [-1.5, 2, -1, 1.8, -0.8];
 
 // Fallback colors if dailyColors not yet available
 const FALLBACK_COLORS: ClueColor[] = ["pink", "purple", "blue", "green", "yellow"];
 
-function StepSetup({ colors }: { colors: ClueColor[] }) {
+/* ─── Step 1: TAKE A GUESS ─── */
+function StepTakeAGuess() {
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="flex flex-col items-center gap-1.5 py-2">
-        {colors.map((c, i) => (
-          <div
-            key={i}
-            className="h-7 text-[10px] font-semibold text-transparent flex items-center justify-center"
-            style={{
-              backgroundColor: ALL_COLORS[c],
-              width: "180px",
-              transform: `rotate(${ROTATIONS[i]}deg)`,
-            }}
-          >
-            ???
-          </div>
-        ))}
+    <div className="flex flex-col items-center gap-4">
+      {/* Mock guess box showing category */}
+      <div className="flex gap-0 w-[260px]">
+        <div
+          className="flex-1 border border-r-0 px-3 py-2.5 text-xs"
+          style={{
+            borderColor: "rgba(255,255,255,0.1)",
+            backgroundColor: "rgba(255,255,255,0.06)",
+            color: "rgba(255,255,255,0.5)",
+          }}
+        >
+          Guess a Broadway Musical...
+        </div>
+        <div
+          className="px-3 py-2.5 text-xs font-semibold"
+          style={{
+            backgroundColor: "rgba(255,255,255,0.9)",
+            color: "black",
+          }}
+        >
+          Submit
+        </div>
       </div>
       <p className="text-sm text-white/50 text-center leading-relaxed">
-        5 pieces of tape. 5 clues.
+        The category tells you what to guess.
         <br />
-        One correct answer.
+        Type your best shot and submit.
       </p>
     </div>
   );
 }
 
-function StepGuess({ colors }: { colors: ClueColor[] }) {
+/* ─── Step 2: WRONG ANSWERS ─── */
+function StepWrongAnswers({ colors }: { colors: ClueColor[] }) {
   const [flash, setFlash] = useState(false);
   const [autoPeeled, setAutoPeeled] = useState(false);
+  const [lostCount, setLostCount] = useState(0);
 
   useEffect(() => {
     const run = () => {
       setFlash(true);
       setAutoPeeled(false);
       setTimeout(() => setFlash(false), 500);
-      setTimeout(() => setAutoPeeled(true), 700);
+      setTimeout(() => {
+        setAutoPeeled(true);
+        setLostCount((c) => c + 1);
+      }, 700);
     };
     run();
     const interval = setInterval(() => {
@@ -102,7 +115,7 @@ function StepGuess({ colors }: { colors: ClueColor[] }) {
         <div
           className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-black/25 transition-all duration-700"
           style={{
-            backgroundColor: ALL_COLORS[colors[0]],
+            backgroundColor: ALL_COLORS[colors[lostCount % colors.length]],
             transform: autoPeeled
               ? `translateX(120%) rotate(${ROTATIONS[0] + 5}deg)`
               : `rotate(${ROTATIONS[0]}deg)`,
@@ -111,63 +124,15 @@ function StepGuess({ colors }: { colors: ClueColor[] }) {
         />
       </div>
       <p className="text-sm text-white/50 text-center leading-relaxed">
-        Take a guess. Each wrong
+        Wrong guesses cost tape
         <br />
-        answer reveals a clue.
-      </p>
-      <p className="text-[11px] text-white/30 text-center mt-2 italic">
-        Hint: the category is in the guess box
+        — but reveal clues.
       </p>
     </div>
   );
 }
 
-function StepCost({ colors }: { colors: ClueColor[] }) {
-  // Show 5 tapes, then animate 3 fading out to show "cost"
-  const [lostCount, setLostCount] = useState(0);
-
-  useEffect(() => {
-    const run = () => {
-      setLostCount(0);
-      setTimeout(() => setLostCount(1), 600);
-      setTimeout(() => setLostCount(2), 1000);
-      setTimeout(() => setLostCount(3), 1400);
-    };
-    run();
-    const interval = setInterval(run, 3500);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="flex flex-col items-center gap-1.5 py-2">
-        {colors.map((c, i) => {
-          const lost = i < lostCount;
-          return (
-            <div
-              key={i}
-              className="h-7 text-[10px] font-semibold text-transparent flex items-center justify-center transition-all duration-500"
-              style={{
-                backgroundColor: ALL_COLORS[c],
-                width: "180px",
-                transform: `rotate(${ROTATIONS[i]}deg)`,
-                opacity: lost ? 0.15 : 1,
-              }}
-            >
-              ???
-            </div>
-          );
-        })}
-      </div>
-      <p className="text-sm text-white/50 text-center leading-relaxed">
-        Each wrong guess costs you
-        <br />
-        a piece of tape.
-      </p>
-    </div>
-  );
-}
-
+/* ─── Step 3: COLLECT YOUR TAPE ─── */
 function StepCollect({ colors }: { colors: ClueColor[] }) {
   const letters = ["S", "P", "I", "K", "E"];
   // Show a 3/5 scenario: first 2 peeled (dim), last 3 collected (glowing)
@@ -205,14 +170,15 @@ function StepCollect({ colors }: { colors: ClueColor[] }) {
       <p className="text-sm text-white/50 text-center leading-relaxed">
         Guess right and collect your
         <br />
-        remaining tape! New colors
+        remaining tape!
         <br />
-        every day.
+        New colors every day.
       </p>
     </div>
   );
 }
 
+/* ─── Step 4: THE QUEST ─── */
 function StepTheQuest() {
   // Build gradient from all 8 neon colors
   const allHexes = ALL_COLOR_NAMES.map((c) => ALL_COLORS[c]).join(", ");
@@ -250,9 +216,8 @@ function StepTheQuest() {
 }
 
 const STEP_TITLES = [
-  "THE SETUP",
-  "THE GUESS",
-  "THE COST",
+  "TAKE A GUESS",
+  "WRONG ANSWERS",
   "COLLECT YOUR TAPE",
   "THE QUEST",
 ];
@@ -295,11 +260,10 @@ export default function HowToPlay({ onClose, dailyColors }: HowToPlayProps) {
 
   const renderStep = () => {
     switch (step) {
-      case 0: return <StepSetup colors={colors} />;
-      case 1: return <StepGuess colors={colors} />;
-      case 2: return <StepCost colors={colors} />;
-      case 3: return <StepCollect colors={colors} />;
-      case 4: return <StepTheQuest />;
+      case 0: return <StepTakeAGuess />;
+      case 1: return <StepWrongAnswers colors={colors} />;
+      case 2: return <StepCollect colors={colors} />;
+      case 3: return <StepTheQuest />;
       default: return null;
     }
   };
