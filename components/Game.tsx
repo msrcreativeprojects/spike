@@ -337,15 +337,13 @@ export default function Game({
         />
       )}
 
-      {/* Dev reset — only in development */}
-      {process.env.NODE_ENV === "development" && (
-        <button
-          onClick={handleReset}
-          className="mx-auto mt-4 text-[10px] text-white/15 hover:text-white/30 transition-colors"
-        >
-          reset puzzle (dev)
-        </button>
-      )}
+      {/* Dev reset — hidden but always available */}
+      <button
+        onClick={handleReset}
+        className="mx-auto mt-4 text-[10px] text-white/[0.07] hover:text-white/25 transition-colors"
+      >
+        reset puzzle
+      </button>
     </div>
   );
 }

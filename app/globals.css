@@ -145,29 +145,17 @@ body {
   animation: tape-fall 0.6s cubic-bezier(0.55, 0, 1, 0.45) both;
 }
 
-/* Guess box shimmer — single sweep across the border, then pause */
-@keyframes shimmer-border {
-  0%, 65% {
-    background-position: 0 0, -250% 0;
+/* Guess box glow — subtle glow-tape pulse on the input border */
+@keyframes guess-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(255, 255, 255, 0);
   }
-  100% {
-    background-position: 0 0, 250% 0;
+  50% {
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.12), 0 0 2px rgba(255, 255, 255, 0.08);
   }
 }
 
-.guess-shimmer {
-  border-color: rgba(255, 255, 255, 0);
-  border-width: 1.5px;
-  border-right-width: 0;
-  background:
-    linear-gradient(#19191b, #19191b) padding-box,
-    linear-gradient(
-      70deg,
-      rgba(255, 255, 255, 0.08) 30%,
-      rgba(255, 255, 255, 0.3) 50%,
-      rgba(255, 255, 255, 0.08) 70%
-    ) border-box;
-  background-size: 100% 100%, 300% 100%;
-  animation: shimmer-border 6s ease-out infinite;
+.guess-glow {
+  animation: guess-glow 4s ease-in-out infinite;
 }
 
