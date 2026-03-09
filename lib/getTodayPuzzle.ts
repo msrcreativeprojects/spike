@@ -1,4 +1,4 @@
-import puzzles from "@/data/puzzles.json";
+import { createClient } from "@/lib/supabase/server";
 import { Puzzle } from "@/types/puzzle";
 
 // DEV OVERRIDE: change this to test different days (set to "" for real date)
@@ -14,11 +14,25 @@ function getLocalDateString(): string {
   return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 }
 
-export function getTodayPuzzle(): Puzzle | null {
+export async function getTodayPuzzle(): Promise<Puzzle | null> {
   const today = getLocalDateString();
-  return (puzzles as Puzzle[]).find((p) => p.date === today) ?? null;
-}
+  const supabase = await createClient();
 
-export function getPuzzleById(id: number): Puzzle | undefined {
-  return (puzzles as Puzzle[]).find((p) => p.id === id);
+  const { data } = await supabase
+    .from("puzzles")
+    .select("id, date, answer, category, clues, aliases")
+    .eq("date", today)
+    .eq("status", "approved")
+    .single();
+
+  if (!data) return null;
+
+  return {
+    id: data.id,
+    date: data.date,
+    answer: data.answer,
+    category: data.category,
+    clues: data.clues as [string, string, string, string, string],
+    aliases: (data.aliases as string[]) ?? undefined,
+  };
 }

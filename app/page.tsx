@@ -1,8 +1,8 @@
 import { getTodayPuzzle } from "@/lib/getTodayPuzzle";
 import GameShell from "@/components/GameShell";
 
-export default function Home() {
-  const puzzle = getTodayPuzzle();
+export default async function Home() {
+  const puzzle = await getTodayPuzzle();
 
   const fwButton = (
     <a
