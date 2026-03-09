@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { GLOW_COLOR } from "@/types/puzzle";
 
 interface GuessFormProps {
   onGuess: (guess: string) => void;
@@ -21,12 +20,10 @@ export default function GuessForm({
   category,
 }: GuessFormProps) {
   const [value, setValue] = useState("");
-  const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const isLocked = !!(solved || failed);
   const showGlow = !isLocked && !disabled;
 
-  // Show custom placeholder when input is empty and not locked
   const displayValue = isLocked ? lockedValue ?? "" : value;
   const showCustomPlaceholder = !isLocked && !displayValue && category;
 
@@ -51,8 +48,6 @@ export default function GuessForm({
           type="text"
           value={displayValue}
           onChange={(e) => setValue(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
           disabled={disabled || isLocked}
           readOnly={isLocked}
           placeholder={!category ? "Type your guess..." : undefined}
@@ -74,20 +69,15 @@ export default function GuessForm({
             }
           `}
         />
-        {/* Custom placeholder with glowing category */}
+        {/* Custom placeholder — category portion is brighter */}
         {showCustomPlaceholder && (
           <div
             className="absolute inset-0 flex items-center px-4 text-sm pointer-events-none"
             aria-hidden="true"
           >
-            <span className="text-white/50">Guess a </span>
-            <span
-              className="animate-glow-text-pulse"
-              style={{ color: GLOW_COLOR }}
-            >
-              {category}
-            </span>
-            <span className="text-white/50">...</span>
+            <span className="text-white/40">Guess a&nbsp;</span>
+            <span className="text-white/70">{category}</span>
+            <span className="text-white/40">...</span>
           </div>
         )}
       </div>
