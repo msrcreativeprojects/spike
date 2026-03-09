@@ -6,7 +6,7 @@
 const STAGE_POOLS: string[][] = [
   // Stage 0 — no clues yet (instruct + encourage blind guessing)
   [
-    "Guess the show — type your answer below",
+    "Guess the show — type your answer and submit",
     "Type a show name to start",
     "Start guessing! Wrong answers reveal clues",
     "Take a swing — wrong guesses give you clues",

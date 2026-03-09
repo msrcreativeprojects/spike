@@ -16,10 +16,11 @@ interface GameShellProps {
   puzzle: Puzzle;
 }
 
-type Screen = "loading" | "tutorial" | "auth" | "game";
+type Overlay = "none" | "tutorial" | "auth";
 
 export default function GameShell({ puzzle }: GameShellProps) {
-  const [screen, setScreen] = useState<Screen>("loading");
+  const [ready, setReady] = useState(false);
+  const [overlay, setOverlay] = useState<Overlay>("none");
   const [userId, setUserId] = useState<string | null>(null);
   const [isGuest, setIsGuest] = useState(false);
   const [tapeStats, setTapeStats] = useState<TapeStats | null>(null);
@@ -28,6 +29,8 @@ export default function GameShell({ puzzle }: GameShellProps) {
 
   // Compute daily colors once from puzzle date
   const dailyColors = useMemo(() => getDailyColors(puzzle.date), [puzzle.date]);
+
+  const gameBlocked = overlay !== "none";
 
   // Check auth state on mount
   useEffect(() => {
@@ -38,23 +41,26 @@ export default function GameShell({ puzzle }: GameShellProps) {
         setUserId(user.id);
         loadTapeStats(user.id).then((stats) => {
           setTapeStats(stats);
-          setScreen("game");
+          setReady(true);
+          setOverlay("none");
         });
       } else if (!hasSeenTutorial()) {
-        setScreen("tutorial");
+        setReady(true);
+        setOverlay("tutorial");
       } else {
-        setScreen("auth");
+        setReady(true);
+        setOverlay("auth");
       }
     });
   }, []);
 
   const handleCloseTutorial = useCallback(() => {
     markTutorialSeen();
-    // If guest was already chosen, go straight to game; otherwise show auth
+    // If guest was already chosen, dismiss overlay; otherwise show auth
     if (isGuest) {
-      setScreen("game");
+      setOverlay("none");
     } else {
-      setScreen("auth");
+      setOverlay("auth");
     }
   }, [isGuest]);
 
@@ -66,7 +72,7 @@ export default function GameShell({ puzzle }: GameShellProps) {
         setIsGuest(false);
         loadTapeStats(user.id).then((stats) => {
           setTapeStats(stats);
-          setScreen("game");
+          setOverlay("none");
         });
       }
     });
@@ -74,7 +80,7 @@ export default function GameShell({ puzzle }: GameShellProps) {
 
   const handleGuest = useCallback(() => {
     setIsGuest(true);
-    setScreen("tutorial");
+    setOverlay("tutorial");
   }, []);
 
   const handleSignOut = useCallback(async () => {
@@ -84,7 +90,7 @@ export default function GameShell({ puzzle }: GameShellProps) {
     setTapeStats(null);
     setIsGuest(false);
     setShowStats(false);
-    setScreen("auth");
+    setOverlay("auth");
   }, []);
 
   const handleTapeUpdate = useCallback((stats: TapeStats) => {
@@ -93,19 +99,17 @@ export default function GameShell({ puzzle }: GameShellProps) {
 
   const handleTapeCounterClick = useCallback(() => {
     if (isGuest) {
-      // Guest clicking counter → show auth
-      setScreen("auth");
+      setOverlay("auth");
     } else if (tapeStats) {
       setShowStats(true);
     }
   }, [isGuest, tapeStats]);
 
-  // Trigger sign-in from guest mode (e.g., from TapeResult nudge)
   const handleGuestSignIn = useCallback(() => {
-    setScreen("auth");
+    setOverlay("auth");
   }, []);
 
-  if (screen === "loading") {
+  if (!ready) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-white/60" />
@@ -113,31 +117,40 @@ export default function GameShell({ puzzle }: GameShellProps) {
     );
   }
 
-  if (screen === "tutorial") {
-    return <HowToPlay onClose={handleCloseTutorial} dailyColors={dailyColors} />;
-  }
-
-  if (screen === "auth") {
-    return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <AuthGate onAuth={handleAuth} onGuest={handleGuest} />
-      </div>
-    );
-  }
-
-  // screen === "game"
   return (
     <>
-      <Game
-        puzzle={puzzle}
-        userId={userId}
-        isGuest={isGuest}
-        tapeStats={tapeStats}
-        onTapeUpdate={handleTapeUpdate}
-        onGuestSignIn={handleGuestSignIn}
-        dailyColors={dailyColors}
-      />
+      {/* Game always renders — blurred + dimmed when an overlay is active */}
+      <div
+        className="transition-all duration-500"
+        style={{
+          filter: gameBlocked ? "blur(6px) brightness(0.4)" : "none",
+          pointerEvents: gameBlocked ? "none" : "auto",
+        }}
+      >
+        <Game
+          puzzle={puzzle}
+          userId={userId}
+          isGuest={isGuest}
+          tapeStats={tapeStats}
+          onTapeUpdate={handleTapeUpdate}
+          onGuestSignIn={handleGuestSignIn}
+          dailyColors={dailyColors}
+        />
+      </div>
 
+      {/* Auth overlay */}
+      {overlay === "auth" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <AuthGate onAuth={handleAuth} onGuest={handleGuest} />
+        </div>
+      )}
+
+      {/* Tutorial overlay */}
+      {overlay === "tutorial" && (
+        <HowToPlay onClose={handleCloseTutorial} dailyColors={dailyColors} />
+      )}
+
+      {/* In-game tutorial (from ? button) */}
       {showTutorial && (
         <HowToPlay
           onClose={() => setShowTutorial(false)}
@@ -153,7 +166,7 @@ export default function GameShell({ puzzle }: GameShellProps) {
         />
       )}
 
-      {!showTutorial && (
+      {!gameBlocked && !showTutorial && (
         <>
           <TapeCounter
             total={isGuest ? null : (tapeStats?.totalTape ?? 0)}
