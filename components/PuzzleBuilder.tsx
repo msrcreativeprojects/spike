@@ -1,0 +1,391 @@
+"use client";
+
+import { useState, useCallback, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+
+interface ShowInfo {
+  name: string;
+  category: string;
+  hasExisting: boolean;
+}
+
+interface ClueRow {
+  id: number;
+  show_name: string;
+  category: string;
+  level: number;
+  clue_text: string;
+  clue_type: string | null;
+  specificity: string | null;
+  notes: string | null;
+  used: boolean;
+}
+
+interface LockedClue {
+  text: string;
+  bankId: number | null; // null if edited/custom
+}
+
+export default function PuzzleBuilder({ shows }: { shows: ShowInfo[] }) {
+  const supabase = createClient();
+
+  const [selectedShow, setSelectedShow] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("Broadway Musical");
+  const [clues, setClues] = useState<ClueRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [activeLevel, setActiveLevel] = useState(1);
+  const [currentIndex, setCurrentIndex] = useState<Record<number, number>>({1:0, 2:0, 3:0, 4:0, 5:0});
+  const [lockedClues, setLockedClues] = useState<Record<number, LockedClue>>({});
+  const [editText, setEditText] = useState<Record<number, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [aliases, setAliases] = useState("");
+
+  // Fetch clues when show selected
+  useEffect(() => {
+    if (!selectedShow) return;
+    setLoading(true);
+    setLockedClues({});
+    setActiveLevel(1);
+    setCurrentIndex({1:0, 2:0, 3:0, 4:0, 5:0});
+    setEditText({});
+    setSaveMessage(null);
+
+    supabase
+      .from("clue_bank")
+      .select("*")
+      .eq("show_name", selectedShow)
+      .order("level")
+      .order("id")
+      .then(({ data }) => {
+        setClues(data ?? []);
+        // Initialize edit text with first clue for each level
+        const initial: Record<number, string> = {};
+        for (let lvl = 1; lvl <= 5; lvl++) {
+          const levelClues = (data ?? []).filter(c => c.level === lvl);
+          if (levelClues.length > 0) initial[lvl] = levelClues[0].clue_text;
+        }
+        setEditText(initial);
+        setLoading(false);
+      });
+
+    // Set category from show info
+    const showInfo = shows.find(s => s.name === selectedShow);
+    if (showInfo) setSelectedCategory(showInfo.category);
+  }, [selectedShow]);
+
+  const getCluesForLevel = (level: number) => clues.filter(c => c.level === level);
+  const facts = clues.filter(c => c.level === 0);
+
+  const handleCycle = (level: number, dir: number) => {
+    const levelClues = getCluesForLevel(level);
+    if (levelClues.length === 0) return;
+    const newIdx = (currentIndex[level] + dir + levelClues.length) % levelClues.length;
+    setCurrentIndex(prev => ({ ...prev, [level]: newIdx }));
+    setEditText(prev => ({ ...prev, [level]: levelClues[newIdx].clue_text }));
+  };
+
+  const handleLock = (level: number) => {
+    const levelClues = getCluesForLevel(level);
+    const currentClue = levelClues[currentIndex[level]];
+    const text = editText[level] ?? currentClue?.clue_text ?? "";
+    const isEdited = currentClue && text !== currentClue.clue_text;
+
+    setLockedClues(prev => ({
+      ...prev,
+      [level]: {
+        text,
+        bankId: isEdited ? null : (currentClue?.id ?? null),
+      }
+    }));
+
+    // Move to next unlocked level
+    if (level < 5) {
+      setActiveLevel(level + 1);
+    }
+  };
+
+  const handleUnlock = (level: number) => {
+    setLockedClues(prev => {
+      const next = { ...prev };
+      delete next[level];
+      return next;
+    });
+    setActiveLevel(level);
+  };
+
+  const allLocked = [1,2,3,4,5].every(l => lockedClues[l]);
+
+  const handleSave = async () => {
+    if (!allLocked || !selectedShow) return;
+    setSaving(true);
+    setSaveMessage(null);
+
+    const clueTexts = [1,2,3,4,5].map(l => lockedClues[l].text);
+    const aliasArr = aliases.split(",").map(a => a.trim()).filter(Boolean);
+
+    // Insert puzzle
+    const { error } = await supabase.from("puzzles").insert({
+      answer: selectedShow,
+      category: selectedCategory,
+      clues: clueTexts,
+      aliases: aliasArr.length > 0 ? aliasArr : null,
+      status: "queued",
+    });
+
+    if (error) {
+      setSaveMessage(`Error: ${error.message}`);
+      setSaving(false);
+      return;
+    }
+
+    // Mark used clues
+    const usedIds = [1,2,3,4,5]
+      .map(l => lockedClues[l].bankId)
+      .filter((id): id is number => id !== null);
+
+    if (usedIds.length > 0) {
+      await supabase
+        .from("clue_bank")
+        .update({ used: true })
+        .in("id", usedIds);
+    }
+
+    setSaveMessage("Saved to queue!");
+    setSaving(false);
+
+    // Reset after a moment
+    setTimeout(() => {
+      setLockedClues({});
+      setActiveLevel(1);
+      setCurrentIndex({1:0, 2:0, 3:0, 4:0, 5:0});
+      setEditText({});
+      setAliases("");
+      setSaveMessage(null);
+      // Optionally could move to next show
+    }, 2000);
+  };
+
+  // Find first unbuilt show
+  const nextUnbuilt = shows.find(s => !s.hasExisting);
+
+  const levelLabels: Record<number, string> = {
+    1: "Very Broad",
+    2: "Obscure Detail",
+    3: "Narrowing",
+    4: "Recognition",
+    5: "Giveaway",
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Show picker */}
+      <div className="flex gap-3 items-end">
+        <div className="flex-1">
+          <label className="text-xs text-white/30 uppercase tracking-wider block mb-2">
+            Show
+          </label>
+          <select
+            value={selectedShow ?? ""}
+            onChange={e => setSelectedShow(e.target.value || null)}
+            className="w-full bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white/80 focus:border-white/30 focus:outline-none appearance-none"
+          >
+            <option value="">Select a show...</option>
+            <optgroup label="Needs Puzzle">
+              {shows.filter(s => !s.hasExisting).map(s => (
+                <option key={s.name} value={s.name}>{s.name}</option>
+              ))}
+            </optgroup>
+            <optgroup label="Already Has Puzzle">
+              {shows.filter(s => s.hasExisting).map(s => (
+                <option key={s.name} value={s.name}>{s.name} ✓</option>
+              ))}
+            </optgroup>
+          </select>
+        </div>
+        {nextUnbuilt && (
+          <button
+            onClick={() => setSelectedShow(nextUnbuilt.name)}
+            className="px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border border-white/15 text-white/40 hover:text-white/70 hover:border-white/30 transition-colors whitespace-nowrap"
+          >
+            Next Unbuilt →
+          </button>
+        )}
+      </div>
+
+      {loading && (
+        <p className="text-sm text-white/30 animate-pulse">Loading clues...</p>
+      )}
+
+      {selectedShow && !loading && clues.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+          {/* Main builder */}
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map(level => {
+              const levelClues = getCluesForLevel(level);
+              const isLocked = !!lockedClues[level];
+              const isActive = activeLevel === level && !isLocked;
+              const idx = currentIndex[level] ?? 0;
+              const currentClue = levelClues[idx];
+
+              if (isLocked) {
+                return (
+                  <div
+                    key={level}
+                    className="border border-white/10 bg-white/[0.03] px-5 py-3 flex items-center gap-4 cursor-pointer hover:border-white/20 transition-colors"
+                    onClick={() => handleUnlock(level)}
+                  >
+                    <span className="text-xs font-semibold text-green-400/70 w-6">
+                      {level}
+                    </span>
+                    <span className="flex-1 text-sm text-white/60">
+                      {lockedClues[level].text}
+                    </span>
+                    <span className="text-xs text-white/20">
+                      {lockedClues[level].bankId === null ? "edited" : "locked"}
+                    </span>
+                  </div>
+                );
+              }
+
+              if (!isActive) {
+                return (
+                  <div
+                    key={level}
+                    className="border border-white/[0.06] bg-white/[0.01] px-5 py-3 flex items-center gap-4 opacity-30"
+                  >
+                    <span className="text-xs font-semibold text-white/30 w-6">
+                      {level}
+                    </span>
+                    <span className="text-sm text-white/20">
+                      {levelLabels[level]}
+                    </span>
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  key={level}
+                  className="border border-white/15 bg-white/[0.04] p-5 space-y-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-semibold text-white/50 w-6">
+                        {level}
+                      </span>
+                      <span className="text-xs uppercase tracking-wider text-white/30">
+                        {levelLabels[level]}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleCycle(level, -1)}
+                        className="w-8 h-8 flex items-center justify-center border border-white/10 text-white/30 hover:text-white/60 hover:border-white/25 transition-colors text-sm"
+                      >
+                        ←
+                      </button>
+                      <span className="text-xs text-white/25 tabular-nums w-12 text-center">
+                        {idx + 1} / {levelClues.length}
+                      </span>
+                      <button
+                        onClick={() => handleCycle(level, 1)}
+                        className="w-8 h-8 flex items-center justify-center border border-white/10 text-white/30 hover:text-white/60 hover:border-white/25 transition-colors text-sm"
+                      >
+                        →
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Clue text - editable */}
+                  <textarea
+                    value={editText[level] ?? ""}
+                    onChange={e => setEditText(prev => ({ ...prev, [level]: e.target.value }))}
+                    className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm text-white/80 focus:border-white/30 focus:outline-none resize-none"
+                    rows={2}
+                  />
+
+                  {/* Meta info */}
+                  {currentClue && (
+                    <div className="flex items-center gap-3 text-xs text-white/20">
+                      {currentClue.clue_type && (
+                        <span className="px-2 py-0.5 border border-white/10 text-white/30">
+                          {currentClue.clue_type}
+                        </span>
+                      )}
+                      {currentClue.notes && (
+                        <span className="text-white/15 italic">
+                          {currentClue.notes}
+                        </span>
+                      )}
+                      {currentClue.used && (
+                        <span className="text-yellow-400/50">used</span>
+                      )}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => handleLock(level)}
+                    className="px-5 py-2 text-xs font-semibold uppercase tracking-wider bg-green-600/80 text-white hover:bg-green-500 transition-colors"
+                  >
+                    Lock Clue {level}
+                  </button>
+                </div>
+              );
+            })}
+
+            {/* Aliases input */}
+            {allLocked && (
+              <div className="border border-white/15 bg-white/[0.04] p-5 space-y-3">
+                <label className="text-xs text-white/30 uppercase tracking-wider block">
+                  Aliases (comma-separated)
+                </label>
+                <input
+                  value={aliases}
+                  onChange={e => setAliases(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white/80 focus:border-white/30 focus:outline-none"
+                  placeholder="e.g. phantom, poto"
+                />
+              </div>
+            )}
+
+            {/* Save button */}
+            {allLocked && (
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="w-full px-6 py-3 text-sm font-semibold uppercase tracking-wider bg-green-600/80 text-white hover:bg-green-500 transition-colors disabled:opacity-40"
+              >
+                {saving ? "Saving..." : "Save to Queue"}
+              </button>
+            )}
+
+            {saveMessage && (
+              <p className={`text-sm text-center ${saveMessage.startsWith("Error") ? "text-red-400" : "text-green-400"}`}>
+                {saveMessage}
+              </p>
+            )}
+          </div>
+
+          {/* Facts sidebar */}
+          {facts.length > 0 && (
+            <div className="border border-white/10 bg-white/[0.02] p-5 space-y-3 h-fit lg:sticky lg:top-8">
+              <h3 className="text-xs font-semibold uppercase tracking-[3px] text-white/25 mb-3">
+                Facts
+              </h3>
+              {facts.map(fact => (
+                <p key={fact.id} className="text-xs text-white/35 leading-relaxed">
+                  {fact.clue_text}
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {selectedShow && !loading && clues.length === 0 && (
+        <p className="text-sm text-white/30">No clues found for this show in the clue bank.</p>
+      )}
+    </div>
+  );
+}
