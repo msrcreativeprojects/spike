@@ -12,14 +12,24 @@ export default async function BuildPage() {
   }
 
   // Fetch distinct show names from clue_bank, and which shows already have puzzles
-  const { data: shows } = await supabase
-    .from("clue_bank")
-    .select("show_name, category")
-    .order("show_name");
+  // Use RPC-like approach: fetch all rows (default limit is 1000, so paginate)
+  let allShows: { show_name: string; category: string }[] = [];
+  let from = 0;
+  const pageSize = 1000;
+  while (true) {
+    const { data } = await supabase
+      .from("clue_bank")
+      .select("show_name, category")
+      .range(from, from + pageSize - 1);
+    if (!data || data.length === 0) break;
+    allShows = allShows.concat(data);
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
 
   // Get unique shows
   const uniqueShows = Array.from(
-    new Map((shows ?? []).map(s => [s.show_name, s])).values()
+    new Map(allShows.map(s => [s.show_name, s])).values()
   );
 
   // Check which shows already have puzzles in the queue
