@@ -84,17 +84,8 @@ export default function Game({
         state.solved,
         dailyColors
       ).then((result) => {
-        // If server returned stale data (old puzzle), use local calculation
-        const actualCount = result.colorsEarned.filter(c => c !== "glow").length;
-        if (actualCount !== expectedCount) {
-          const colorsEarned: TapeColor[] = state.score > 0
-            ? dailyColors.slice(5 - state.score)
-            : ["white"];
-          setTapeResult({ ...result, colorsEarned });
-        } else {
-          setTapeResult(result);
-        }
-        // Refresh tape stats in parent
+        setTapeResult(result);
+        // Refresh tape stats in parent (DB was corrected server-side)
         loadTapeStats(userId).then(onTapeUpdate);
       });
     } else {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 interface ShowInfo {
@@ -26,10 +26,12 @@ interface LockedClue {
   bankId: number | null; // null if edited/custom
 }
 
-export default function PuzzleBuilder({ shows }: { shows: ShowInfo[] }) {
+export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo[] }) {
   const supabase = createClient();
 
+  const [shows, setShows] = useState<ShowInfo[]>(initialShows);
   const [selectedShow, setSelectedShow] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string>("All");
   const [selectedCategory, setSelectedCategory] = useState<string>("Broadway Musical");
   const [clues, setClues] = useState<ClueRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -154,7 +156,12 @@ export default function PuzzleBuilder({ shows }: { shows: ShowInfo[] }) {
     setSaveMessage("Saved to queue!");
     setSaving(false);
 
-    // Reset after a moment
+    // Mark show as built in local state
+    setShows(prev => prev.map(s =>
+      s.name === selectedShow ? { ...s, hasExisting: true } : s
+    ));
+
+    // Reset after a moment and jump to next unbuilt show
     setTimeout(() => {
       setLockedClues({});
       setActiveLevel(1);
@@ -162,12 +169,32 @@ export default function PuzzleBuilder({ shows }: { shows: ShowInfo[] }) {
       setEditText({});
       setAliases("");
       setSaveMessage(null);
-      // Optionally could move to next show
-    }, 2000);
+      // Auto-advance to next unbuilt show in the same category
+      const filtered = shows.filter(s =>
+        !s.hasExisting && s.name !== selectedShow &&
+        (categoryFilter === "All" || s.category === categoryFilter)
+      );
+      if (filtered.length > 0) {
+        setSelectedShow(filtered[0].name);
+      }
+    }, 1500);
   };
 
-  // Find first unbuilt show
-  const nextUnbuilt = shows.find(s => !s.hasExisting);
+  // Unique categories for filter tabs
+  const categories = useMemo(() => {
+    const cats = Array.from(new Set(shows.map(s => s.category)));
+    cats.sort();
+    return ["All", ...cats];
+  }, [shows]);
+
+  // Filtered shows based on category
+  const filteredShows = useMemo(() => {
+    if (categoryFilter === "All") return shows;
+    return shows.filter(s => s.category === categoryFilter);
+  }, [shows, categoryFilter]);
+
+  // Find first unbuilt show in current filter
+  const nextUnbuilt = filteredShows.find(s => !s.hasExisting);
 
   const levelLabels: Record<number, string> = {
     1: "Very Broad",
@@ -179,6 +206,33 @@ export default function PuzzleBuilder({ shows }: { shows: ShowInfo[] }) {
 
   return (
     <div className="space-y-8">
+      {/* Category filter tabs */}
+      <div className="flex flex-wrap gap-2">
+        {categories.map(cat => {
+          const count = cat === "All"
+            ? shows.filter(s => !s.hasExisting).length
+            : shows.filter(s => s.category === cat && !s.hasExisting).length;
+          const total = cat === "All" ? shows.length : shows.filter(s => s.category === cat).length;
+          return (
+            <button
+              key={cat}
+              onClick={() => {
+                setCategoryFilter(cat);
+                setSelectedShow(null);
+              }}
+              className={`px-3 py-1.5 text-xs transition-colors border ${
+                categoryFilter === cat
+                  ? "border-white/30 bg-white/10 text-white/80"
+                  : "border-white/10 text-white/30 hover:text-white/60 hover:border-white/20"
+              }`}
+            >
+              {cat}{" "}
+              <span className="text-white/20">{count}/{total}</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Show picker */}
       <div className="flex gap-3 items-end">
         <div className="flex-1">
@@ -192,12 +246,12 @@ export default function PuzzleBuilder({ shows }: { shows: ShowInfo[] }) {
           >
             <option value="">Select a show...</option>
             <optgroup label="Needs Puzzle">
-              {shows.filter(s => !s.hasExisting).map(s => (
+              {filteredShows.filter(s => !s.hasExisting).map(s => (
                 <option key={s.name} value={s.name}>{s.name}</option>
               ))}
             </optgroup>
             <optgroup label="Already Has Puzzle">
-              {shows.filter(s => s.hasExisting).map(s => (
+              {filteredShows.filter(s => s.hasExisting).map(s => (
                 <option key={s.name} value={s.name}>{s.name} ✓</option>
               ))}
             </optgroup>

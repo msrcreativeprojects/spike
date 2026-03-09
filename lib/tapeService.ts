@@ -95,8 +95,8 @@ export async function recordGameCompletion(
     .eq("date", date)
     .single();
 
-  if (existing && existing.puzzle_id === puzzleId) {
-    // Same puzzle, already recorded — return existing data
+  if (existing && existing.puzzle_id === puzzleId && existing.score === score) {
+    // Same puzzle + same score, already recorded — return existing data
     const stats = await loadTapeStats(userId);
     return {
       colorsEarned: existing.colors_earned as TapeColor[],
@@ -106,8 +106,8 @@ export async function recordGameCompletion(
     };
   }
 
-  // If puzzle changed for the same date (admin swapped puzzle), undo old record
-  if (existing && existing.puzzle_id !== puzzleId) {
+  // Undo stale record: puzzle changed OR score mismatch (corrupt data)
+  if (existing) {
     const oldColors = (existing.colors_earned as TapeColor[]) ?? [];
     // Remove old tape from stats before re-recording
     const currentStats = await loadTapeStats(userId);

@@ -76,6 +76,33 @@ export default function AdminDashboard({
     [supabase]
   );
 
+  // Swap two scheduled puzzles' dates
+  const handleSwap = useCallback(
+    async (indexA: number, indexB: number) => {
+      if (indexA < 0 || indexB < 0 || indexA >= scheduled.length || indexB >= scheduled.length) return;
+      setBusy(true);
+      const a = scheduled[indexA];
+      const b = scheduled[indexB];
+
+      // Swap dates in DB
+      const [resA, resB] = await Promise.all([
+        supabase.from("puzzles").update({ date: b.date }).eq("id", a.id),
+        supabase.from("puzzles").update({ date: a.date }).eq("id", b.id),
+      ]);
+
+      if (!resA.error && !resB.error) {
+        setScheduled(prev => {
+          const next = [...prev];
+          next[indexA] = { ...a, date: b.date };
+          next[indexB] = { ...b, date: a.date };
+          return next.sort((x, y) => (x.date ?? "").localeCompare(y.date ?? ""));
+        });
+      }
+      setBusy(false);
+    },
+    [supabase, scheduled]
+  );
+
   // Start editing
   const startEdit = useCallback((puzzle: PuzzleRow) => {
     setEditingId(puzzle.id);
@@ -151,40 +178,66 @@ export default function AdminDashboard({
           {scheduled.length === 0 && (
             <p className="text-sm text-white/20">No scheduled puzzles yet.</p>
           )}
-          {scheduled.map((p) => (
-            <div
-              key={p.id}
-              className={`flex items-center gap-4 border border-white/10 px-4 py-3 ${
-                p.date && p.date < todayStr ? "opacity-40" : ""
-              }`}
-            >
-              <span className="w-24 shrink-0 text-xs text-white/30 tabular-nums">
-                {p.date}
-              </span>
-              {editingId === p.id ? (
-                <EditRow
-                  form={editForm}
-                  setForm={setEditForm}
-                  onSave={() => saveEdit(p.id)}
-                  onCancel={() => setEditingId(null)}
-                  busy={busy}
-                />
-              ) : (
-                <>
-                  <span className="flex-1 text-sm text-white/70 truncate">
-                    {p.answer}
-                  </span>
-                  <span className="text-xs text-white/20">{p.category}</span>
-                  <button
-                    onClick={() => startEdit(p)}
-                    className="text-xs text-white/25 hover:text-white/60 transition-colors"
-                  >
-                    Edit
-                  </button>
-                </>
-              )}
-            </div>
-          ))}
+          {scheduled.map((p, idx) => {
+            const isPast = p.date && p.date < todayStr;
+            return (
+              <div
+                key={p.id}
+                className={`flex items-center gap-3 border border-white/10 px-4 py-3 ${
+                  isPast ? "opacity-40" : ""
+                }`}
+              >
+                {/* Reorder buttons — only for future puzzles */}
+                {!isPast && !editingId ? (
+                  <div className="flex flex-col gap-0.5 shrink-0">
+                    <button
+                      onClick={() => handleSwap(idx, idx - 1)}
+                      disabled={busy || idx === 0 || (scheduled[idx - 1]?.date ?? "") < todayStr}
+                      className="text-[10px] leading-none text-white/20 hover:text-white/60 disabled:opacity-20 disabled:cursor-default transition-colors"
+                      aria-label="Move up"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      onClick={() => handleSwap(idx, idx + 1)}
+                      disabled={busy || idx === scheduled.length - 1}
+                      className="text-[10px] leading-none text-white/20 hover:text-white/60 disabled:opacity-20 disabled:cursor-default transition-colors"
+                      aria-label="Move down"
+                    >
+                      ▼
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-3 shrink-0" />
+                )}
+                <span className="w-24 shrink-0 text-xs text-white/30 tabular-nums">
+                  {p.date}
+                </span>
+                {editingId === p.id ? (
+                  <EditRow
+                    form={editForm}
+                    setForm={setEditForm}
+                    onSave={() => saveEdit(p.id)}
+                    onCancel={() => setEditingId(null)}
+                    busy={busy}
+                  />
+                ) : (
+                  <>
+                    <span className="flex-1 text-sm text-white/70 truncate">
+                      {p.answer}
+                    </span>
+                    <span className="text-xs text-white/20">{p.category}</span>
+                    <button
+                      onClick={() => startEdit(p)}
+                      className="text-xs text-white/25 hover:text-white/60 transition-colors"
+                    >
+                      Edit
+                    </button>
+                  </>
+                )}
+              </div>
+            );
+          })}
         </div>
       </section>
 
