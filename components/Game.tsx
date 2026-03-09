@@ -75,6 +75,7 @@ export default function Game({
 
     if (userId && !isGuest) {
       // Authenticated: record to Supabase
+      const expectedCount = state.score > 0 ? state.score : 1;
       recordGameCompletion(
         userId,
         puzzle.date,
@@ -83,7 +84,16 @@ export default function Game({
         state.solved,
         dailyColors
       ).then((result) => {
-        setTapeResult(result);
+        // If server returned stale data (old puzzle), use local calculation
+        const actualCount = result.colorsEarned.filter(c => c !== "glow").length;
+        if (actualCount !== expectedCount) {
+          const colorsEarned: TapeColor[] = state.score > 0
+            ? dailyColors.slice(5 - state.score)
+            : ["white"];
+          setTapeResult({ ...result, colorsEarned });
+        } else {
+          setTapeResult(result);
+        }
         // Refresh tape stats in parent
         loadTapeStats(userId).then(onTapeUpdate);
       });
@@ -204,10 +214,7 @@ export default function Game({
   }
 
   const lastGuess = state.guesses[state.guesses.length - 1] ?? "";
-  // Prefer tapeResult (server truth) over state.score for display consistency
-  const tapeCollected = tapeResult
-    ? tapeResult.colorsEarned.filter(c => c !== "glow").length
-    : (state.score > 0 ? state.score : 1);
+  const tapeCollected = state.score > 0 ? state.score : 1;
 
   return (
     <div className="flex flex-col gap-3">
