@@ -3,6 +3,25 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useThemeClass } from "@/lib/adminTheme";
+import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragStartEvent,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
 
 interface ShowInfo {
   name: string;
@@ -22,11 +41,186 @@ interface ClueRow {
   used: boolean;
 }
 
-interface LockedClue {
+interface PickedClue {
   text: string;
-  bankId: number | null; // null if edited/custom
+  bankId: number | null;
+  clueType: string | null;
 }
 
+// Stable IDs for the 5 sortable slots
+const SLOT_IDS = ["slot-0", "slot-1", "slot-2", "slot-3", "slot-4"];
+
+function GripIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+      <circle cx="4" cy="2" r="1" /><circle cx="8" cy="2" r="1" />
+      <circle cx="4" cy="6" r="1" /><circle cx="8" cy="6" r="1" />
+      <circle cx="4" cy="10" r="1" /><circle cx="8" cy="10" r="1" />
+    </svg>
+  );
+}
+
+/* ─── Sortable Slot ─── */
+function SortableSlot({
+  slotId,
+  index,
+  clue,
+  isEditing,
+  editText,
+  onEditStart,
+  onEditChange,
+  onEditSave,
+  onEditCancel,
+  onRemove,
+}: {
+  slotId: string;
+  index: number;
+  clue: PickedClue | null;
+  isEditing: boolean;
+  editText: string;
+  onEditStart: () => void;
+  onEditChange: (v: string) => void;
+  onEditSave: () => void;
+  onEditCancel: () => void;
+  onRemove: () => void;
+}) {
+  const c = useThemeClass();
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: slotId, disabled: !clue });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    opacity: isDragging ? 0.3 : 1,
+  };
+
+  if (!clue) {
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`flex items-center gap-3 px-4 py-3 border border-dashed ${c(
+          "border-white/10 bg-white/[0.01]",
+          "border-gray-200 bg-gray-50/50"
+        )}`}
+      >
+        <span className={`text-xs font-semibold w-5 ${c("text-white/15", "text-gray-300")}`}>
+          {index + 1}
+        </span>
+        <span className={`text-sm italic ${c("text-white/15", "text-gray-300")}`}>
+          Click a clue below to fill
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-3 px-4 py-3 border transition-colors ${
+        isDragging
+          ? c("border-dashed border-white/15 bg-white/[0.02]", "border-dashed border-gray-300 bg-gray-50")
+          : c("border-white/10 bg-white/[0.03] hover:border-white/20", "border-gray-200 bg-white hover:border-gray-300")
+      }`}
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className={`cursor-grab active:cursor-grabbing transition-colors touch-none shrink-0 ${c(
+          "text-white/15 hover:text-white/40",
+          "text-gray-300 hover:text-gray-500"
+        )}`}
+        aria-label="Drag to reorder"
+      >
+        <GripIcon />
+      </button>
+
+      <span className={`text-xs font-semibold w-5 shrink-0 ${c("text-green-400/70", "text-green-600")}`}>
+        {index + 1}
+      </span>
+
+      {isEditing ? (
+        <div className="flex-1 space-y-2">
+          <textarea
+            value={editText}
+            onChange={e => onEditChange(e.target.value)}
+            className={`w-full px-3 py-2 text-sm focus:outline-none resize-none border ${c(
+              "bg-white/5 border-white/10 text-white/80 focus:border-white/30",
+              "bg-gray-50 border-gray-200 text-gray-800 focus:border-gray-400"
+            )}`}
+            rows={2}
+            autoFocus
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={onEditSave}
+              className={`px-3 py-1 text-xs ${c(
+                "bg-green-600/80 text-white hover:bg-green-500",
+                "bg-green-600 text-white hover:bg-green-500"
+              )}`}
+            >
+              Save
+            </button>
+            <button
+              onClick={onEditCancel}
+              className={`px-3 py-1 text-xs ${c(
+                "text-white/30 hover:text-white/60",
+                "text-gray-400 hover:text-gray-700"
+              )}`}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <span
+          className={`flex-1 text-sm cursor-pointer ${c("text-white/60 hover:text-white/80", "text-gray-600 hover:text-gray-900")}`}
+          onClick={onEditStart}
+          title="Click to edit"
+        >
+          {clue.text}
+        </span>
+      )}
+
+      {!isEditing && (
+        <>
+          {clue.clueType && (
+            <span className={`text-[10px] px-1.5 py-0.5 shrink-0 border ${c(
+              "border-white/10 text-white/20",
+              "border-gray-200 text-gray-400"
+            )}`}>
+              {clue.clueType}
+            </span>
+          )}
+          {clue.bankId === null && (
+            <span className={`text-[10px] italic shrink-0 ${c("text-white/20", "text-gray-400")}`}>
+              edited
+            </span>
+          )}
+          <button
+            onClick={onRemove}
+            className={`text-xs shrink-0 transition-colors ${c(
+              "text-red-400/40 hover:text-red-400/80",
+              "text-red-400 hover:text-red-600"
+            )}`}
+            title="Remove from slot"
+          >
+            x
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ─── Main Builder ─── */
 export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo[] }) {
   const supabase = createClient();
   const c = useThemeClass();
@@ -37,98 +231,162 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
   const [selectedCategory, setSelectedCategory] = useState<string>("Broadway Musical");
   const [clues, setClues] = useState<ClueRow[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeLevel, setActiveLevel] = useState(1);
-  const [currentIndex, setCurrentIndex] = useState<Record<number, number>>({1:0, 2:0, 3:0, 4:0, 5:0});
-  const [lockedClues, setLockedClues] = useState<Record<number, LockedClue>>({});
-  const [editText, setEditText] = useState<Record<number, string>>({});
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [aliases, setAliases] = useState("");
+
+  // Pick-5 state
+  const [picked, setPicked] = useState<(PickedClue | null)[]>([null, null, null, null, null]);
+  const [editingSlot, setEditingSlot] = useState<number | null>(null);
+  const [editingText, setEditingText] = useState("");
+  const [typeFilter, setTypeFilter] = useState("All");
+
+  // DnD state
+  const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+  );
 
   // Fetch clues when show selected
   useEffect(() => {
     if (!selectedShow) return;
     setLoading(true);
-    setLockedClues({});
-    setActiveLevel(1);
-    setCurrentIndex({1:0, 2:0, 3:0, 4:0, 5:0});
-    setEditText({});
+    setPicked([null, null, null, null, null]);
+    setEditingSlot(null);
+    setTypeFilter("All");
     setSaveMessage(null);
+    setAliases("");
 
     supabase
       .from("clue_bank")
       .select("*")
       .eq("show_name", selectedShow)
-      .order("level")
       .order("id")
       .then(({ data }) => {
         setClues(data ?? []);
-        // Initialize edit text with first clue for each level
-        const initial: Record<number, string> = {};
-        for (let lvl = 1; lvl <= 5; lvl++) {
-          const levelClues = (data ?? []).filter(c => c.level === lvl);
-          if (levelClues.length > 0) initial[lvl] = levelClues[0].clue_text;
-        }
-        setEditText(initial);
         setLoading(false);
       });
 
-    // Set category from show info
     const showInfo = shows.find(s => s.name === selectedShow);
     if (showInfo) setSelectedCategory(showInfo.category);
   }, [selectedShow]);
 
-  const getCluesForLevel = (level: number) => clues.filter(c => c.level === level);
-  const facts = clues.filter(c => c.level === 0);
-
-  const handleCycle = (level: number, dir: number) => {
-    const levelClues = getCluesForLevel(level);
-    if (levelClues.length === 0) return;
-    const newIdx = (currentIndex[level] + dir + levelClues.length) % levelClues.length;
-    setCurrentIndex(prev => ({ ...prev, [level]: newIdx }));
-    setEditText(prev => ({ ...prev, [level]: levelClues[newIdx].clue_text }));
-  };
-
-  const handleLock = (level: number) => {
-    const levelClues = getCluesForLevel(level);
-    const currentClue = levelClues[currentIndex[level]];
-    const text = editText[level] ?? currentClue?.clue_text ?? "";
-    const isEdited = currentClue && text !== currentClue.clue_text;
-
-    setLockedClues(prev => ({
-      ...prev,
-      [level]: {
-        text,
-        bankId: isEdited ? null : (currentClue?.id ?? null),
-      }
-    }));
-
-    // Move to next unlocked level
-    if (level < 5) {
-      setActiveLevel(level + 1);
+  // Set of picked bankIds for graying out pool items
+  const pickedBankIds = useMemo(() => {
+    const ids = new Set<number>();
+    for (const p of picked) {
+      if (p?.bankId != null) ids.add(p.bankId);
     }
-  };
+    return ids;
+  }, [picked]);
 
-  const handleUnlock = (level: number) => {
-    setLockedClues(prev => {
-      const next = { ...prev };
-      delete next[level];
+  // Unique clue types for filter
+  const clueTypes = useMemo(() => {
+    const types = new Set<string>();
+    for (const cl of clues) {
+      if (cl.clue_type) types.add(cl.clue_type);
+    }
+    const sorted = Array.from(types).sort();
+    return ["All", ...sorted];
+  }, [clues]);
+
+  // Filtered pool
+  const pool = useMemo(() => {
+    let list = clues;
+    if (typeFilter !== "All") {
+      list = list.filter(cl => cl.clue_type === typeFilter);
+    }
+    return list;
+  }, [clues, typeFilter]);
+
+  // First empty slot index
+  const firstEmptySlot = picked.findIndex(p => p === null);
+  const allFilled = picked.every(p => p !== null);
+
+  const handlePickClue = useCallback((clue: ClueRow) => {
+    const emptyIdx = picked.findIndex(p => p === null);
+    if (emptyIdx === -1) return; // all full
+    // Don't pick if already picked
+    if (clue.id && pickedBankIds.has(clue.id)) return;
+
+    setPicked(prev => {
+      const next = [...prev];
+      next[emptyIdx] = {
+        text: clue.clue_text,
+        bankId: clue.id,
+        clueType: clue.clue_type,
+      };
       return next;
     });
-    setActiveLevel(level);
-  };
+  }, [picked, pickedBankIds]);
 
-  const allLocked = [1,2,3,4,5].every(l => lockedClues[l]);
+  const handleRemoveSlot = useCallback((idx: number) => {
+    setPicked(prev => {
+      // Remove item at idx, shift remaining up, pad with null
+      const filled = prev.filter((_, i) => i !== idx).filter(Boolean);
+      const next: (PickedClue | null)[] = [...filled];
+      while (next.length < 5) next.push(null);
+      return next;
+    });
+    if (editingSlot === idx) setEditingSlot(null);
+  }, [editingSlot]);
 
+  const handleEditStart = useCallback((idx: number) => {
+    const clue = picked[idx];
+    if (!clue) return;
+    setEditingSlot(idx);
+    setEditingText(clue.text);
+  }, [picked]);
+
+  const handleEditSave = useCallback(() => {
+    if (editingSlot === null) return;
+    setPicked(prev => {
+      const next = [...prev];
+      const existing = next[editingSlot];
+      if (existing) {
+        next[editingSlot] = {
+          ...existing,
+          text: editingText,
+          bankId: editingText !== existing.text ? null : existing.bankId,
+        };
+      }
+      return next;
+    });
+    setEditingSlot(null);
+  }, [editingSlot, editingText]);
+
+  const handleEditCancel = useCallback(() => {
+    setEditingSlot(null);
+  }, []);
+
+  // DnD handlers
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveSlotId(event.active.id as string);
+  }, []);
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    setActiveSlotId(null);
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = SLOT_IDS.indexOf(active.id as string);
+    const newIndex = SLOT_IDS.indexOf(over.id as string);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    setPicked(prev => arrayMove(prev, oldIndex, newIndex) as (PickedClue | null)[]);
+  }, []);
+
+  // Save puzzle
   const handleSave = async () => {
-    if (!allLocked || !selectedShow) return;
+    if (!allFilled || !selectedShow) return;
     setSaving(true);
     setSaveMessage(null);
 
-    const clueTexts = [1,2,3,4,5].map(l => lockedClues[l].text);
+    const clueTexts = picked.map(p => p!.text);
     const aliasArr = aliases.split(",").map(a => a.trim()).filter(Boolean);
 
-    // Insert puzzle
     const { error } = await supabase.from("puzzles").insert({
       answer: selectedShow,
       category: selectedCategory,
@@ -144,9 +402,9 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
     }
 
     // Mark used clues
-    const usedIds = [1,2,3,4,5]
-      .map(l => lockedClues[l].bankId)
-      .filter((id): id is number => id !== null);
+    const usedIds = picked
+      .map(p => p?.bankId)
+      .filter((id): id is number => id != null);
 
     if (usedIds.length > 0) {
       await supabase
@@ -158,20 +416,15 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
     setSaveMessage("Saved to queue!");
     setSaving(false);
 
-    // Mark show as built in local state
     setShows(prev => prev.map(s =>
       s.name === selectedShow ? { ...s, hasExisting: true } : s
     ));
 
-    // Reset after a moment and jump to next unbuilt show
     setTimeout(() => {
-      setLockedClues({});
-      setActiveLevel(1);
-      setCurrentIndex({1:0, 2:0, 3:0, 4:0, 5:0});
-      setEditText({});
+      setPicked([null, null, null, null, null]);
+      setEditingSlot(null);
       setAliases("");
       setSaveMessage(null);
-      // Auto-advance to next unbuilt show in the same category
       const filtered = shows.filter(s =>
         !s.hasExisting && s.name !== selectedShow &&
         (categoryFilter === "All" || s.category === categoryFilter)
@@ -182,29 +435,23 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
     }, 1500);
   };
 
-  // Unique categories for filter tabs
+  // Category/show filtering (unchanged)
   const categories = useMemo(() => {
     const cats = Array.from(new Set(shows.map(s => s.category)));
     cats.sort();
     return ["All", ...cats];
   }, [shows]);
 
-  // Filtered shows based on category
   const filteredShows = useMemo(() => {
     if (categoryFilter === "All") return shows;
     return shows.filter(s => s.category === categoryFilter);
   }, [shows, categoryFilter]);
 
-  // Find first unbuilt show in current filter
   const nextUnbuilt = filteredShows.find(s => !s.hasExisting);
 
-  const levelLabels: Record<number, string> = {
-    1: "Very Broad",
-    2: "Obscure Detail",
-    3: "Thematic / Setting",
-    4: "Narrowing",
-    5: "Giveaway",
-  };
+  // Drag overlay content
+  const activeSlotIndex = activeSlotId ? SLOT_IDS.indexOf(activeSlotId) : -1;
+  const activeClue = activeSlotIndex >= 0 ? picked[activeSlotIndex] : null;
 
   return (
     <div className="space-y-8">
@@ -224,8 +471,8 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
               }}
               className={`px-3 py-1.5 text-xs transition-colors border ${
                 categoryFilter === cat
-                  ? `${c("border-white/30 bg-white/10 text-white/80", "border-gray-400 bg-gray-200 text-gray-800")}`
-                  : `${c("border-white/10 text-white/30 hover:text-white/60 hover:border-white/20", "border-gray-200 text-gray-400 hover:text-gray-700 hover:border-gray-300")}`
+                  ? c("border-white/30 bg-white/10 text-white/80", "border-gray-400 bg-gray-200 text-gray-800")
+                  : c("border-white/10 text-white/30 hover:text-white/60 hover:border-white/20", "border-gray-200 text-gray-400 hover:text-gray-700 hover:border-gray-300")
               }`}
             >
               {cat}{" "}
@@ -280,220 +527,154 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
       )}
 
       {selectedShow && !loading && clues.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
-          {/* Main builder */}
-          <div className="space-y-3">
-            {[1, 2, 3, 4, 5].map(level => {
-              const levelClues = getCluesForLevel(level);
-              const isLocked = !!lockedClues[level];
-              const isActive = activeLevel === level && !isLocked;
-              const idx = currentIndex[level] ?? 0;
-              const currentClue = levelClues[idx];
+        <div className="space-y-6">
+          {/* ── Picked Clues (5 DnD slots) ── */}
+          <div className={`p-5 space-y-2 border ${c(
+            "border-white/15 bg-white/[0.02]",
+            "border-gray-300 bg-gray-50"
+          )}`}>
+            <h3 className={`text-xs font-semibold uppercase tracking-[3px] mb-3 ${c("text-white/25", "text-gray-400")}`}>
+              Picked Clues
+            </h3>
 
-              if (isLocked) {
-                return (
-                  <div
-                    key={level}
-                    className={`px-5 py-3 flex items-center gap-4 cursor-pointer transition-colors border ${c(
-                      "border-white/10 bg-white/[0.03] hover:border-white/20",
-                      "border-gray-200 bg-gray-50 hover:border-gray-300"
-                    )}`}
-                    onClick={() => handleUnlock(level)}
-                  >
-                    <span className={`text-xs font-semibold w-6 ${c("text-green-400/70", "text-green-600")}`}>
-                      {level}
-                    </span>
-                    <span className={`flex-1 text-sm ${c("text-white/60", "text-gray-600")}`}>
-                      {lockedClues[level].text}
-                    </span>
-                    <span className={`text-xs ${c("text-white/20", "text-gray-400")}`}>
-                      {lockedClues[level].bankId === null ? "edited" : "locked"}
-                    </span>
-                  </div>
-                );
-              }
-
-              if (!isActive) {
-                return (
-                  <div
-                    key={level}
-                    className={`px-5 py-3 flex items-center gap-4 opacity-30 border ${c(
-                      "border-white/[0.06] bg-white/[0.01]",
-                      "border-gray-100 bg-gray-50/50"
-                    )}`}
-                  >
-                    <span className={`text-xs font-semibold w-6 ${c("text-white/30", "text-gray-400")}`}>
-                      {level}
-                    </span>
-                    <span className={`text-sm ${c("text-white/20", "text-gray-400")}`}>
-                      {levelLabels[level]}
-                    </span>
-                  </div>
-                );
-              }
-
-              return (
-                <div
-                  key={level}
-                  className={`p-5 space-y-4 border ${c(
-                    "border-white/15 bg-white/[0.04]",
-                    "border-gray-300 bg-white"
-                  )}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className={`text-xs font-semibold w-6 ${c("text-white/50", "text-gray-500")}`}>
-                        {level}
-                      </span>
-                      <span className={`text-xs uppercase tracking-wider ${c("text-white/30", "text-gray-400")}`}>
-                        {levelLabels[level]}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleCycle(level, -1)}
-                        className={`w-8 h-8 flex items-center justify-center border transition-colors text-sm ${c(
-                          "border-white/10 text-white/30 hover:text-white/60 hover:border-white/25",
-                          "border-gray-200 text-gray-400 hover:text-gray-700 hover:border-gray-400"
-                        )}`}
-                      >
-                        ←
-                      </button>
-                      <span className={`text-xs tabular-nums w-12 text-center ${c("text-white/25", "text-gray-400")}`}>
-                        {idx + 1} / {levelClues.length}
-                      </span>
-                      <button
-                        onClick={() => handleCycle(level, 1)}
-                        className={`w-8 h-8 flex items-center justify-center border transition-colors text-sm ${c(
-                          "border-white/10 text-white/30 hover:text-white/60 hover:border-white/25",
-                          "border-gray-200 text-gray-400 hover:text-gray-700 hover:border-gray-400"
-                        )}`}
-                      >
-                        →
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Clue text - editable */}
-                  <textarea
-                    value={editText[level] ?? ""}
-                    onChange={e => setEditText(prev => ({ ...prev, [level]: e.target.value }))}
-                    className={`w-full px-4 py-3 text-sm focus:outline-none resize-none border ${c(
-                      "bg-white/5 border-white/10 text-white/80 focus:border-white/30",
-                      "bg-gray-50 border-gray-200 text-gray-800 focus:border-gray-400"
-                    )}`}
-                    rows={2}
-                  />
-
-                  {/* Meta info */}
-                  {currentClue && (
-                    <div className={`flex items-center gap-3 text-xs ${c("text-white/20", "text-gray-400")}`}>
-                      {currentClue.clue_type && (
-                        <span className={`px-2 py-0.5 border ${c(
-                          "border-white/10 text-white/30",
-                          "border-gray-200 text-gray-500"
-                        )}`}>
-                          {currentClue.clue_type}
-                        </span>
-                      )}
-                      {currentClue.notes && (
-                        <span className={`italic ${c("text-white/15", "text-gray-400")}`}>
-                          {currentClue.notes}
-                        </span>
-                      )}
-                      {currentClue.used && (
-                        <span className={c("text-yellow-400/50", "text-yellow-600")}>used</span>
-                      )}
-                    </div>
-                  )}
-
-                  <button
-                    onClick={() => handleLock(level)}
-                    className={`px-5 py-2 text-xs font-semibold uppercase tracking-wider text-white hover:bg-green-500 transition-colors ${c(
-                      "bg-green-600/80",
-                      "bg-green-600"
-                    )}`}
-                  >
-                    Lock Clue {level}
-                  </button>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={SLOT_IDS} strategy={verticalListSortingStrategy}>
+                <div className="space-y-1">
+                  {SLOT_IDS.map((id, idx) => (
+                    <SortableSlot
+                      key={id}
+                      slotId={id}
+                      index={idx}
+                      clue={picked[idx]}
+                      isEditing={editingSlot === idx}
+                      editText={editingText}
+                      onEditStart={() => handleEditStart(idx)}
+                      onEditChange={setEditingText}
+                      onEditSave={handleEditSave}
+                      onEditCancel={handleEditCancel}
+                      onRemove={() => handleRemoveSlot(idx)}
+                    />
+                  ))}
                 </div>
-              );
-            })}
+              </SortableContext>
 
-            {/* Aliases input */}
-            {allLocked && (
-              <div className={`p-5 space-y-3 border ${c(
-                "border-white/15 bg-white/[0.04]",
-                "border-gray-300 bg-white"
-              )}`}>
-                <label className={`text-xs uppercase tracking-wider block ${c("text-white/30", "text-gray-500")}`}>
-                  Aliases (comma-separated)
-                </label>
-                <input
-                  value={aliases}
-                  onChange={e => setAliases(e.target.value)}
-                  className={`w-full px-4 py-2.5 text-sm focus:outline-none border ${c(
-                    "bg-white/5 border-white/10 text-white/80 focus:border-white/30",
-                    "bg-gray-50 border-gray-200 text-gray-800 focus:border-gray-400"
-                  )}`}
-                  placeholder="e.g. phantom, poto"
-                />
-              </div>
-            )}
+              <DragOverlay dropAnimation={null}>
+                {activeClue && (
+                  <div className={`flex items-center gap-3 px-4 py-3 border shadow-lg ${c(
+                    "border-white/25 bg-[#141418] text-white/80",
+                    "border-gray-400 bg-white text-gray-800 shadow-gray-300"
+                  )}`}>
+                    <GripIcon />
+                    <span className={`text-xs font-semibold w-5 ${c("text-green-400/70", "text-green-600")}`}>
+                      {activeSlotIndex + 1}
+                    </span>
+                    <span className="flex-1 text-sm truncate">{activeClue.text}</span>
+                  </div>
+                )}
+              </DragOverlay>
+            </DndContext>
 
-            {/* Save button */}
-            {allLocked && (
+            {/* Aliases + Save row */}
+            <div className="flex items-center gap-3 pt-3">
+              <input
+                value={aliases}
+                onChange={e => setAliases(e.target.value)}
+                className={`flex-1 px-4 py-2 text-sm focus:outline-none border ${c(
+                  "bg-white/5 border-white/10 text-white/80 focus:border-white/30",
+                  "bg-white border-gray-200 text-gray-800 focus:border-gray-400"
+                )}`}
+                placeholder="Aliases (comma-separated, e.g. phantom, poto)"
+              />
               <button
                 onClick={handleSave}
-                disabled={saving}
-                className={`w-full px-6 py-3 text-sm font-semibold uppercase tracking-wider text-white hover:bg-green-500 transition-colors disabled:opacity-40 ${c(
-                  "bg-green-600/80",
-                  "bg-green-600"
+                disabled={!allFilled || saving}
+                className={`px-6 py-2 text-xs font-semibold uppercase tracking-wider text-white transition-colors disabled:opacity-30 shrink-0 ${c(
+                  "bg-green-600/80 hover:bg-green-500",
+                  "bg-green-600 hover:bg-green-500"
                 )}`}
               >
                 {saving ? "Saving..." : "Save to Queue"}
               </button>
-            )}
+            </div>
 
             {saveMessage && (
-              <p className={`text-sm text-center ${saveMessage.startsWith("Error") ? c("text-red-400", "text-red-600") : c("text-green-400", "text-green-600")}`}>
+              <p className={`text-sm text-center pt-1 ${saveMessage.startsWith("Error") ? c("text-red-400", "text-red-600") : c("text-green-400", "text-green-600")}`}>
                 {saveMessage}
               </p>
             )}
           </div>
 
-          {/* Facts sidebar — click to use as clue */}
-          {facts.length > 0 && (
-            <div className={`p-5 space-y-3 h-fit lg:sticky lg:top-8 border ${c(
-              "border-white/10 bg-white/[0.02]",
-              "border-gray-200 bg-gray-50"
-            )}`}>
-              <h3 className={`text-xs font-semibold uppercase tracking-[3px] mb-3 ${c("text-white/25", "text-gray-400")}`}>
-                Facts
-              </h3>
-              <p className={`text-[10px] -mt-1 mb-2 ${c("text-white/15", "text-gray-400")}`}>
-                Click to use as clue {activeLevel}
-              </p>
-              {facts.map(fact => (
+          {/* ── Clue Pool ── */}
+          <div className={`p-5 space-y-3 border ${c(
+            "border-white/10 bg-white/[0.01]",
+            "border-gray-200 bg-white"
+          )}`}>
+            <h3 className={`text-xs font-semibold uppercase tracking-[3px] mb-1 ${c("text-white/25", "text-gray-400")}`}>
+              Clue Pool
+              <span className={`ml-2 font-normal tracking-normal ${c("text-white/15", "text-gray-300")}`}>
+                {pool.length} clues
+              </span>
+            </h3>
+
+            {/* Type filter pills */}
+            <div className="flex flex-wrap gap-1.5">
+              {clueTypes.map(type => (
                 <button
-                  key={fact.id}
-                  onClick={() => {
-                    if (!lockedClues[activeLevel]) {
-                      setEditText(prev => ({ ...prev, [activeLevel]: fact.clue_text }));
-                    }
-                  }}
-                  className={`block w-full text-left text-xs leading-relaxed px-2 py-1.5 -mx-2 transition-colors ${
-                    lockedClues[activeLevel]
-                      ? c("text-white/20 cursor-default", "text-gray-300 cursor-default")
-                      : c("text-white/35 hover:text-white/60 hover:bg-white/5 cursor-pointer", "text-gray-500 hover:text-gray-800 hover:bg-gray-100 cursor-pointer")
+                  key={type}
+                  onClick={() => setTypeFilter(type)}
+                  className={`px-2 py-1 text-[10px] transition-colors border ${
+                    typeFilter === type
+                      ? c("border-white/30 bg-white/10 text-white/70", "border-gray-400 bg-gray-200 text-gray-700")
+                      : c("border-white/[0.06] text-white/20 hover:text-white/40 hover:border-white/15", "border-gray-100 text-gray-400 hover:text-gray-600 hover:border-gray-300")
                   }`}
-                  disabled={!!lockedClues[activeLevel]}
                 >
-                  {fact.clue_text}
+                  {type}
                 </button>
               ))}
             </div>
-          )}
+
+            {/* Clue list */}
+            <div className="space-y-0.5 max-h-[60vh] overflow-y-auto">
+              {pool.map(clue => {
+                const isPicked = pickedBankIds.has(clue.id);
+                return (
+                  <button
+                    key={clue.id}
+                    onClick={() => handlePickClue(clue)}
+                    disabled={isPicked || allFilled}
+                    className={`w-full text-left flex items-start gap-3 px-3 py-2 transition-colors ${
+                      isPicked
+                        ? c("text-white/10 line-through cursor-default", "text-gray-300 line-through cursor-default")
+                        : allFilled
+                          ? c("text-white/20 cursor-default", "text-gray-400 cursor-default")
+                          : c("text-white/50 hover:text-white/80 hover:bg-white/5 cursor-pointer", "text-gray-600 hover:text-gray-900 hover:bg-gray-50 cursor-pointer")
+                    }`}
+                  >
+                    <span className="flex-1 text-xs leading-relaxed">{clue.clue_text}</span>
+                    <span className="flex items-center gap-2 shrink-0">
+                      {clue.clue_type && (
+                        <span className={`text-[10px] px-1.5 py-0.5 border ${c(
+                          "border-white/[0.06] text-white/15",
+                          "border-gray-100 text-gray-300"
+                        )}`}>
+                          {clue.clue_type}
+                        </span>
+                      )}
+                      {clue.used && (
+                        <span className={`text-[10px] ${c("text-yellow-400/40", "text-yellow-600/60")}`}>used</span>
+                      )}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 
