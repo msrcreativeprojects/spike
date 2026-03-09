@@ -50,8 +50,13 @@ export default function GameShell({ puzzle }: GameShellProps) {
 
   const handleCloseTutorial = useCallback(() => {
     markTutorialSeen();
-    setScreen("auth");
-  }, []);
+    // If guest was already chosen, go straight to game; otherwise show auth
+    if (isGuest) {
+      setScreen("game");
+    } else {
+      setScreen("auth");
+    }
+  }, [isGuest]);
 
   const handleAuth = useCallback(() => {
     const supabase = createClient();
@@ -69,7 +74,7 @@ export default function GameShell({ puzzle }: GameShellProps) {
 
   const handleGuest = useCallback(() => {
     setIsGuest(true);
-    setScreen("game");
+    setScreen("tutorial");
   }, []);
 
   const handleSignOut = useCallback(async () => {
