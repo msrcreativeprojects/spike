@@ -2,12 +2,14 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useThemeClass } from "@/lib/adminTheme";
 import {
   DndContext,
   DragOverlay,
   closestCenter,
   PointerSensor,
   KeyboardSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragStartEvent,
@@ -21,7 +23,7 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
 
 interface PuzzleRow {
   id: number;
@@ -72,6 +74,7 @@ function SortableRow({
   puzzle,
   editingId,
   onEdit,
+  onUnschedule,
   editForm,
   setEditForm,
   onSave,
@@ -82,6 +85,7 @@ function SortableRow({
   puzzle: PuzzleRow;
   editingId: number | null;
   onEdit: (p: PuzzleRow) => void;
+  onUnschedule: (p: PuzzleRow) => void;
   editForm: Partial<PuzzleRow>;
   setEditForm: (f: Partial<PuzzleRow>) => void;
   onSave: (id: number) => void;
@@ -89,6 +93,7 @@ function SortableRow({
   busy: boolean;
   disabled: boolean;
 }) {
+  const c = useThemeClass();
   const {
     attributes,
     listeners,
@@ -99,7 +104,7 @@ function SortableRow({
   } = useSortable({ id: puzzle.id, disabled });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
     transition,
     opacity: isDragging ? 0.3 : 1,
     zIndex: isDragging ? 10 : undefined,
@@ -112,19 +117,21 @@ function SortableRow({
     <div ref={setNodeRef} style={style} className="flex items-start gap-4">
       {/* Date column */}
       <div className="w-14 shrink-0 pt-3 text-right">
-        <div className="text-[10px] font-semibold tracking-wider text-white/35">{dayOfWeek}</div>
-        <div className="text-xs text-white/20 tabular-nums">{shortDate}</div>
+        <div className={`text-[10px] font-semibold tracking-wider ${c("text-white/35", "text-gray-400")}`}>{dayOfWeek}</div>
+        <div className={`text-xs tabular-nums ${c("text-white/20", "text-gray-300")}`}>{shortDate}</div>
       </div>
 
       {/* Puzzle card */}
       <div className={`flex-1 flex items-center gap-3 border px-4 py-3 transition-colors ${
-        isDragging ? "border-white/25 bg-white/[0.06]" : "border-white/10 hover:border-white/15"
+        isDragging
+          ? c("border-dashed border-white/15 bg-white/[0.02]", "border-dashed border-gray-300 bg-gray-50")
+          : c("border-white/10 hover:border-white/15", "border-gray-200 hover:border-gray-300")
       }`}>
         {!isEditing && !disabled && (
           <button
             {...attributes}
             {...listeners}
-            className="cursor-grab active:cursor-grabbing text-white/15 hover:text-white/40 transition-colors touch-none shrink-0"
+            className={`cursor-grab active:cursor-grabbing transition-colors touch-none shrink-0 ${c("text-white/15 hover:text-white/40", "text-gray-300 hover:text-gray-500")}`}
             aria-label="Drag to reorder"
           >
             <GripIcon />
@@ -140,13 +147,19 @@ function SortableRow({
           />
         ) : (
           <>
-            <span className="flex-1 text-sm text-white/70 truncate">{puzzle.answer}</span>
-            <span className="text-xs text-white/20">{puzzle.category}</span>
+            <span className={`flex-1 text-sm truncate ${c("text-white/70", "text-gray-700")}`}>{puzzle.answer}</span>
+            <span className={`text-xs ${c("text-white/20", "text-gray-400")}`}>{puzzle.category}</span>
             <button
               onClick={() => onEdit(puzzle)}
-              className="text-xs text-white/25 hover:text-white/60 transition-colors"
+              className={`text-xs transition-colors ${c("text-white/25 hover:text-white/60", "text-gray-400 hover:text-gray-700")}`}
             >
               Edit
+            </button>
+            <button
+              onClick={() => onUnschedule(puzzle)}
+              className={`text-xs transition-colors ${c("text-red-400/40 hover:text-red-400/80", "text-red-500/50 hover:text-red-600")}`}
+            >
+              Unsched
             </button>
           </>
         )}
@@ -177,6 +190,7 @@ function StaticRow({
   onCancelEdit: () => void;
   busy: boolean;
 }) {
+  const c = useThemeClass();
   const { dayOfWeek, shortDate } = formatDateSlot(puzzle.date!);
   const isEditing = editingId === puzzle.id;
 
@@ -184,17 +198,23 @@ function StaticRow({
     <div className={`flex items-start gap-4 ${isToday ? "" : "opacity-40"}`}>
       {/* Date column */}
       <div className="w-14 shrink-0 pt-3 text-right">
-        <div className={`text-[10px] font-semibold tracking-wider ${isToday ? "text-white/50" : "text-white/35"}`}>
+        <div className={`text-[10px] font-semibold tracking-wider ${isToday ? "text-green-400/60" : c("text-white/35", "text-gray-400")}`}>
           {dayOfWeek}
         </div>
-        <div className="text-xs text-white/20 tabular-nums">{shortDate}</div>
+        <div className={`text-xs tabular-nums ${c("text-white/20", "text-gray-300")}`}>{shortDate}</div>
         {isToday && (
-          <div className="text-[9px] text-white/30 uppercase tracking-widest mt-0.5">live</div>
+          <div className="mt-1 flex justify-end">
+            <span className="text-[9px] font-bold uppercase tracking-widest text-green-400/80 bg-green-400/10 px-1.5 py-0.5 rounded-sm">
+              live
+            </span>
+          </div>
         )}
       </div>
 
       {/* Puzzle card */}
-      <div className="flex-1 flex items-center gap-3 border border-white/10 px-4 py-3">
+      <div className={`flex-1 flex items-center gap-3 border px-4 py-3 ${
+        isToday ? "border-green-400/50 animate-live-pulse" : c("border-white/10", "border-gray-200")
+      }`}>
         {isEditing ? (
           <EditRow
             form={editForm}
@@ -205,12 +225,12 @@ function StaticRow({
           />
         ) : (
           <>
-            <span className="flex-1 text-sm text-white/70 truncate">{puzzle.answer}</span>
-            <span className="text-xs text-white/20">{puzzle.category}</span>
+            <span className={`flex-1 text-sm truncate ${c("text-white/70", "text-gray-700")}`}>{puzzle.answer}</span>
+            <span className={`text-xs ${c("text-white/20", "text-gray-400")}`}>{puzzle.category}</span>
             {isToday && (
               <button
                 onClick={() => onEdit(puzzle)}
-                className="text-xs text-white/25 hover:text-white/60 transition-colors"
+                className={`text-xs transition-colors ${c("text-white/25 hover:text-white/60", "text-gray-400 hover:text-gray-700")}`}
               >
                 Edit
               </button>
@@ -227,6 +247,7 @@ export default function AdminDashboard({
   initialScheduled,
   initialQueued,
 }: AdminDashboardProps) {
+  const c = useThemeClass();
   const [scheduled, setScheduled] = useState<PuzzleRow[]>(initialScheduled);
   const [queued, setQueued] = useState<PuzzleRow[]>(initialQueued);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -255,7 +276,8 @@ export default function AdminDashboard({
 
   // ─── DnD sensors ───
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
@@ -273,24 +295,18 @@ export default function AdminDashboard({
       const newIndex = futurePuzzles.findIndex((p) => p.id === over.id);
       if (oldIndex === -1 || newIndex === -1) return;
 
-      // Capture fixed date slots
       const dateSlots = futurePuzzles.map((p) => p.date);
-
-      // Reorder puzzles, reassign dates
       const reordered = arrayMove(futurePuzzles, oldIndex, newIndex);
       const updated = reordered.map((p, i) => ({ ...p, date: dateSlots[i] }));
 
-      // Find which puzzles actually changed
       const changed = updated.filter(
         (p) => p.date !== futurePuzzles.find((f) => f.id === p.id)?.date
       );
 
-      // Optimistic UI update
       setScheduled([...pastPuzzles, ...(todayPuzzle ? [todayPuzzle] : []), ...updated]);
 
       if (changed.length === 0) return;
 
-      // Persist to Supabase
       setBusy(true);
       const results = await Promise.all(
         changed.map((p) =>
@@ -299,21 +315,69 @@ export default function AdminDashboard({
       );
 
       const anyError = results.some((r) => r.error);
-      if (anyError) {
-        // Rollback: refetch from server
-        const { data } = await supabase
-          .from("puzzles")
-          .select("*")
-          .eq("status", "approved")
-          .order("date", { ascending: true });
-        if (data) setScheduled(data);
-      }
+      if (anyError) await refetchAll();
       setBusy(false);
     },
     [supabase, futurePuzzles, pastPuzzles, todayPuzzle]
   );
 
-  // ─── Other handlers (unchanged) ───
+  // ─── Refetch helper (used by drag rollback + unschedule) ───
+  const refetchAll = useCallback(async () => {
+    const [{ data: sched }, { data: q }] = await Promise.all([
+      supabase.from("puzzles").select("*").eq("status", "approved").order("date", { ascending: true }),
+      supabase.from("puzzles").select("*").eq("status", "queued").order("created_at", { ascending: true }),
+    ]);
+    if (sched) setScheduled(sched);
+    if (q) setQueued(q);
+  }, [supabase]);
+
+  // ─── Unschedule: move future puzzle back to queue, shift dates ───
+  const handleUnschedule = useCallback(
+    async (puzzle: PuzzleRow) => {
+      if (!confirm(`Unschedule "${puzzle.answer}" and shift remaining dates?`)) return;
+      setBusy(true);
+
+      const puzzleIndex = futurePuzzles.findIndex((p) => p.id === puzzle.id);
+      if (puzzleIndex === -1) { setBusy(false); return; }
+
+      const dateSlots = futurePuzzles.map((p) => p.date);
+      const remaining = futurePuzzles.filter((p) => p.id !== puzzle.id);
+      const shifted = remaining.map((p, i) => ({ ...p, date: dateSlots[i] }));
+
+      const unscheduled: PuzzleRow = { ...puzzle, status: "queued", date: null };
+      setScheduled([...pastPuzzles, ...(todayPuzzle ? [todayPuzzle] : []), ...shifted]);
+      setQueued((q) => [...q, unscheduled]);
+
+      const { error: unschedErr } = await supabase
+        .from("puzzles")
+        .update({ status: "queued", date: null })
+        .eq("id", puzzle.id);
+
+      if (unschedErr) {
+        await refetchAll();
+        setBusy(false);
+        return;
+      }
+
+      const toUpdate = shifted.filter(
+        (p) => p.date !== futurePuzzles.find((f) => f.id === p.id)?.date
+      );
+
+      if (toUpdate.length > 0) {
+        const results = await Promise.all(
+          toUpdate.map((p) =>
+            supabase.from("puzzles").update({ date: p.date }).eq("id", p.id)
+          )
+        );
+        if (results.some((r) => r.error)) await refetchAll();
+      }
+
+      setBusy(false);
+    },
+    [supabase, futurePuzzles, pastPuzzles, todayPuzzle, refetchAll]
+  );
+
+  // ─── Other handlers ───
   const getNextDate = useCallback((): string => {
     if (scheduled.length === 0) {
       const tomorrow = new Date();
@@ -405,36 +469,34 @@ export default function AdminDashboard({
 
   const cancelEdit = useCallback(() => setEditingId(null), []);
 
-  // The puzzle currently being dragged (for overlay)
   const activePuzzle = activeId ? futurePuzzles.find((p) => p.id === activeId) : null;
 
   return (
     <div className="space-y-10">
       {/* Stats bar */}
-      <div className="flex gap-6 text-sm text-white/40">
+      <div className={`flex gap-6 text-sm ${c("text-white/40", "text-gray-500")}`}>
         <span>
-          <strong className="text-white/70">{scheduled.length}</strong> scheduled
+          <strong className={c("text-white/70", "text-gray-700")}>{scheduled.length}</strong> scheduled
         </span>
         <span>
-          <strong className="text-white/70">{queued.length}</strong> in queue
+          <strong className={c("text-white/70", "text-gray-700")}>{queued.length}</strong> in queue
         </span>
         <span>
-          <strong className="text-white/70">{daysOfCoverage}</strong> days of coverage
+          <strong className={c("text-white/70", "text-gray-700")}>{daysOfCoverage}</strong> days of coverage
         </span>
       </div>
 
       {/* Scheduled section */}
       <section>
-        <h2 className="text-xs font-semibold uppercase tracking-[3px] text-white/35 mb-4">
+        <h2 className={`text-xs font-semibold uppercase tracking-[3px] mb-4 ${c("text-white/35", "text-gray-400")}`}>
           Scheduled
         </h2>
 
         {scheduled.length === 0 && (
-          <p className="text-sm text-white/20">No scheduled puzzles yet.</p>
+          <p className={`text-sm ${c("text-white/20", "text-gray-400")}`}>No scheduled puzzles yet.</p>
         )}
 
         <div className="space-y-1">
-          {/* Past puzzles (static, dimmed) */}
           {pastPuzzles.map((p) => (
             <StaticRow
               key={p.id}
@@ -450,7 +512,6 @@ export default function AdminDashboard({
             />
           ))}
 
-          {/* Today's puzzle (static, full opacity, LIVE badge) */}
           {todayPuzzle && (
             <StaticRow
               key={todayPuzzle.id}
@@ -466,11 +527,10 @@ export default function AdminDashboard({
             />
           )}
 
-          {/* Future puzzles (draggable) */}
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis]}
+            modifiers={[restrictToVerticalAxis, restrictToParentElement]}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
@@ -484,6 +544,7 @@ export default function AdminDashboard({
                   puzzle={p}
                   editingId={editingId}
                   onEdit={startEdit}
+                  onUnschedule={handleUnschedule}
                   editForm={editForm}
                   setEditForm={setEditForm}
                   onSave={saveEdit}
@@ -494,12 +555,15 @@ export default function AdminDashboard({
               ))}
             </SortableContext>
 
-            <DragOverlay>
+            <DragOverlay dropAnimation={null}>
               {activePuzzle && (
-                <div className="flex items-center gap-3 border border-white/25 bg-[#0a0a0c] px-4 py-3 shadow-lg shadow-black/50">
-                  <span className="text-white/20"><GripIcon /></span>
-                  <span className="flex-1 text-sm text-white/80">{activePuzzle.answer}</span>
-                  <span className="text-xs text-white/30">{activePuzzle.category}</span>
+                <div className={`flex items-center gap-3 border px-4 py-3 shadow-xl ${c(
+                  "border-white/30 bg-[#141418] shadow-black/60 ring-1 ring-white/10",
+                  "border-gray-300 bg-white shadow-gray-300/50 ring-1 ring-gray-200"
+                )}`}>
+                  <span className={c("text-white/25", "text-gray-300")}><GripIcon /></span>
+                  <span className={`flex-1 text-sm font-medium ${c("text-white/90", "text-gray-900")}`}>{activePuzzle.answer}</span>
+                  <span className={`text-xs ${c("text-white/35", "text-gray-400")}`}>{activePuzzle.category}</span>
                 </div>
               )}
             </DragOverlay>
@@ -509,17 +573,17 @@ export default function AdminDashboard({
 
       {/* Queue section */}
       <section>
-        <h2 className="text-xs font-semibold uppercase tracking-[3px] text-white/35 mb-4">
+        <h2 className={`text-xs font-semibold uppercase tracking-[3px] mb-4 ${c("text-white/35", "text-gray-400")}`}>
           Review Queue
         </h2>
         {queued.length === 0 && (
-          <p className="text-sm text-white/20">Queue is empty. Generate more puzzles!</p>
+          <p className={`text-sm ${c("text-white/20", "text-gray-400")}`}>Queue is empty. Generate more puzzles!</p>
         )}
         <div className="space-y-4">
           {queued.map((p) => (
             <div
               key={p.id}
-              className="border border-white/10 bg-white/[0.02] p-5 space-y-3"
+              className={`border p-5 space-y-3 ${c("border-white/10 bg-white/[0.02]", "border-gray-200 bg-gray-50")}`}
             >
               {editingId === p.id ? (
                 <EditRow
@@ -533,18 +597,18 @@ export default function AdminDashboard({
               ) : (
                 <>
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-semibold text-white/80">
+                    <h3 className={`text-base font-semibold ${c("text-white/80", "text-gray-800")}`}>
                       {p.answer}
                     </h3>
-                    <span className="text-xs text-white/25">{p.category}</span>
+                    <span className={`text-xs ${c("text-white/25", "text-gray-400")}`}>{p.category}</span>
                   </div>
-                  <ol className="list-decimal list-inside space-y-1 text-sm text-white/40">
+                  <ol className={`list-decimal list-inside space-y-1 text-sm ${c("text-white/40", "text-gray-500")}`}>
                     {p.clues.map((clue, i) => (
                       <li key={i}>{clue}</li>
                     ))}
                   </ol>
                   {p.aliases && p.aliases.length > 0 && (
-                    <p className="text-xs text-white/20">
+                    <p className={`text-xs ${c("text-white/20", "text-gray-400")}`}>
                       Aliases: {p.aliases.join(", ")}
                     </p>
                   )}
@@ -559,14 +623,20 @@ export default function AdminDashboard({
                     <button
                       onClick={() => startEdit(p)}
                       disabled={busy}
-                      className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wider border border-white/15 text-white/40 hover:text-white/70 hover:border-white/30 transition-colors disabled:opacity-40"
+                      className={`px-4 py-1.5 text-xs font-semibold uppercase tracking-wider border transition-colors disabled:opacity-40 ${c(
+                        "border-white/15 text-white/40 hover:text-white/70 hover:border-white/30",
+                        "border-gray-300 text-gray-400 hover:text-gray-700 hover:border-gray-400"
+                      )}`}
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleCut(p.id)}
                       disabled={busy}
-                      className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-red-400/60 hover:text-red-400 transition-colors disabled:opacity-40"
+                      className={`px-4 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors disabled:opacity-40 ${c(
+                        "text-red-400/60 hover:text-red-400",
+                        "text-red-500/60 hover:text-red-600"
+                      )}`}
                     >
                       Cut
                     </button>
@@ -581,7 +651,7 @@ export default function AdminDashboard({
   );
 }
 
-// ─── Inline edit form (unchanged) ───
+// ─── Inline edit form ───
 function EditRow({
   form,
   setForm,
@@ -597,8 +667,11 @@ function EditRow({
   busy: boolean;
   expanded?: boolean;
 }) {
-  const inputClass =
-    "w-full bg-white/5 border border-white/10 px-3 py-1.5 text-sm text-white/80 focus:border-white/30 focus:outline-none";
+  const c = useThemeClass();
+  const inputClass = `w-full px-3 py-1.5 text-sm focus:outline-none border ${c(
+    "bg-white/5 border-white/10 text-white/80 focus:border-white/30",
+    "bg-white border-gray-200 text-gray-800 focus:border-gray-400"
+  )}`;
 
   return (
     <div className={`space-y-2 ${expanded ? "" : "flex-1"}`}>
@@ -653,7 +726,7 @@ function EditRow({
         </button>
         <button
           onClick={onCancel}
-          className="px-3 py-1 text-xs text-white/30 hover:text-white/60 transition-colors"
+          className={`px-3 py-1 text-xs transition-colors ${c("text-white/30 hover:text-white/60", "text-gray-400 hover:text-gray-700")}`}
         >
           Cancel
         </button>

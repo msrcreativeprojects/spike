@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import AdminDashboard from "@/components/AdminDashboard";
+import AdminHeader from "@/components/AdminHeader";
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -27,15 +28,8 @@ export default async function AdminPage() {
     .order("created_at", { ascending: true });
 
   return (
-    <main className="mx-auto min-h-dvh max-w-2xl px-5 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="font-title text-4xl tracking-wide text-white/90">
-          SPIKE <span className="text-base font-sans tracking-normal text-white/30">Admin</span>
-        </h1>
-        <a href="/admin/build" className="px-4 py-2 text-xs font-semibold uppercase tracking-wider border border-white/15 text-white/40 hover:text-white/70 hover:border-white/30 transition-colors">
-          Puzzle Builder →
-        </a>
-      </div>
+    <main className="mx-auto max-w-2xl px-5 py-8">
+      <AdminHeader subtitle="Admin" navHref="/admin/build" navLabel="Puzzle Builder →" />
       <AdminDashboard
         initialScheduled={scheduled ?? []}
         initialQueued={queued ?? []}

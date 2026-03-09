@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import PuzzleBuilder from "@/components/PuzzleBuilder";
+import AdminHeader from "@/components/AdminHeader";
 
 export default async function BuildPage() {
   const supabase = await createClient();
@@ -29,15 +30,8 @@ export default async function BuildPage() {
   const existingAnswers = new Set((existingPuzzles ?? []).map(p => p.answer));
 
   return (
-    <main className="mx-auto min-h-dvh max-w-3xl px-5 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="font-title text-4xl tracking-wide text-white/90">
-          SPIKE <span className="text-base font-sans tracking-normal text-white/30">Builder</span>
-        </h1>
-        <a href="/admin" className="text-xs text-white/25 hover:text-white/60 transition-colors">
-          ← Back to Admin
-        </a>
-      </div>
+    <main className="mx-auto max-w-3xl px-5 py-8">
+      <AdminHeader subtitle="Builder" navHref="/admin" navLabel="← Back to Admin" />
       <PuzzleBuilder
         shows={uniqueShows.map(s => ({
           name: s.show_name,

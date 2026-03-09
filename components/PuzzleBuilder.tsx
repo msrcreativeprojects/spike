@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useThemeClass } from "@/lib/adminTheme";
 
 interface ShowInfo {
   name: string;
@@ -28,6 +29,7 @@ interface LockedClue {
 
 export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo[] }) {
   const supabase = createClient();
+  const c = useThemeClass();
 
   const [shows, setShows] = useState<ShowInfo[]>(initialShows);
   const [selectedShow, setSelectedShow] = useState<string | null>(null);
@@ -222,12 +224,12 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
               }}
               className={`px-3 py-1.5 text-xs transition-colors border ${
                 categoryFilter === cat
-                  ? "border-white/30 bg-white/10 text-white/80"
-                  : "border-white/10 text-white/30 hover:text-white/60 hover:border-white/20"
+                  ? `${c("border-white/30 bg-white/10 text-white/80", "border-gray-400 bg-gray-200 text-gray-800")}`
+                  : `${c("border-white/10 text-white/30 hover:text-white/60 hover:border-white/20", "border-gray-200 text-gray-400 hover:text-gray-700 hover:border-gray-300")}`
               }`}
             >
               {cat}{" "}
-              <span className="text-white/20">{count}/{total}</span>
+              <span className={c("text-white/20", "text-gray-400")}>{count}/{total}</span>
             </button>
           );
         })}
@@ -236,13 +238,16 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
       {/* Show picker */}
       <div className="flex gap-3 items-end">
         <div className="flex-1">
-          <label className="text-xs text-white/30 uppercase tracking-wider block mb-2">
+          <label className={`text-xs uppercase tracking-wider block mb-2 ${c("text-white/30", "text-gray-500")}`}>
             Show
           </label>
           <select
             value={selectedShow ?? ""}
             onChange={e => setSelectedShow(e.target.value || null)}
-            className="w-full bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white/80 focus:border-white/30 focus:outline-none appearance-none"
+            className={`w-full px-4 py-2.5 text-sm focus:outline-none appearance-none ${c(
+              "bg-white/5 border border-white/10 text-white/80 focus:border-white/30",
+              "bg-gray-50 border border-gray-200 text-gray-800 focus:border-gray-400"
+            )}`}
           >
             <option value="">Select a show...</option>
             <optgroup label="Needs Puzzle">
@@ -260,7 +265,10 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
         {nextUnbuilt && (
           <button
             onClick={() => setSelectedShow(nextUnbuilt.name)}
-            className="px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border border-white/15 text-white/40 hover:text-white/70 hover:border-white/30 transition-colors whitespace-nowrap"
+            className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border transition-colors whitespace-nowrap ${c(
+              "border-white/15 text-white/40 hover:text-white/70 hover:border-white/30",
+              "border-gray-300 text-gray-400 hover:text-gray-700 hover:border-gray-400"
+            )}`}
           >
             Next Unbuilt →
           </button>
@@ -268,7 +276,7 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
       </div>
 
       {loading && (
-        <p className="text-sm text-white/30 animate-pulse">Loading clues...</p>
+        <p className={`text-sm animate-pulse ${c("text-white/30", "text-gray-400")}`}>Loading clues...</p>
       )}
 
       {selectedShow && !loading && clues.length > 0 && (
@@ -286,16 +294,19 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
                 return (
                   <div
                     key={level}
-                    className="border border-white/10 bg-white/[0.03] px-5 py-3 flex items-center gap-4 cursor-pointer hover:border-white/20 transition-colors"
+                    className={`px-5 py-3 flex items-center gap-4 cursor-pointer transition-colors border ${c(
+                      "border-white/10 bg-white/[0.03] hover:border-white/20",
+                      "border-gray-200 bg-gray-50 hover:border-gray-300"
+                    )}`}
                     onClick={() => handleUnlock(level)}
                   >
-                    <span className="text-xs font-semibold text-green-400/70 w-6">
+                    <span className={`text-xs font-semibold w-6 ${c("text-green-400/70", "text-green-600")}`}>
                       {level}
                     </span>
-                    <span className="flex-1 text-sm text-white/60">
+                    <span className={`flex-1 text-sm ${c("text-white/60", "text-gray-600")}`}>
                       {lockedClues[level].text}
                     </span>
-                    <span className="text-xs text-white/20">
+                    <span className={`text-xs ${c("text-white/20", "text-gray-400")}`}>
                       {lockedClues[level].bankId === null ? "edited" : "locked"}
                     </span>
                   </div>
@@ -306,12 +317,15 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
                 return (
                   <div
                     key={level}
-                    className="border border-white/[0.06] bg-white/[0.01] px-5 py-3 flex items-center gap-4 opacity-30"
+                    className={`px-5 py-3 flex items-center gap-4 opacity-30 border ${c(
+                      "border-white/[0.06] bg-white/[0.01]",
+                      "border-gray-100 bg-gray-50/50"
+                    )}`}
                   >
-                    <span className="text-xs font-semibold text-white/30 w-6">
+                    <span className={`text-xs font-semibold w-6 ${c("text-white/30", "text-gray-400")}`}>
                       {level}
                     </span>
-                    <span className="text-sm text-white/20">
+                    <span className={`text-sm ${c("text-white/20", "text-gray-400")}`}>
                       {levelLabels[level]}
                     </span>
                   </div>
@@ -321,30 +335,39 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
               return (
                 <div
                   key={level}
-                  className="border border-white/15 bg-white/[0.04] p-5 space-y-4"
+                  className={`p-5 space-y-4 border ${c(
+                    "border-white/15 bg-white/[0.04]",
+                    "border-gray-300 bg-white"
+                  )}`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="text-xs font-semibold text-white/50 w-6">
+                      <span className={`text-xs font-semibold w-6 ${c("text-white/50", "text-gray-500")}`}>
                         {level}
                       </span>
-                      <span className="text-xs uppercase tracking-wider text-white/30">
+                      <span className={`text-xs uppercase tracking-wider ${c("text-white/30", "text-gray-400")}`}>
                         {levelLabels[level]}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleCycle(level, -1)}
-                        className="w-8 h-8 flex items-center justify-center border border-white/10 text-white/30 hover:text-white/60 hover:border-white/25 transition-colors text-sm"
+                        className={`w-8 h-8 flex items-center justify-center border transition-colors text-sm ${c(
+                          "border-white/10 text-white/30 hover:text-white/60 hover:border-white/25",
+                          "border-gray-200 text-gray-400 hover:text-gray-700 hover:border-gray-400"
+                        )}`}
                       >
                         ←
                       </button>
-                      <span className="text-xs text-white/25 tabular-nums w-12 text-center">
+                      <span className={`text-xs tabular-nums w-12 text-center ${c("text-white/25", "text-gray-400")}`}>
                         {idx + 1} / {levelClues.length}
                       </span>
                       <button
                         onClick={() => handleCycle(level, 1)}
-                        className="w-8 h-8 flex items-center justify-center border border-white/10 text-white/30 hover:text-white/60 hover:border-white/25 transition-colors text-sm"
+                        className={`w-8 h-8 flex items-center justify-center border transition-colors text-sm ${c(
+                          "border-white/10 text-white/30 hover:text-white/60 hover:border-white/25",
+                          "border-gray-200 text-gray-400 hover:text-gray-700 hover:border-gray-400"
+                        )}`}
                       >
                         →
                       </button>
@@ -355,32 +378,41 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
                   <textarea
                     value={editText[level] ?? ""}
                     onChange={e => setEditText(prev => ({ ...prev, [level]: e.target.value }))}
-                    className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm text-white/80 focus:border-white/30 focus:outline-none resize-none"
+                    className={`w-full px-4 py-3 text-sm focus:outline-none resize-none border ${c(
+                      "bg-white/5 border-white/10 text-white/80 focus:border-white/30",
+                      "bg-gray-50 border-gray-200 text-gray-800 focus:border-gray-400"
+                    )}`}
                     rows={2}
                   />
 
                   {/* Meta info */}
                   {currentClue && (
-                    <div className="flex items-center gap-3 text-xs text-white/20">
+                    <div className={`flex items-center gap-3 text-xs ${c("text-white/20", "text-gray-400")}`}>
                       {currentClue.clue_type && (
-                        <span className="px-2 py-0.5 border border-white/10 text-white/30">
+                        <span className={`px-2 py-0.5 border ${c(
+                          "border-white/10 text-white/30",
+                          "border-gray-200 text-gray-500"
+                        )}`}>
                           {currentClue.clue_type}
                         </span>
                       )}
                       {currentClue.notes && (
-                        <span className="text-white/15 italic">
+                        <span className={`italic ${c("text-white/15", "text-gray-400")}`}>
                           {currentClue.notes}
                         </span>
                       )}
                       {currentClue.used && (
-                        <span className="text-yellow-400/50">used</span>
+                        <span className={c("text-yellow-400/50", "text-yellow-600")}>used</span>
                       )}
                     </div>
                   )}
 
                   <button
                     onClick={() => handleLock(level)}
-                    className="px-5 py-2 text-xs font-semibold uppercase tracking-wider bg-green-600/80 text-white hover:bg-green-500 transition-colors"
+                    className={`px-5 py-2 text-xs font-semibold uppercase tracking-wider text-white hover:bg-green-500 transition-colors ${c(
+                      "bg-green-600/80",
+                      "bg-green-600"
+                    )}`}
                   >
                     Lock Clue {level}
                   </button>
@@ -390,14 +422,20 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
 
             {/* Aliases input */}
             {allLocked && (
-              <div className="border border-white/15 bg-white/[0.04] p-5 space-y-3">
-                <label className="text-xs text-white/30 uppercase tracking-wider block">
+              <div className={`p-5 space-y-3 border ${c(
+                "border-white/15 bg-white/[0.04]",
+                "border-gray-300 bg-white"
+              )}`}>
+                <label className={`text-xs uppercase tracking-wider block ${c("text-white/30", "text-gray-500")}`}>
                   Aliases (comma-separated)
                 </label>
                 <input
                   value={aliases}
                   onChange={e => setAliases(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white/80 focus:border-white/30 focus:outline-none"
+                  className={`w-full px-4 py-2.5 text-sm focus:outline-none border ${c(
+                    "bg-white/5 border-white/10 text-white/80 focus:border-white/30",
+                    "bg-gray-50 border-gray-200 text-gray-800 focus:border-gray-400"
+                  )}`}
                   placeholder="e.g. phantom, poto"
                 />
               </div>
@@ -408,14 +446,17 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full px-6 py-3 text-sm font-semibold uppercase tracking-wider bg-green-600/80 text-white hover:bg-green-500 transition-colors disabled:opacity-40"
+                className={`w-full px-6 py-3 text-sm font-semibold uppercase tracking-wider text-white hover:bg-green-500 transition-colors disabled:opacity-40 ${c(
+                  "bg-green-600/80",
+                  "bg-green-600"
+                )}`}
               >
                 {saving ? "Saving..." : "Save to Queue"}
               </button>
             )}
 
             {saveMessage && (
-              <p className={`text-sm text-center ${saveMessage.startsWith("Error") ? "text-red-400" : "text-green-400"}`}>
+              <p className={`text-sm text-center ${saveMessage.startsWith("Error") ? c("text-red-400", "text-red-600") : c("text-green-400", "text-green-600")}`}>
                 {saveMessage}
               </p>
             )}
@@ -423,11 +464,14 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
 
           {/* Facts sidebar — click to use as clue */}
           {facts.length > 0 && (
-            <div className="border border-white/10 bg-white/[0.02] p-5 space-y-3 h-fit lg:sticky lg:top-8">
-              <h3 className="text-xs font-semibold uppercase tracking-[3px] text-white/25 mb-3">
+            <div className={`p-5 space-y-3 h-fit lg:sticky lg:top-8 border ${c(
+              "border-white/10 bg-white/[0.02]",
+              "border-gray-200 bg-gray-50"
+            )}`}>
+              <h3 className={`text-xs font-semibold uppercase tracking-[3px] mb-3 ${c("text-white/25", "text-gray-400")}`}>
                 Facts
               </h3>
-              <p className="text-[10px] text-white/15 -mt-1 mb-2">
+              <p className={`text-[10px] -mt-1 mb-2 ${c("text-white/15", "text-gray-400")}`}>
                 Click to use as clue {activeLevel}
               </p>
               {facts.map(fact => (
@@ -440,8 +484,8 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
                   }}
                   className={`block w-full text-left text-xs leading-relaxed px-2 py-1.5 -mx-2 transition-colors ${
                     lockedClues[activeLevel]
-                      ? "text-white/20 cursor-default"
-                      : "text-white/35 hover:text-white/60 hover:bg-white/5 cursor-pointer"
+                      ? c("text-white/20 cursor-default", "text-gray-300 cursor-default")
+                      : c("text-white/35 hover:text-white/60 hover:bg-white/5 cursor-pointer", "text-gray-500 hover:text-gray-800 hover:bg-gray-100 cursor-pointer")
                   }`}
                   disabled={!!lockedClues[activeLevel]}
                 >
@@ -454,7 +498,7 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
       )}
 
       {selectedShow && !loading && clues.length === 0 && (
-        <p className="text-sm text-white/30">No clues found for this show in the clue bank.</p>
+        <p className={`text-sm ${c("text-white/30", "text-gray-400")}`}>No clues found for this show in the clue bank.</p>
       )}
     </div>
   );
