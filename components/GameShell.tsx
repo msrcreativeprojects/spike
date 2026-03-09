@@ -138,10 +138,13 @@ export default function GameShell({ puzzle }: GameShellProps) {
         />
       </div>
 
-      {/* Auth overlay */}
+      {/* Auth overlay — same backdrop + panel style as HowToPlay */}
       {overlay === "auth" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <AuthGate onAuth={handleAuth} onGuest={handleGuest} />
+          <div className="absolute inset-0 bg-black/80" />
+          <div className="relative z-10 w-full max-w-sm border border-white/10 bg-[#0a0a0c] p-6 pt-8 animate-curtain-up">
+            <AuthGate onAuth={handleAuth} onGuest={handleGuest} />
+          </div>
         </div>
       )}
 
