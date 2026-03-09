@@ -4,13 +4,14 @@ import { Puzzle } from "@/types/puzzle";
 // DEV OVERRIDE: change this to test different days (set to "" for real date)
 const DEV_DATE_OVERRIDE = "";
 
+// Puzzle day rolls over at midnight America/New_York
 function getLocalDateString(): string {
   if (DEV_DATE_OVERRIDE) return DEV_DATE_OVERRIDE;
   const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  const [month, day, year] = now
+    .toLocaleDateString("en-US", { timeZone: "America/New_York" })
+    .split("/");
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 }
 
 export function getTodayPuzzle(): Puzzle | null {
