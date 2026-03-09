@@ -15,32 +15,43 @@ const ROTATIONS = [-1.5, 2, -1, 1.8, -0.8];
 const FALLBACK_COLORS: ClueColor[] = ["pink", "purple", "blue", "green", "yellow"];
 
 /* ─── Step 1: TAKE A GUESS ─── */
-function StepTakeAGuess() {
+function StepTakeAGuess({ colors }: { colors: ClueColor[] }) {
+  const accentColor = ALL_COLORS[colors[2]]; // pick a middle color
   return (
-    <div className="flex flex-col items-center gap-4">
-      {/* Mock guess box showing category */}
-      <div className="flex gap-0 w-[260px]">
-        <div
-          className="flex-1 border border-r-0 px-3 py-2.5 text-xs"
-          style={{
-            borderColor: "rgba(255,255,255,0.1)",
-            backgroundColor: "rgba(255,255,255,0.06)",
-            color: "rgba(255,255,255,0.5)",
-          }}
-        >
-          Guess a Broadway Musical...
+    <div className="flex flex-col items-center gap-2">
+      {/* Mock guess box with highlighted category */}
+      <div className="flex flex-col items-center gap-0">
+        <div className="flex gap-0 w-[260px]">
+          <div
+            className="flex-1 border border-r-0 px-3 py-2.5 text-xs"
+            style={{
+              borderColor: "rgba(255,255,255,0.1)",
+              backgroundColor: "rgba(255,255,255,0.06)",
+            }}
+          >
+            <span style={{ color: "rgba(255,255,255,0.35)" }}>Guess a </span>
+            <span style={{ color: accentColor }}> Broadway Musical</span>
+            <span style={{ color: "rgba(255,255,255,0.35)" }}>...</span>
+          </div>
+          <div
+            className="px-3 py-2.5 text-xs font-semibold"
+            style={{
+              backgroundColor: "rgba(255,255,255,0.9)",
+              color: "black",
+            }}
+          >
+            Submit
+          </div>
         </div>
-        <div
-          className="px-3 py-2.5 text-xs font-semibold"
-          style={{
-            backgroundColor: "rgba(255,255,255,0.9)",
-            color: "black",
-          }}
+        {/* Category callout */}
+        <p
+          className="text-[10px] uppercase tracking-widest mt-2"
+          style={{ color: accentColor, opacity: 0.7 }}
         >
-          Submit
-        </div>
+          ↑ category
+        </p>
       </div>
-      <p className="text-sm text-white/50 text-center leading-relaxed">
+      <p className="text-sm text-white/50 text-center leading-relaxed mt-1">
         The category tells you what to guess.
         <br />
         Type your best shot and submit.
@@ -260,7 +271,7 @@ export default function HowToPlay({ onClose, dailyColors }: HowToPlayProps) {
 
   const renderStep = () => {
     switch (step) {
-      case 0: return <StepTakeAGuess />;
+      case 0: return <StepTakeAGuess colors={colors} />;
       case 1: return <StepWrongAnswers colors={colors} />;
       case 2: return <StepCollect colors={colors} />;
       case 3: return <StepTheQuest />;
