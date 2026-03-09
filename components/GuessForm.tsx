@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { GLOW_COLOR } from "@/types/puzzle";
 
 interface GuessFormProps {
   onGuess: (guess: string) => void;
@@ -20,9 +21,14 @@ export default function GuessForm({
   category,
 }: GuessFormProps) {
   const [value, setValue] = useState("");
+  const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const isLocked = !!(solved || failed);
   const showGlow = !isLocked && !disabled;
+
+  // Show custom placeholder when input is empty and not locked
+  const displayValue = isLocked ? lockedValue ?? "" : value;
+  const showCustomPlaceholder = !isLocked && !displayValue && category;
 
   useEffect(() => {
     if (!disabled && !isLocked) {
@@ -39,32 +45,52 @@ export default function GuessForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-0">
-      <input
-        ref={inputRef}
-        type="text"
-        value={isLocked ? lockedValue ?? "" : value}
-        onChange={(e) => setValue(e.target.value)}
-        disabled={disabled || isLocked}
-        readOnly={isLocked}
-        placeholder={category ? `Guess a ${category}...` : "Type your guess..."}
-        autoComplete="off"
-        autoCorrect="off"
-        spellCheck={false}
-        className={`
-          flex-1 rounded-none border border-r-0
-          px-4 py-3 text-sm
-          outline-none transition-all duration-500
-          ${
-            solved
-              ? "border-green-500/30 bg-green-500/15 text-green-300 opacity-100"
-              : failed
-                ? "border-red-500/30 bg-red-500/10 text-red-300 opacity-100"
-                : showGlow
-                  ? "border-white/10 bg-white/[0.06] guess-glow text-white placeholder-white/50 disabled:opacity-40 disabled:cursor-not-allowed"
-                  : "border-white/10 bg-white/[0.06] text-white placeholder-white/50 focus:border-white/25 focus:bg-white/[0.08] disabled:opacity-40 disabled:cursor-not-allowed"
-          }
-        `}
-      />
+      <div className="relative flex-1">
+        <input
+          ref={inputRef}
+          type="text"
+          value={displayValue}
+          onChange={(e) => setValue(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          disabled={disabled || isLocked}
+          readOnly={isLocked}
+          placeholder={!category ? "Type your guess..." : undefined}
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          className={`
+            w-full rounded-none border border-r-0
+            px-4 py-3 text-sm
+            outline-none transition-all duration-500
+            ${
+              solved
+                ? "border-green-500/30 bg-green-500/15 text-green-300 opacity-100"
+                : failed
+                  ? "border-red-500/30 bg-red-500/10 text-red-300 opacity-100"
+                  : showGlow
+                    ? "border-white/10 bg-white/[0.06] guess-glow text-white placeholder-white/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                    : "border-white/10 bg-white/[0.06] text-white placeholder-white/50 focus:border-white/25 focus:bg-white/[0.08] disabled:opacity-40 disabled:cursor-not-allowed"
+            }
+          `}
+        />
+        {/* Custom placeholder with glowing category */}
+        {showCustomPlaceholder && (
+          <div
+            className="absolute inset-0 flex items-center px-4 text-sm pointer-events-none"
+            aria-hidden="true"
+          >
+            <span className="text-white/50">Guess a </span>
+            <span
+              className="animate-glow-text-pulse"
+              style={{ color: GLOW_COLOR }}
+            >
+              {category}
+            </span>
+            <span className="text-white/50">...</span>
+          </div>
+        )}
+      </div>
       <button
         type="submit"
         disabled={disabled || isLocked || !value.trim()}
