@@ -95,8 +95,8 @@ export async function recordGameCompletion(
     .eq("date", date)
     .single();
 
-  if (existing) {
-    // Already recorded — return existing data
+  if (existing && existing.puzzle_id === puzzleId) {
+    // Same puzzle, already recorded — return existing data
     const stats = await loadTapeStats(userId);
     return {
       colorsEarned: existing.colors_earned as TapeColor[],
@@ -104,6 +104,32 @@ export async function recordGameCompletion(
       newStreak: stats.currentStreak,
       tapeByColor: stats.tapeByColor,
     };
+  }
+
+  // If puzzle changed for the same date (admin swapped puzzle), undo old record
+  if (existing && existing.puzzle_id !== puzzleId) {
+    const oldColors = (existing.colors_earned as TapeColor[]) ?? [];
+    // Remove old tape from stats before re-recording
+    const currentStats = await loadTapeStats(userId);
+    const fixedByColor: Record<string, number> = { ...currentStats.tapeByColor };
+    for (const c of oldColors) {
+      fixedByColor[c] = Math.max((fixedByColor[c] ?? 0) - 1, 0);
+    }
+    const fixedTotal = Math.max(currentStats.totalTape - oldColors.length, 0);
+    await supabase
+      .from("tape_stats")
+      .update({
+        total_tape: fixedTotal,
+        tape_colors: fixedByColor,
+        games_played: Math.max(currentStats.gamesPlayed - 1, 0),
+        games_won: Math.max(currentStats.gamesWon - (existing.score > 0 ? 1 : 0), 0),
+      })
+      .eq("user_id", userId);
+    await supabase
+      .from("game_history")
+      .delete()
+      .eq("user_id", userId)
+      .eq("date", date);
   }
 
   // Load current stats (or create defaults)

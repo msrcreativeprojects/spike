@@ -204,7 +204,10 @@ export default function Game({
   }
 
   const lastGuess = state.guesses[state.guesses.length - 1] ?? "";
-  const tapeCollected = state.score > 0 ? state.score : 1; // min 1 (white consolation)
+  // Prefer tapeResult (server truth) over state.score for display consistency
+  const tapeCollected = tapeResult
+    ? tapeResult.colorsEarned.filter(c => c !== "glow").length
+    : (state.score > 0 ? state.score : 1);
 
   return (
     <div className="flex flex-col gap-3">
