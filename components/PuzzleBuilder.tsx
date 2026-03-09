@@ -172,8 +172,8 @@ export default function PuzzleBuilder({ shows }: { shows: ShowInfo[] }) {
   const levelLabels: Record<number, string> = {
     1: "Very Broad",
     2: "Obscure Detail",
-    3: "Narrowing",
-    4: "Recognition",
+    3: "Thematic / Setting",
+    4: "Narrowing",
     5: "Giveaway",
   };
 
@@ -367,16 +367,32 @@ export default function PuzzleBuilder({ shows }: { shows: ShowInfo[] }) {
             )}
           </div>
 
-          {/* Facts sidebar */}
+          {/* Facts sidebar — click to use as clue */}
           {facts.length > 0 && (
             <div className="border border-white/10 bg-white/[0.02] p-5 space-y-3 h-fit lg:sticky lg:top-8">
               <h3 className="text-xs font-semibold uppercase tracking-[3px] text-white/25 mb-3">
                 Facts
               </h3>
+              <p className="text-[10px] text-white/15 -mt-1 mb-2">
+                Click to use as clue {activeLevel}
+              </p>
               {facts.map(fact => (
-                <p key={fact.id} className="text-xs text-white/35 leading-relaxed">
+                <button
+                  key={fact.id}
+                  onClick={() => {
+                    if (!lockedClues[activeLevel]) {
+                      setEditText(prev => ({ ...prev, [activeLevel]: fact.clue_text }));
+                    }
+                  }}
+                  className={`block w-full text-left text-xs leading-relaxed px-2 py-1.5 -mx-2 transition-colors ${
+                    lockedClues[activeLevel]
+                      ? "text-white/20 cursor-default"
+                      : "text-white/35 hover:text-white/60 hover:bg-white/5 cursor-pointer"
+                  }`}
+                  disabled={!!lockedClues[activeLevel]}
+                >
                   {fact.clue_text}
-                </p>
+                </button>
               ))}
             </div>
           )}
