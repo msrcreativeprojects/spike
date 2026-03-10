@@ -92,7 +92,7 @@ function SortableSlot({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: slotId, disabled: !clue });
+  } = useSortable({ id: slotId });
 
   const style = {
     transform: CSS.Translate.toString(transform),
