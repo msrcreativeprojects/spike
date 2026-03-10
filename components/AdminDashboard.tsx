@@ -203,8 +203,8 @@ function StaticRow({
         </div>
         <div className={`text-xs tabular-nums ${c("text-white/20", "text-gray-300")}`}>{shortDate}</div>
         {isToday && (
-          <div className="mt-1 flex justify-end">
-            <span className="text-[9px] font-bold uppercase tracking-widest text-green-400/80 bg-green-400/10 px-1.5 py-0.5 rounded-sm">
+          <div className="mt-0.5 text-right">
+            <span className="text-[9px] font-bold uppercase tracking-widest text-green-500">
               live
             </span>
           </div>
@@ -213,7 +213,7 @@ function StaticRow({
 
       {/* Puzzle card */}
       <div className={`flex-1 flex items-center gap-3 border px-4 py-3 ${
-        isToday ? "border-green-400/50 animate-live-pulse" : c("border-white/10", "border-gray-200")
+        isToday ? "border-green-500/60" : c("border-white/10", "border-gray-200")
       }`}>
         {isEditing ? (
           <EditRow

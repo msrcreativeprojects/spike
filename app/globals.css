@@ -159,13 +159,4 @@ body {
   animation: guess-glow 4s ease-in-out infinite;
 }
 
-/* Admin: Live puzzle pulse */
-@keyframes live-border-pulse {
-  0%, 100% { border-color: rgba(74, 222, 128, 0.4); box-shadow: 0 0 8px rgba(74, 222, 128, 0.15); }
-  50% { border-color: rgba(74, 222, 128, 0.7); box-shadow: 0 0 16px rgba(74, 222, 128, 0.25); }
-}
-
-.animate-live-pulse {
-  animation: live-border-pulse 2.5s ease-in-out infinite;
-}
 
