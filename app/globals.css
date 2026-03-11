@@ -145,6 +145,22 @@ body {
   animation: tape-fall 0.6s cubic-bezier(0.55, 0, 1, 0.45) both;
 }
 
+/* Tape peel — lift and fade to reveal clue underneath */
+@keyframes tape-peel {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px) rotate(2deg);
+  }
+}
+
+.animate-tape-peel {
+  animation: tape-peel 0.4s ease-out both;
+}
+
 /* Guess box glow — subtle glow-tape pulse on the input border */
 @keyframes guess-glow {
   0%, 100% {

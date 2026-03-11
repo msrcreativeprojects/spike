@@ -1,4 +1,4 @@
-import { SHARE_EMOJIS, GameState, type ClueColor, type TapeColor } from "@/types/puzzle";
+import { SHARE_EMOJIS, GameState, Puzzle, type ClueColor, type TapeColor } from "@/types/puzzle";
 import { generateShareImage } from "./shareImage";
 
 const TOTAL_CLUES = 5;
@@ -10,6 +10,7 @@ interface TapeInfo {
 
 export function generateShareText(
   state: GameState,
+  puzzle: Puzzle,
   dailyColors: ClueColor[],
   tapeInfo?: TapeInfo
 ): string {
@@ -28,7 +29,7 @@ export function generateShareText(
     ? `Collected ${tapeCollected}/5 tape`
     : `Collected 1/5 tape`;
 
-  let text = `SPIKE #${puzzleNum}\n${marksLine}\n${resultLine}`;
+  let text = `SPIKE #${puzzleNum}\nGuess the ${puzzle.category}\n${marksLine}\n${resultLine}`;
 
   if (tapeInfo) {
     const hasGlow = tapeInfo.colorsEarned.includes("glow");
@@ -58,10 +59,12 @@ function downloadBlob(blob: Blob, filename: string): void {
  */
 export async function shareResult(
   state: GameState,
+  puzzle: Puzzle,
+  selectedClueIndex: number,
   dailyColors: ClueColor[],
   tapeInfo?: TapeInfo
 ): Promise<"shared" | "saved" | "failed"> {
-  const text = generateShareText(state, dailyColors, tapeInfo) + "\nspike.quest";
+  const text = generateShareText(state, puzzle, dailyColors, tapeInfo) + "\nspike.quest";
 
   try {
     const blob = await generateShareImage({
@@ -69,8 +72,8 @@ export async function shareResult(
       score: state.score,
       solved: state.solved,
       dailyColors,
-      tapeEarned: tapeInfo?.colorsEarned,
-      totalTape: tapeInfo?.totalTape,
+      category: puzzle.category,
+      featuredClue: puzzle.clues[selectedClueIndex],
     });
 
     const file = new File([blob], "spike-result.png", { type: "image/png" });

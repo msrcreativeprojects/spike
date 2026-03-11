@@ -8,6 +8,7 @@ import { hasSeenTutorial, markTutorialSeen } from "@/lib/tutorial";
 import { getDailyColors } from "@/lib/dailyColors";
 import Game from "./Game";
 import HowToPlay from "./HowToPlay";
+import Welcome from "./Welcome";
 import AuthGate from "./AuthGate";
 import TapeCounter from "./TapeCounter";
 import TapeStatsModal from "./TapeStatsModal";
@@ -16,7 +17,7 @@ interface GameShellProps {
   puzzle: Puzzle;
 }
 
-type Overlay = "none" | "tutorial" | "auth";
+type Overlay = "none" | "welcome" | "tutorial" | "auth";
 
 export default function GameShell({ puzzle }: GameShellProps) {
   const [ready, setReady] = useState(false);
@@ -46,12 +47,17 @@ export default function GameShell({ puzzle }: GameShellProps) {
         });
       } else if (!hasSeenTutorial()) {
         setReady(true);
-        setOverlay("tutorial");
+        setOverlay("welcome");
       } else {
         setReady(true);
         setOverlay("auth");
       }
     });
+  }, []);
+
+  const handleCloseWelcome = useCallback(() => {
+    markTutorialSeen();
+    setOverlay("auth");
   }, []);
 
   const handleCloseTutorial = useCallback(() => {
@@ -80,7 +86,12 @@ export default function GameShell({ puzzle }: GameShellProps) {
 
   const handleGuest = useCallback(() => {
     setIsGuest(true);
-    setOverlay("tutorial");
+    // Tutorial was already shown before auth gate, go straight to game
+    if (hasSeenTutorial()) {
+      setOverlay("none");
+    } else {
+      setOverlay("tutorial");
+    }
   }, []);
 
   const handleSignOut = useCallback(async () => {
@@ -146,6 +157,11 @@ export default function GameShell({ puzzle }: GameShellProps) {
             <AuthGate onAuth={handleAuth} onGuest={handleGuest} />
           </div>
         </div>
+      )}
+
+      {/* Welcome overlay (first visit only) */}
+      {overlay === "welcome" && (
+        <Welcome onClose={handleCloseWelcome} dailyColors={dailyColors} />
       )}
 
       {/* Tutorial overlay */}

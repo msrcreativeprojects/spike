@@ -56,7 +56,7 @@ export default function GuessForm({
           spellCheck={false}
           className={`
             w-full rounded-none border border-r-0
-            px-4 py-3 text-sm
+            px-4 py-3 text-base
             outline-none transition-all duration-500
             ${
               solved
@@ -72,7 +72,7 @@ export default function GuessForm({
         {/* Custom placeholder — category portion is brighter */}
         {showCustomPlaceholder && (
           <div
-            className="absolute inset-0 flex items-center px-4 text-sm pointer-events-none"
+            className="absolute inset-0 flex items-center px-4 text-base pointer-events-none"
             aria-hidden="true"
           >
             <span className="text-white/40">Guess a&nbsp;</span>

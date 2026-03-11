@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ALL_COLORS, GLOW_COLOR, WHITE_TAPE_COLOR, type TapeColor } from "@/types/puzzle";
+import { type TapeColor } from "@/types/puzzle";
+import { getColorHex } from "@/lib/colors";
 
 interface TapeResultProps {
   colorsEarned: TapeColor[];
@@ -38,12 +39,6 @@ export default function TapeResult({
   const regularColors = colorsEarned.filter((c) => c !== "glow" && c !== "white");
   const hasGlow = colorsEarned.includes("glow");
   const hasWhite = colorsEarned.includes("white");
-
-  function getColorHex(color: TapeColor): string {
-    if (color === "glow") return GLOW_COLOR;
-    if (color === "white") return WHITE_TAPE_COLOR;
-    return ALL_COLORS[color] ?? "#ffffff";
-  }
 
   const tapeCount = colorsEarned.filter((c) => c !== "glow").length;
 

@@ -7,8 +7,8 @@ import {
   GLOW_COLOR,
   type TapeStats,
   type TapeColor,
-  type ClueColor,
 } from "@/types/puzzle";
+import { getColorHex } from "@/lib/colors";
 
 interface TapeStatsModalProps {
   stats: TapeStats;
@@ -54,11 +54,6 @@ export default function TapeStatsModal({
     (c) => (stats.tapeByColor[c] ?? 0) > 0
   );
   const glowCount = stats.tapeByColor.glow ?? 0;
-
-  function getColorHex(color: string): string {
-    if (color === "glow") return GLOW_COLOR;
-    return ALL_COLORS[color as ClueColor] ?? "#ffffff";
-  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

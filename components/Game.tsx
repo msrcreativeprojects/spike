@@ -8,11 +8,20 @@ import { loadGameState, saveGameState, clearGameState } from "@/lib/storage";
 import { shareResult } from "@/lib/shareResult";
 import { getEncouragement } from "@/data/encouragements";
 import { recordGameCompletion, loadTapeStats, type GameCompletionResult } from "@/lib/tapeService";
+import { getColorHex, getEarnedColors } from "@/lib/colors";
 import ClueList from "./ClueList";
 import GuessForm from "./GuessForm";
 import TapeResult from "./TapeResult";
 
-const TOTAL_CLUES = 5;
+/* ─── Timing constants (ms) ─── */
+const WRONG_FLASH_MS = 600;
+const REVEAL_START_DELAY_MS = 800;
+const REVEAL_STAGGER_MS = 300;
+const TAPE_PEEL_MS = 400;
+const READING_PAUSE_MS = 500;
+const SCORE_ZERO_SHARE_DELAY_MS = 1000;
+const LOSS_SHARE_DELAY_MS = 1200;
+const SHARE_LABEL_MS = 2000;
 
 interface GameProps {
   puzzle: Puzzle;
@@ -22,12 +31,6 @@ interface GameProps {
   onTapeUpdate: (stats: TapeStats) => void;
   onGuestSignIn: () => void;
   dailyColors: ClueColor[];
-}
-
-function getColorHex(color: TapeColor): string {
-  if (color === "glow") return "#c8ffc8";
-  if (color === "white") return "#e0e0e0";
-  return ALL_COLORS[color as ClueColor] ?? "#ffffff";
 }
 
 export default function Game({
@@ -42,10 +45,11 @@ export default function Game({
   const [state, setState] = useState<GameState | null>(null);
   const [wrongFlash, setWrongFlash] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
-  const [collecting, setCollecting] = useState(false);
+  const [revealing, setRevealing] = useState(false);
   const [shareLabel, setShareLabel] = useState<string | null>(null);
   const [shareMode, setShareMode] = useState(false);
   const [tapeResult, setTapeResult] = useState<GameCompletionResult | null>(null);
+  const [selectedClue, setSelectedClue] = useState(0);
 
   // Load or initialize game state
   useEffect(() => {
@@ -55,6 +59,7 @@ export default function Game({
       // If loading a completed game, skip to share state
       if (saved.completed) {
         if (saved.solved) setCelebrating(true);
+        setRevealing(true);
         setShareMode(true);
       }
     } else {
@@ -90,11 +95,8 @@ export default function Game({
       });
     } else {
       // Guest: compute locally but don't persist
-      const colorsEarned: TapeColor[] = state.score > 0
-        ? dailyColors.slice(5 - state.score)
-        : ["white"];
       setTapeResult({
-        colorsEarned,
+        colorsEarned: getEarnedColors(state.score, dailyColors),
         newTotal: 0,
         newStreak: 0,
         tapeByColor: {},
@@ -130,51 +132,53 @@ export default function Game({
       setState(next);
 
       if (next.solved) {
-        // Win flow: SPIKE wave → tapes fall → confetti → share mode
+        // Win flow: SPIKE wave → reveal remaining clues → share mode
         setCelebrating(true);
 
         if (next.score > 0) {
-          // Tapes to collect: fall after a beat
-          setTimeout(() => setCollecting(true), 600);
-          // After tapes finish falling, fire confetti and go to share
-          const fallDuration = 600 + (next.score * 150) + 600; // delay + stagger + fall
+          // After SPIKE wave, start peeling remaining tapes
+          setTimeout(() => setRevealing(true), REVEAL_START_DELAY_MS);
+          const unrevealedCount = next.score; // score = 5 - revealedClues
+          const revealDuration = REVEAL_START_DELAY_MS
+            + (unrevealedCount * REVEAL_STAGGER_MS)
+            + TAPE_PEEL_MS
+            + READING_PAUSE_MS;
           setTimeout(() => {
-            const earnedColors = dailyColors.slice(5 - next.score);
-            fireConfetti(earnedColors);
             setShareMode(true);
-          }, fallDuration);
+          }, revealDuration);
         } else {
-          // Solved on 6th guess (score 0): white consolation tape + white confetti
+          // Solved on 6th guess (score 0): all clues already visible
+          setRevealing(true);
           setTimeout(() => {
-            fireConfetti(["white"]);
             setShareMode(true);
-          }, 1000);
+          }, SCORE_ZERO_SHARE_DELAY_MS);
         }
       } else if (next.completed) {
-        // Loss: flash, then white confetti + share mode
+        // Loss: flash, then share mode (all clues already visible)
         setWrongFlash(true);
-        setTimeout(() => setWrongFlash(false), 600);
+        setTimeout(() => setWrongFlash(false), WRONG_FLASH_MS);
+        setRevealing(true);
         setTimeout(() => {
-          fireConfetti(["white"]);
           setShareMode(true);
-        }, 1200);
+        }, LOSS_SHARE_DELAY_MS);
       } else {
         // Flash on wrong guess
         setWrongFlash(true);
-        setTimeout(() => setWrongFlash(false), 600);
+        setTimeout(() => setWrongFlash(false), WRONG_FLASH_MS);
       }
     },
-    [state, puzzle, dailyColors, fireConfetti]
+    [state, puzzle]
   );
 
   const handleReset = () => {
     clearGameState(puzzle.date);
     setState(createInitialState(puzzle.id));
     setCelebrating(false);
-    setCollecting(false);
+    setRevealing(false);
     setShareLabel(null);
     setShareMode(false);
     setTapeResult(null);
+    setSelectedClue(0);
     confetti.reset();
   };
 
@@ -186,13 +190,13 @@ export default function Game({
           totalTape: tapeResult.newTotal,
         }
       : undefined;
-    const result = await shareResult(state, dailyColors, tapeInfo);
+    const result = await shareResult(state, puzzle, selectedClue, dailyColors, tapeInfo);
     if (result === "shared") {
       setShareLabel("Shared!");
-      setTimeout(() => setShareLabel(null), 2000);
+      setTimeout(() => setShareLabel(null), SHARE_LABEL_MS);
     } else if (result === "saved") {
       setShareLabel("Saved!");
-      setTimeout(() => setShareLabel(null), 2000);
+      setTimeout(() => setShareLabel(null), SHARE_LABEL_MS);
     }
   };
 
@@ -211,22 +215,6 @@ export default function Game({
     <div className="flex flex-col gap-3">
       {/* Header */}
       <header className="text-center mb-2">
-        {shareMode && (
-          <p
-            key="share"
-            className="text-sm text-white/35 tracking-widest uppercase"
-          >
-            {"share your".split("").map((char, ci) => (
-              <span
-                key={ci}
-                className="inline-block animate-letter-in"
-                style={{ animationDelay: `${ci * 40}ms` }}
-              >
-                {char === " " ? "\u00A0" : char}
-              </span>
-            ))}
-          </p>
-        )}
         <h1 className="font-title text-8xl tracking-wide">
           {["S", "P", "I", "K", "E"].map((letter, i) => {
             const isLit = state.completed
@@ -252,21 +240,23 @@ export default function Game({
         </h1>
       </header>
 
-      {/* Guess form / share button + encouragement */}
-      <div className={`flex flex-col ${shareMode ? "items-center" : ""}`}>
+      {/* Guess form / pick-a-clue prompt */}
+      <div className="flex flex-col">
         {shareMode ? (
-          <button
-            onClick={handleShare}
-            className="
-              w-48 rounded-none px-5 py-2.5 text-sm font-semibold uppercase tracking-widest
-              transition-all duration-500 animate-fade-in
-              border border-green-500/30 bg-green-500/15 text-green-300
-              hover:bg-green-500/25 hover:border-green-500/50 hover:text-green-200
-              active:scale-[0.98]
-            "
+          <p
+            key="pick-clue"
+            className="text-center text-sm font-semibold tracking-widest uppercase text-white/40 py-3 animate-fade-in"
           >
-            {shareLabel ?? "Share"}
-          </button>
+            {"pick a clue to share".split("").map((char, ci) => (
+              <span
+                key={ci}
+                className="inline-block animate-letter-in"
+                style={{ animationDelay: `${ci * 40}ms` }}
+              >
+                {char === " " ? "\u00A0" : char}
+              </span>
+            ))}
+          </p>
         ) : (
           <GuessForm
             onGuess={handleGuess}
@@ -277,25 +267,18 @@ export default function Game({
             category={puzzle.category}
           />
         )}
-        <div className="flex items-center justify-center gap-2 py-3">
-          <div
-            className={`
-              h-0.5 rounded-full transition-all duration-300
-              ${wrongFlash ? "w-8 bg-red-500/60" : "w-0 bg-transparent"}
-            `}
-          />
+        {/* Result message — only shown after game completes */}
+        {state.completed && (
           <p
-            key={state.completed ? "result" : state.revealedClues}
-            className="text-center text-xs tracking-wide text-white/50"
+            key="result"
+            className="text-center text-xs tracking-wide text-white/50 py-2"
           >
             {(() => {
               const msg = state.solved
                 ? state.score > 0
                   ? `Collected ${tapeCollected}/5 tape!`
                   : `Collected 1/5 tape!`
-                : state.completed
-                  ? `the answer was ${puzzle.answer}`
-                  : getEncouragement(state.revealedClues, puzzle.date);
+                : `the answer was ${puzzle.answer}`;
               return msg.split("").map((char, ci) => (
                 <span
                   key={ci}
@@ -307,16 +290,40 @@ export default function Game({
               ));
             })()}
           </p>
-          <div
-            className={`
-              h-0.5 rounded-full transition-all duration-300
-              ${wrongFlash ? "w-8 bg-red-500/60" : "w-0 bg-transparent"}
-            `}
-          />
-        </div>
+        )}
       </div>
 
-      {/* Tape result (shown after completion) */}
+      {/* Clues board — always visible */}
+      <ClueList
+        clues={puzzle.clues}
+        revealedCount={state.revealedClues}
+        completed={state.completed}
+        revealing={revealing}
+        dailyColors={dailyColors}
+        shareMode={shareMode}
+        selectedClue={selectedClue}
+        onSelectClue={setSelectedClue}
+      />
+
+      {/* Share button (below clues) */}
+      {shareMode && (
+        <div className="flex justify-center mt-2 animate-fade-in">
+          <button
+            onClick={handleShare}
+            className="
+              w-48 rounded-none px-5 py-2.5 text-sm font-semibold uppercase tracking-widest
+              transition-all duration-500
+              border border-green-500/30 bg-green-500/15 text-green-300
+              hover:bg-green-500/25 hover:border-green-500/50 hover:text-green-200
+              active:scale-[0.98]
+            "
+          >
+            {shareLabel ?? "Share"}
+          </button>
+        </div>
+      )}
+
+      {/* Tape result (shown after completion, below clues) */}
       {state.completed && tapeResult && shareMode && (
         <TapeResult
           colorsEarned={tapeResult.colorsEarned}
@@ -324,17 +331,6 @@ export default function Game({
           solved={state.solved}
           isGuest={isGuest}
           onSignIn={onGuestSignIn}
-        />
-      )}
-
-      {/* Clues board — hide in share mode */}
-      {!shareMode && (
-        <ClueList
-          clues={puzzle.clues}
-          revealedCount={state.revealedClues}
-          completed={state.completed}
-          collecting={collecting}
-          dailyColors={dailyColors}
         />
       )}
 
