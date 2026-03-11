@@ -15,12 +15,12 @@ import TapeResult from "./TapeResult";
 
 /* ─── Timing constants (ms) ─── */
 const WRONG_FLASH_MS = 600;
-const REVEAL_START_DELAY_MS = 800;
-const REVEAL_STAGGER_MS = 300;
-const TAPE_PEEL_MS = 400;
-const READING_PAUSE_MS = 500;
-const SCORE_ZERO_SHARE_DELAY_MS = 1000;
-const LOSS_SHARE_DELAY_MS = 1200;
+const REVEAL_START_DELAY_MS = 300;
+const REVEAL_STAGGER_MS = 150;
+const TAPE_PEEL_MS = 200;
+const READING_PAUSE_MS = 0;
+const SCORE_ZERO_SHARE_DELAY_MS = 400;
+const LOSS_SHARE_DELAY_MS = 800;
 const SHARE_LABEL_MS = 2000;
 
 interface GameProps {
@@ -87,7 +87,8 @@ export default function Game({
         puzzle.id,
         state.score,
         state.solved,
-        dailyColors
+        dailyColors,
+        state.guesses
       ).then((result) => {
         setTapeResult(result);
         // Refresh tape stats in parent (DB was corrected server-side)
@@ -133,13 +134,14 @@ export default function Game({
       setState(next);
 
       if (next.solved) {
-        // Win flow: SPIKE wave → reveal remaining clues → share mode
+        // Win flow: confetti → reveal → share mode (fast)
         setCelebrating(true);
+        const earnedColors = getEarnedColors(next.score, dailyColors);
+        fireConfetti(earnedColors);
 
         if (next.score > 0) {
-          // After SPIKE wave, start peeling remaining tapes
           setTimeout(() => setRevealing(true), REVEAL_START_DELAY_MS);
-          const unrevealedCount = next.score; // score = 5 - revealedClues
+          const unrevealedCount = next.score;
           const revealDuration = REVEAL_START_DELAY_MS
             + (unrevealedCount * REVEAL_STAGGER_MS)
             + TAPE_PEEL_MS
@@ -148,7 +150,6 @@ export default function Game({
             setShareMode(true);
           }, revealDuration);
         } else {
-          // Solved on 6th guess (score 0): all clues already visible
           setRevealing(true);
           setTimeout(() => {
             setShareMode(true);
@@ -168,7 +169,7 @@ export default function Game({
         setTimeout(() => setWrongFlash(false), WRONG_FLASH_MS);
       }
     },
-    [state, puzzle]
+    [state, puzzle, fireConfetti, dailyColors]
   );
 
   const handleReset = () => {
@@ -210,7 +211,6 @@ export default function Game({
   }
 
   const lastGuess = state.guesses[state.guesses.length - 1] ?? "";
-  const tapeCollected = state.score > 0 ? state.score : 1;
 
   return (
     <div className="flex flex-col gap-2">
@@ -240,7 +240,7 @@ export default function Game({
           })}
         </h1>
         {state.completed && (
-          <p className="text-xs tracking-wide text-white/35 mt-1 animate-fade-in">
+          <p className="text-sm tracking-wide text-white/60 mt-1 animate-fade-in">
             #{String(puzzle.id).padStart(3, "0")}: {puzzle.answer}
           </p>
         )}
@@ -273,28 +273,21 @@ export default function Game({
             category={puzzle.category}
           />
         )}
-        {/* Result message — only shown after game completes */}
-        {state.completed && (
+        {/* Result message — only shown on loss */}
+        {state.completed && !state.solved && (
           <p
             key="result"
             className="text-center text-xs tracking-wide text-white/50 py-2"
           >
-            {(() => {
-              const msg = state.solved
-                ? state.score > 0
-                  ? `Collected ${tapeCollected}/5 tape!`
-                  : `Collected 1/5 tape!`
-                : `the answer was ${puzzle.answer}`;
-              return msg.split("").map((char, ci) => (
-                <span
-                  key={ci}
-                  className="inline-block animate-letter-in"
-                  style={{ animationDelay: `${ci * 28}ms` }}
-                >
-                  {char === " " ? "\u00A0" : char}
-                </span>
-              ));
-            })()}
+            {`the answer was ${puzzle.answer}`.split("").map((char, ci) => (
+              <span
+                key={ci}
+                className="inline-block animate-letter-in"
+                style={{ animationDelay: `${ci * 28}ms` }}
+              >
+                {char === " " ? "\u00A0" : char}
+              </span>
+            ))}
           </p>
         )}
       </div>

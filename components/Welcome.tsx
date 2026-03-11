@@ -45,26 +45,24 @@ export default function Welcome({ onClose, dailyColors }: WelcomeProps) {
         }`}
         style={{ maxHeight: "80dvh", overflowY: "auto" }}
       >
-        {/* SPIKE mini logo */}
-        <h2 className="font-title text-5xl tracking-wide text-center mb-4">
-          {["S", "P", "I", "K", "E"].map((letter, i) => (
-            <span
-              key={i}
-              className="inline-block"
-              style={{
-                color: ALL_COLORS[colors[i]],
-                textShadow: `0 0 20px ${ALL_COLORS[colors[i]]}40`,
-              }}
-            >
-              {letter}
-            </span>
-          ))}
-        </h2>
-
         {/* Personal note */}
         <div className="flex flex-col gap-4 text-sm text-white/55 leading-relaxed" style={{ textWrap: "pretty" }}>
-          <p>
-            Welcome to SPIKE!
+          <p className="text-base text-white/70">
+            Welcome to{" "}
+            <span className="font-title text-lg tracking-wide">
+              {["S", "P", "I", "K", "E"].map((letter, i) => (
+                <span
+                  key={i}
+                  style={{
+                    color: ALL_COLORS[colors[i]],
+                    textShadow: `0 0 16px ${ALL_COLORS[colors[i]]}40`,
+                  }}
+                >
+                  {letter}
+                </span>
+              ))}
+            </span>
+            !
           </p>
           <p>
             If you{"'"}re seeing this, you{"'"}re one of the first people
@@ -82,16 +80,8 @@ export default function Welcome({ onClose, dailyColors }: WelcomeProps) {
             That{"'"}s what this game is. A small daily practice
             in getting closer to something we love.
           </p>
-          <p className="text-white/40 text-xs">
+          <p>
             New puzzle (and tape colors) every day.
-            <br />
-            Feedback always welcome @{" "}
-            <a
-              href="mailto:beta@spike.quest"
-              className="underline underline-offset-2 hover:text-white/60 transition-colors"
-            >
-              beta@spike.quest
-            </a>
           </p>
         </div>
 

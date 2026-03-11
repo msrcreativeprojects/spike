@@ -98,7 +98,7 @@ export default function TapeResult({
       {isGuest && (
         <button
           onClick={onSignIn}
-          className="text-xs text-white/30 hover:text-white/50 transition-colors underline underline-offset-2 decoration-white/15"
+          className="text-sm text-white/45 hover:text-white/65 transition-colors underline underline-offset-2 decoration-white/20"
         >
           Sign in to save your tape
         </button>

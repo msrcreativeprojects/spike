@@ -84,7 +84,8 @@ export async function recordGameCompletion(
   puzzleId: number,
   score: number,
   solved: boolean,
-  dailyColors: ClueColor[]
+  dailyColors: ClueColor[],
+  guesses: string[] = []
 ): Promise<GameCompletionResult> {
   if (dailyColors.length !== 5) {
     throw new Error(`Expected 5 daily colors, got ${dailyColors.length}`);
@@ -186,6 +187,7 @@ export async function recordGameCompletion(
     score,
     colors_earned: colorsEarned,
     total_tape_after: newTotal,
+    guesses,
   });
 
   return {
