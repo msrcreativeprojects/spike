@@ -20,23 +20,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "SPIKE" };
   }
 
-  const num = String(puzzleId).padStart(3, "0");
-  const clue = puzzle.clues[clueIndex] ?? puzzle.clues[0];
-
   return {
-    title: `SPIKE #${num} — Guess the ${puzzle.category}`,
-    description: clue,
+    title: "Can You Guess?",
+    description: "Play today's puzzle at spike.quest",
     openGraph: {
-      title: `SPIKE #${num} — Guess the ${puzzle.category}`,
-      description: clue,
+      title: "Can You Guess?",
+      description: "Play today's puzzle at spike.quest",
       siteName: "SPIKE",
       url: `https://spike.quest/s/${id}/${c}`,
       type: "website",
     },
     twitter: {
       card: "summary_large_image",
-      title: `SPIKE #${num} — Guess the ${puzzle.category}`,
-      description: clue,
+      title: "Can You Guess?",
+      description: "Play today's puzzle at spike.quest",
     },
   };
 }
