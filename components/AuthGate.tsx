@@ -72,13 +72,10 @@ export default function AuthGate({ onAuth, onGuest }: AuthGateProps) {
   return (
     <div className="flex flex-col items-center justify-center gap-8 animate-fade-in">
       <div className="text-center">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/40 mb-2">
-          {step === "email" ? "SIGN IN" : "ENTER CODE"}
-        </p>
         <p className="text-sm text-white/50">
           {step === "email" ? (
             <>
-              Play &amp; start your{" "}
+              Start your{" "}
               <span
                 className="font-semibold animate-glow-text-pulse"
                 style={{ color: GLOW_COLOR }}
@@ -157,7 +154,7 @@ export default function AuthGate({ onAuth, onGuest }: AuthGateProps) {
         onClick={onGuest}
         className="text-xs text-white/20 hover:text-white/35 transition-colors"
       >
-        Play as guest
+        Not now
       </button>
 
       <p className="text-[11px] text-white/15 text-center leading-relaxed max-w-[260px]">

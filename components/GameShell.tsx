@@ -21,9 +21,9 @@ type Overlay = "none" | "welcome" | "tutorial" | "auth";
 
 export default function GameShell({ puzzle }: GameShellProps) {
   const [ready, setReady] = useState(false);
-  const [overlay, setOverlay] = useState<Overlay>("auth");
+  const [overlay, setOverlay] = useState<Overlay>("none");
   const [userId, setUserId] = useState<string | null>(null);
-  const [isGuest, setIsGuest] = useState(false);
+  const [isGuest, setIsGuest] = useState(true); // Start as guest by default
   const [tapeStats, setTapeStats] = useState<TapeStats | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -33,7 +33,7 @@ export default function GameShell({ puzzle }: GameShellProps) {
 
   const gameBlocked = overlay !== "none";
 
-  // Check auth state on mount — game renders immediately behind overlay
+  // Check auth state on mount — no gate, just check quietly
   useEffect(() => {
     setReady(true);
     const supabase = createClient();
@@ -41,32 +41,27 @@ export default function GameShell({ puzzle }: GameShellProps) {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         setUserId(user.id);
-        setOverlay("none");
+        setIsGuest(false);
         loadTapeStats(user.id).then((stats) => {
           setTapeStats(stats);
         });
-      } else if (!hasSeenTutorial()) {
+      }
+      // Show welcome for first-time visitors, otherwise straight to game
+      if (!user && !hasSeenTutorial()) {
         setOverlay("welcome");
-      } else {
-        setOverlay("auth");
       }
     });
   }, []);
 
   const handleCloseWelcome = useCallback(() => {
     markTutorialSeen();
-    setOverlay("auth");
+    setOverlay("none");
   }, []);
 
   const handleCloseTutorial = useCallback(() => {
     markTutorialSeen();
-    // If guest was already chosen, dismiss overlay; otherwise show auth
-    if (isGuest) {
-      setOverlay("none");
-    } else {
-      setOverlay("auth");
-    }
-  }, [isGuest]);
+    setOverlay("none");
+  }, []);
 
   const handleAuth = useCallback(() => {
     const supabase = createClient();
@@ -83,13 +78,7 @@ export default function GameShell({ puzzle }: GameShellProps) {
   }, []);
 
   const handleGuest = useCallback(() => {
-    setIsGuest(true);
-    // Tutorial was already shown before auth gate, go straight to game
-    if (hasSeenTutorial()) {
-      setOverlay("none");
-    } else {
-      setOverlay("tutorial");
-    }
+    setOverlay("none");
   }, []);
 
   const handleSignOut = useCallback(async () => {
@@ -97,9 +86,8 @@ export default function GameShell({ puzzle }: GameShellProps) {
     await supabase.auth.signOut();
     setUserId(null);
     setTapeStats(null);
-    setIsGuest(false);
+    setIsGuest(true);
     setShowStats(false);
-    setOverlay("auth");
   }, []);
 
   const handleTapeUpdate = useCallback((stats: TapeStats) => {
@@ -147,10 +135,10 @@ export default function GameShell({ puzzle }: GameShellProps) {
         />
       </div>
 
-      {/* Auth overlay — same backdrop + panel style as HowToPlay */}
+      {/* Auth overlay — dismissible, opens from person icon or post-game nudge */}
       {overlay === "auth" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80" />
+          <div className="absolute inset-0 bg-black/80" onClick={handleGuest} />
           <div className="relative z-10 w-full max-w-sm border border-white/10 bg-[#0a0a0c] p-6 pt-8 animate-curtain-up">
             <AuthGate onAuth={handleAuth} onGuest={handleGuest} />
           </div>
