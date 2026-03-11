@@ -49,20 +49,17 @@ export default function Welcome({ onClose, dailyColors }: WelcomeProps) {
         <div className="flex flex-col gap-4 text-sm text-white/55 leading-relaxed" style={{ textWrap: "pretty" }}>
           <p className="text-base text-white/70">
             Welcome to{" "}
-            <span className="font-title text-lg tracking-wide">
-              {["S", "P", "I", "K", "E"].map((letter, i) => (
-                <span
-                  key={i}
-                  style={{
-                    color: ALL_COLORS[colors[i]],
-                    textShadow: `0 0 16px ${ALL_COLORS[colors[i]]}40`,
-                  }}
-                >
-                  {letter}
-                </span>
-              ))}
-            </span>
-            !
+            {["S", "P", "I", "K", "E"].map((letter, i) => (
+              <span
+                key={i}
+                style={{
+                  color: ALL_COLORS[colors[i]],
+                  textShadow: `0 0 16px ${ALL_COLORS[colors[i]]}40`,
+                }}
+              >
+                {letter}
+              </span>
+            ))}
           </p>
           <p>
             If you{"'"}re seeing this, you{"'"}re one of the first people
@@ -81,7 +78,7 @@ export default function Welcome({ onClose, dailyColors }: WelcomeProps) {
             in getting closer to something we love.
           </p>
           <p>
-            New puzzle (and tape colors) every day.
+            New puzzle (and tape colors) every day. Have fun!
           </p>
         </div>
 

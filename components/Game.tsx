@@ -246,8 +246,8 @@ export default function Game({
         )}
       </header>
 
-      {/* Guess form / pick-a-clue prompt */}
-      <div className="flex flex-col">
+      {/* Guess form / pick-a-clue prompt — below clues on mobile, above on desktop */}
+      <div className="flex flex-col order-2 md:order-1">
         {shareMode ? (
           <p
             key="pick-clue"
@@ -292,21 +292,23 @@ export default function Game({
         )}
       </div>
 
-      {/* Clues board — always visible */}
-      <ClueList
-        clues={puzzle.clues}
-        revealedCount={state.revealedClues}
-        completed={state.completed}
-        revealing={revealing}
-        dailyColors={dailyColors}
-        shareMode={shareMode}
-        selectedClue={selectedClue}
-        onSelectClue={setSelectedClue}
-      />
+      {/* Clues board — above guess on mobile, below on desktop */}
+      <div className="order-1 md:order-2">
+        <ClueList
+          clues={puzzle.clues}
+          revealedCount={state.revealedClues}
+          completed={state.completed}
+          revealing={revealing}
+          dailyColors={dailyColors}
+          shareMode={shareMode}
+          selectedClue={selectedClue}
+          onSelectClue={setSelectedClue}
+        />
+      </div>
 
       {/* Share button (below clues) */}
       {shareMode && (
-        <div className="flex justify-center mt-2 animate-fade-in">
+        <div className="flex justify-center mt-2 animate-fade-in order-3">
           <button
             onClick={handleShare}
             className="
@@ -324,19 +326,21 @@ export default function Game({
 
       {/* Tape result (shown after completion, below clues) */}
       {state.completed && tapeResult && shareMode && (
-        <TapeResult
-          colorsEarned={tapeResult.colorsEarned}
-          totalTape={tapeResult.newTotal}
-          solved={state.solved}
-          isGuest={isGuest}
-          onSignIn={onGuestSignIn}
-        />
+        <div className="order-4">
+          <TapeResult
+            colorsEarned={tapeResult.colorsEarned}
+            totalTape={tapeResult.newTotal}
+            solved={state.solved}
+            isGuest={isGuest}
+            onSignIn={onGuestSignIn}
+          />
+        </div>
       )}
 
       {/* Dev reset — visible for testing */}
       <button
         onClick={handleReset}
-        className="mx-auto mt-2 text-[10px] text-white/20 hover:text-white/50 transition-colors uppercase tracking-widest"
+        className="mx-auto mt-2 text-[10px] text-white/20 hover:text-white/50 transition-colors uppercase tracking-widest order-5"
       >
         reset puzzle
       </button>
