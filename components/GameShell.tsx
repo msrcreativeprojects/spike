@@ -21,7 +21,7 @@ type Overlay = "none" | "welcome" | "tutorial" | "auth";
 
 export default function GameShell({ puzzle }: GameShellProps) {
   const [ready, setReady] = useState(false);
-  const [overlay, setOverlay] = useState<Overlay>("none");
+  const [overlay, setOverlay] = useState<Overlay>("auth");
   const [userId, setUserId] = useState<string | null>(null);
   const [isGuest, setIsGuest] = useState(false);
   const [tapeStats, setTapeStats] = useState<TapeStats | null>(null);
@@ -33,23 +33,21 @@ export default function GameShell({ puzzle }: GameShellProps) {
 
   const gameBlocked = overlay !== "none";
 
-  // Check auth state on mount
+  // Check auth state on mount — game renders immediately behind overlay
   useEffect(() => {
+    setReady(true);
     const supabase = createClient();
 
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         setUserId(user.id);
+        setOverlay("none");
         loadTapeStats(user.id).then((stats) => {
           setTapeStats(stats);
-          setReady(true);
-          setOverlay("none");
         });
       } else if (!hasSeenTutorial()) {
-        setReady(true);
         setOverlay("welcome");
       } else {
-        setReady(true);
         setOverlay("auth");
       }
     });

@@ -5,6 +5,7 @@ import {
   type TapeStats,
   type TapeDayRecord,
 } from "@/types/puzzle";
+import { getEarnedColors } from "@/lib/colors";
 
 export function defaultTapeStats(): TapeStats {
   return {
@@ -24,20 +25,20 @@ export async function loadTapeStats(
 ): Promise<TapeStats> {
   const supabase = createClient();
 
-  // Load stats
-  const { data: stats } = await supabase
-    .from("tape_stats")
-    .select("*")
-    .eq("user_id", userId)
-    .single();
-
-  // Load recent history (last 30 entries)
-  const { data: history } = await supabase
-    .from("game_history")
-    .select("*")
-    .eq("user_id", userId)
-    .order("date", { ascending: false })
-    .limit(30);
+  // Load stats + history in parallel
+  const [{ data: stats }, { data: history }] = await Promise.all([
+    supabase
+      .from("tape_stats")
+      .select("*")
+      .eq("user_id", userId)
+      .single(),
+    supabase
+      .from("game_history")
+      .select("*")
+      .eq("user_id", userId)
+      .order("date", { ascending: false })
+      .limit(30),
+  ]);
 
   if (!stats) {
     return defaultTapeStats();
@@ -85,6 +86,10 @@ export async function recordGameCompletion(
   solved: boolean,
   dailyColors: ClueColor[]
 ): Promise<GameCompletionResult> {
+  if (dailyColors.length !== 5) {
+    throw new Error(`Expected 5 daily colors, got ${dailyColors.length}`);
+  }
+
   const supabase = createClient();
 
   // Check if already recorded (idempotent)
@@ -145,12 +150,7 @@ export async function recordGameCompletion(
     newStreak = 1;
   }
 
-  // Calculate colors earned — the unpeeled positions use daily colors
-  // Score > 0: earn colored tape from remaining positions
-  // Score 0 (solved on last guess or failed): earn 1 white consolation tape
-  const colorsEarned: TapeColor[] = score > 0
-    ? dailyColors.slice(5 - score)
-    : ["white"];
+  const colorsEarned: TapeColor[] = getEarnedColors(score, dailyColors);
 
   // Glow bonus on every 7th streak day
   const hasGlowBonus = newStreak > 0 && newStreak % 7 === 0;

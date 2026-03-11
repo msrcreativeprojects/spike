@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import confetti from "canvas-confetti";
+
 import { Puzzle, GameState, ALL_COLORS, type ClueColor, type TapeStats, type TapeColor } from "@/types/puzzle";
 import { createInitialState, submitGuess } from "@/lib/gameLogic";
 import { loadGameState, saveGameState, clearGameState } from "@/lib/storage";
@@ -105,9 +105,10 @@ export default function Game({
   }, [state?.completed, state?.score, state?.solved, userId, isGuest, puzzle, onTapeUpdate, dailyColors]);
 
   // Fire confetti when transitioning to share mode after a win
-  const fireConfetti = useCallback((colors: TapeColor[]) => {
+  const fireConfetti = useCallback(async (colors: TapeColor[]) => {
+    const { default: confettiFn } = await import("canvas-confetti");
     const hexColors = colors.map(getColorHex);
-    confetti({
+    confettiFn({
       particleCount: 80,
       spread: 70,
       origin: { y: 0.55 },
@@ -115,7 +116,7 @@ export default function Game({
       disableForReducedMotion: true,
     });
     setTimeout(() => {
-      confetti({
+      confettiFn({
         particleCount: 40,
         spread: 90,
         origin: { y: 0.5, x: 0.4 },
@@ -179,7 +180,7 @@ export default function Game({
     setShareMode(false);
     setTapeResult(null);
     setSelectedClue(0);
-    confetti.reset();
+    import("canvas-confetti").then((m) => m.default.reset());
   };
 
   const handleShare = async () => {
@@ -334,10 +335,10 @@ export default function Game({
         />
       )}
 
-      {/* Dev reset — hidden but always available */}
+      {/* Dev reset — visible for testing */}
       <button
         onClick={handleReset}
-        className="mx-auto mt-4 text-[10px] text-white/[0.07] hover:text-white/25 transition-colors"
+        className="mx-auto mt-4 text-[10px] text-white/20 hover:text-white/50 transition-colors uppercase tracking-widest"
       >
         reset puzzle
       </button>
