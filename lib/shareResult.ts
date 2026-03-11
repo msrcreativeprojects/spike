@@ -1,97 +1,48 @@
-import { SHARE_EMOJIS, GameState, Puzzle, type ClueColor, type TapeColor } from "@/types/puzzle";
-import { generateShareImage } from "./shareImage";
+import { SHARE_EMOJIS, GameState, Puzzle, type ClueColor } from "@/types/puzzle";
 
 const TOTAL_CLUES = 5;
-
-interface TapeInfo {
-  colorsEarned: TapeColor[];
-  totalTape: number;
-}
 
 export function generateShareText(
   state: GameState,
   puzzle: Puzzle,
-  dailyColors: ClueColor[],
-  tapeInfo?: TapeInfo
+  dailyColors: ClueColor[]
 ): string {
   const puzzleNum = String(state.puzzleId).padStart(3, "0");
-  const cluesUsed = TOTAL_CLUES - state.score;
 
   // White = peeled (revealed), colored = still sealed (using daily colors)
   const marks = Array.from({ length: TOTAL_CLUES }, (_, i) => {
-    const peeled = i < cluesUsed;
+    const peeled = i < TOTAL_CLUES - state.score;
     return peeled ? SHARE_EMOJIS.peeled : SHARE_EMOJIS[dailyColors[i]];
   });
 
-  const marksLine = marks.join("");
-  const tapeCollected = state.score > 0 ? state.score : 1;
-  const resultLine = state.solved
-    ? `Collected ${tapeCollected}/5 tape`
-    : `Collected 1/5 tape`;
-
-  let text = `SPIKE #${puzzleNum}\nGuess the ${puzzle.category}\n${marksLine}\n${resultLine}`;
-
-  if (tapeInfo) {
-    const hasGlow = tapeInfo.colorsEarned.includes("glow");
-    const earned = tapeInfo.colorsEarned.length;
-    text += `\n\uD83C\uDFAD +${earned} tape (${tapeInfo.totalTape} total)`;
-    if (hasGlow) text += " \u2728"; // ✨
-  }
-
-  return text;
-}
-
-/** Download a blob as a file via temporary <a> element. */
-function downloadBlob(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  return `SPIKE #${puzzleNum}\nGuess the ${puzzle.category}\n${marks.join("")}`;
 }
 
 /**
- * Generate a share image and share it via the Web Share API (mobile)
- * or download + clipboard copy (desktop).
+ * Share a link to the game via Web Share API (mobile)
+ * or copy to clipboard (desktop).
+ *
+ * The share URL points to a dynamic route that serves an OG image
+ * showing the selected clue — platforms render it as a rich link preview.
  */
 export async function shareResult(
   state: GameState,
   puzzle: Puzzle,
   selectedClueIndex: number,
-  dailyColors: ClueColor[],
-  tapeInfo?: TapeInfo
+  dailyColors: ClueColor[]
 ): Promise<"shared" | "saved" | "failed"> {
-  const text = generateShareText(state, puzzle, dailyColors, tapeInfo) + "\nspike.quest";
+  const text = generateShareText(state, puzzle, dailyColors);
+  const url = `https://spike.quest/s/${state.puzzleId}/${selectedClueIndex}`;
 
   try {
-    const blob = await generateShareImage({
-      puzzleId: state.puzzleId,
-      score: state.score,
-      solved: state.solved,
-      dailyColors,
-      category: puzzle.category,
-      featuredClue: puzzle.clues[selectedClueIndex],
-    });
-
-    const file = new File([blob], "spike-result.png", { type: "image/png" });
-
-    // Try native Web Share API with file support (mobile)
-    if (navigator.canShare?.({ files: [file] })) {
-      await navigator.share({ files: [file], text });
+    // Try native Web Share API (mobile share sheet)
+    if (navigator.share) {
+      await navigator.share({ url, text });
       return "shared";
     }
 
-    // Fallback: download image + copy text to clipboard
-    const puzzleNum = String(state.puzzleId).padStart(3, "0");
-    downloadBlob(blob, `spike-${puzzleNum}.png`);
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      // Clipboard failed silently — image was still downloaded
-    }
+    // Fallback: copy URL + text to clipboard
+    await navigator.clipboard.writeText(`${text}\n${url}`);
     return "saved";
   } catch (err) {
     // User cancelled the share sheet — not an error
@@ -99,9 +50,9 @@ export async function shareResult(
       return "failed";
     }
 
-    // Canvas or share failed — fall back to text-only clipboard
+    // Share failed — fall back to clipboard
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(`${text}\n${url}`);
       return "saved";
     } catch {
       return "failed";

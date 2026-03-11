@@ -186,13 +186,7 @@ export default function Game({
 
   const handleShare = async () => {
     if (!state) return;
-    const tapeInfo = tapeResult && !isGuest
-      ? {
-          colorsEarned: tapeResult.colorsEarned,
-          totalTape: tapeResult.newTotal,
-        }
-      : undefined;
-    const result = await shareResult(state, puzzle, selectedClue, dailyColors, tapeInfo);
+    const result = await shareResult(state, puzzle, selectedClue, dailyColors);
     if (result === "shared") {
       setShareLabel("Shared!");
       setTimeout(() => setShareLabel(null), SHARE_LABEL_MS);

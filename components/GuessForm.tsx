@@ -53,6 +53,8 @@ export default function GuessForm({
           placeholder={!category ? "Type your guess..." : undefined}
           autoComplete="off"
           autoCorrect="off"
+          autoCapitalize="none"
+          enterKeyHint="go"
           spellCheck={false}
           className={`
             w-full rounded-none border border-r-0
