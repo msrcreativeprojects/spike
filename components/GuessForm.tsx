@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 
 interface GuessFormProps {
   onGuess: (guess: string) => void;
@@ -27,11 +27,7 @@ export default function GuessForm({
   const displayValue = isLocked ? lockedValue ?? "" : value;
   const showCustomPlaceholder = !isLocked && !displayValue && category;
 
-  useEffect(() => {
-    if (!disabled && !isLocked) {
-      inputRef.current?.focus();
-    }
-  }, [disabled, isLocked]);
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

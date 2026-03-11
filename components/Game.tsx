@@ -45,11 +45,18 @@ export default function Game({
   const [state, setState] = useState<GameState | null>(null);
   const [wrongFlash, setWrongFlash] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
+  const [waving, setWaving] = useState(true); // entrance wave on mount
   const [revealing, setRevealing] = useState(false);
   const [shareLabel, setShareLabel] = useState<string | null>(null);
   const [shareMode, setShareMode] = useState(false);
   const [tapeResult, setTapeResult] = useState<GameCompletionResult | null>(null);
   const [selectedClue, setSelectedClue] = useState(0);
+
+  // Clear entrance wave after animation finishes
+  useEffect(() => {
+    const timer = setTimeout(() => setWaving(false), 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Load or initialize game state
   useEffect(() => {
@@ -176,6 +183,7 @@ export default function Game({
     clearGameState(puzzle.date);
     setState(createInitialState(puzzle.id));
     setCelebrating(false);
+    setWaving(false);
     setRevealing(false);
     setShareLabel(null);
     setShareMode(false);
@@ -209,7 +217,7 @@ export default function Game({
   return (
     <div className="flex flex-col gap-2">
       {/* Header */}
-      <header className="text-center mb-1">
+      <header className="text-center mb-4 mt-2">
         <h1 className="font-title text-8xl tracking-wide">
           {["S", "P", "I", "K", "E"].map((letter, i) => {
             const isLit = state.completed
@@ -220,12 +228,12 @@ export default function Game({
               <span
                 key={i}
                 className={`inline-block transition-all duration-500 ${
-                  celebrating ? "animate-spike-wave" : ""
+                  (waving || celebrating) ? "animate-spike-wave" : ""
                 }`}
                 style={{
                   color: isLit ? color : "rgba(255,255,255,0.9)",
                   textShadow: isLit ? `0 0 24px ${color}40` : "none",
-                  animationDelay: celebrating ? `${i * 100}ms` : "0ms",
+                  animationDelay: (waving || celebrating) ? `${i * 100}ms` : "0ms",
                 }}
               >
                 {letter}
