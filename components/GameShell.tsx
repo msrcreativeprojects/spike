@@ -185,11 +185,14 @@ export default function GameShell({ puzzle }: GameShellProps) {
 
       {!gameBlocked && !showTutorial && (
         <>
-          <TapeCounter
-            total={isGuest ? null : (tapeStats?.totalTape ?? 0)}
-            onClick={handleTapeCounterClick}
-            dailyColors={dailyColors}
-          />
+          {/* Tape counter — only for logged-in users (guests use person icon) */}
+          {!isGuest && (
+            <TapeCounter
+              total={tapeStats?.totalTape ?? 0}
+              onClick={handleTapeCounterClick}
+              dailyColors={dailyColors}
+            />
+          )}
           {/* Person icon — bottom left */}
           <button
             onClick={isGuest ? handleGuestSignIn : () => tapeStats && setShowStats(true)}
