@@ -1,21 +1,8 @@
-import { SHARE_EMOJIS, GameState, Puzzle, type ClueColor } from "@/types/puzzle";
+import { GameState, Puzzle, type ClueColor } from "@/types/puzzle";
 
-const TOTAL_CLUES = 5;
-
-export function generateShareText(
-  state: GameState,
-  puzzle: Puzzle,
-  dailyColors: ClueColor[]
-): string {
+export function generateShareText(state: GameState): string {
   const puzzleNum = String(state.puzzleId).padStart(3, "0");
-
-  // White = peeled (revealed), colored = still sealed (using daily colors)
-  const marks = Array.from({ length: TOTAL_CLUES }, (_, i) => {
-    const peeled = i < TOTAL_CLUES - state.score;
-    return peeled ? SHARE_EMOJIS.peeled : SHARE_EMOJIS[dailyColors[i]];
-  });
-
-  return `SPIKE #${puzzleNum}\nGuess the ${puzzle.category}\n${marks.join("")}`;
+  return `SPIKE #${puzzleNum} (+${state.score})`;
 }
 
 /**
@@ -31,7 +18,7 @@ export async function shareResult(
   selectedClueIndex: number,
   dailyColors: ClueColor[]
 ): Promise<"shared" | "saved" | "failed"> {
-  const text = generateShareText(state, puzzle, dailyColors);
+  const text = generateShareText(state);
   const url = `https://spike.quest/s/${state.puzzleId}/${selectedClueIndex}`;
 
   try {

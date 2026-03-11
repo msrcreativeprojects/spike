@@ -140,8 +140,8 @@ export default async function OGImage({ params }: Props) {
           <div
             style={{
               fontFamily: "Inter",
-              fontSize: "52px",
-              lineHeight: 1.3,
+              fontSize: "64px",
+              lineHeight: 1.25,
               color: "rgba(255,255,255,0.9)",
               fontWeight: 400,
             }}
