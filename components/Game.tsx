@@ -253,7 +253,7 @@ export default function Game({
             key="pick-clue"
             className="text-center text-sm font-semibold tracking-widest uppercase text-white/40 py-2 animate-fade-in"
           >
-            {"pick a clue to share".split("").map((char, ci) => (
+            {"send a friend a clue".split("").map((char, ci) => (
               <span
                 key={ci}
                 className="inline-block animate-letter-in"
