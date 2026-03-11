@@ -43,14 +43,14 @@ export default function TapeResult({
   const tapeCount = colorsEarned.filter((c) => c !== "glow").length;
 
   return (
-    <div className="flex flex-col items-center gap-2 animate-fade-in mt-4">
+    <div className="flex flex-col items-center gap-2 animate-fade-in mt-2">
       {/* Colored tape strips */}
       {colorsEarned.length > 0 && (
-        <div className="flex gap-1 items-center">
+        <div className="flex gap-1.5 items-center">
           {colorsEarned.map((color, i) => (
             <div
               key={i}
-              className={`h-3 w-7 transition-all duration-300 ${
+              className={`h-3.5 w-8 transition-all duration-300 ${
                 color === "glow" ? "animate-glow-pulse" : ""
               }`}
               style={{

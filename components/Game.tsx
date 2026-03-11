@@ -213,9 +213,9 @@ export default function Game({
   const tapeCollected = state.score > 0 ? state.score : 1;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       {/* Header */}
-      <header className="text-center mb-2">
+      <header className="text-center mb-1">
         <h1 className="font-title text-8xl tracking-wide">
           {["S", "P", "I", "K", "E"].map((letter, i) => {
             const isLit = state.completed
@@ -239,6 +239,11 @@ export default function Game({
             );
           })}
         </h1>
+        {state.completed && (
+          <p className="text-xs tracking-wide text-white/35 mt-1 animate-fade-in">
+            #{String(puzzle.id).padStart(3, "0")}: {puzzle.answer}
+          </p>
+        )}
       </header>
 
       {/* Guess form / pick-a-clue prompt */}
@@ -246,7 +251,7 @@ export default function Game({
         {shareMode ? (
           <p
             key="pick-clue"
-            className="text-center text-sm font-semibold tracking-widest uppercase text-white/40 py-3 animate-fade-in"
+            className="text-center text-sm font-semibold tracking-widest uppercase text-white/40 py-2 animate-fade-in"
           >
             {"pick a clue to share".split("").map((char, ci) => (
               <span
@@ -338,7 +343,7 @@ export default function Game({
       {/* Dev reset — visible for testing */}
       <button
         onClick={handleReset}
-        className="mx-auto mt-4 text-[10px] text-white/20 hover:text-white/50 transition-colors uppercase tracking-widest"
+        className="mx-auto mt-2 text-[10px] text-white/20 hover:text-white/50 transition-colors uppercase tracking-widest"
       >
         reset puzzle
       </button>
