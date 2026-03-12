@@ -149,7 +149,10 @@ export default function ClueList({
               >
                 <div
                   className={`w-full h-full animate-tape-peel ${isGold ? "animate-gold-shimmer" : ""}`}
-                  style={{ backgroundColor: isGold ? undefined : color }}
+                  style={{
+                    backgroundColor: isGold ? undefined : color,
+                    animationDelay: isGold ? `${i * 0.5}s` : undefined,
+                  }}
                 />
               </div>
             )}
@@ -165,7 +168,10 @@ export default function ClueList({
               >
                 <div
                   className={`w-full h-full ${isGold ? "animate-gold-shimmer" : ""}`}
-                  style={{ backgroundColor: isGold ? undefined : color }}
+                  style={{
+                    backgroundColor: isGold ? undefined : color,
+                    animationDelay: isGold ? `${i * 0.5}s` : undefined,
+                  }}
                 />
               </div>
             )}
@@ -181,7 +187,10 @@ export default function ClueList({
               >
                 <div
                   className={`w-full h-full animate-tape-fall ${isGold ? "animate-gold-shimmer" : ""}`}
-                  style={{ backgroundColor: isGold ? undefined : color }}
+                  style={{
+                    backgroundColor: isGold ? undefined : color,
+                    animationDelay: isGold ? `${i * 0.5}s` : undefined,
+                  }}
                 />
               </div>
             )}

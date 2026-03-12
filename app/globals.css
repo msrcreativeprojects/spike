@@ -161,37 +161,60 @@ body {
   animation: tape-peel 0.4s ease-out both;
 }
 
-/* Gold shimmer — moving light band across metallic surface */
-@keyframes gold-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+/* Gold tape glow — convex metallic strip with pulsing halo */
+@keyframes gold-tape-glow {
+  0%, 100% {
+    box-shadow:
+      0 4px 6px rgba(0, 0, 0, 0.4),
+      0 0 8px rgba(255, 215, 0, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 4px 6px rgba(0, 0, 0, 0.4),
+      0 0 18px rgba(255, 215, 0, 0.35),
+      0 0 4px rgba(255, 215, 0, 0.2);
+  }
 }
 
 .animate-gold-shimmer {
   background: linear-gradient(
-    110deg,
-    #FFD700 0%,
-    #FFD700 40%,
-    #FFF8DC 50%,
-    #FFD700 60%,
-    #FFD700 100%
+    180deg,
+    #8B6914 0%,
+    #DAA520 25%,
+    #FFD700 50%,
+    #DAA520 75%,
+    #8B6914 100%
   );
-  background-size: 200% 100%;
-  animation: gold-shimmer 3s ease-in-out infinite;
+  animation: gold-tape-glow 3s ease-in-out infinite;
 }
 
-/* Smaller gold shimmer for tape stats and tape counter */
+/* Smaller gold glow for tape stats and tape counter */
 .animate-gold-shimmer-sm {
   background: linear-gradient(
-    110deg,
-    #FFD700 0%,
-    #FFD700 35%,
-    #FFF8DC 50%,
-    #FFD700 65%,
-    #FFD700 100%
+    180deg,
+    #8B6914 0%,
+    #DAA520 30%,
+    #FFD700 50%,
+    #DAA520 70%,
+    #8B6914 100%
   );
-  background-size: 200% 100%;
-  animation: gold-shimmer 2.5s ease-in-out infinite;
+  animation: gold-tape-glow 2.5s ease-in-out infinite;
+}
+
+/* Gold glow pulse for SPIKE header letters */
+@keyframes gold-glow {
+  0%, 100% {
+    color: #DAA520;
+    text-shadow: 0 0 12px rgba(255, 215, 0, 0.3), 0 0 4px rgba(184, 134, 11, 0.2);
+  }
+  50% {
+    color: #FFD700;
+    text-shadow: 0 0 24px rgba(255, 215, 0, 0.5), 0 0 8px rgba(255, 215, 0, 0.3), 0 0 48px rgba(184, 134, 11, 0.15);
+  }
+}
+
+.gold-text-glow {
+  animation: gold-glow 3s ease-in-out infinite;
 }
 
 /* Guess box glow — subtle glow-tape pulse on the input border */

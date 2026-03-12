@@ -224,16 +224,17 @@ export default function Game({
               ? i >= 5 - state.score
               : i >= state.revealedClues;
             const color = ALL_COLORS[dailyColors[i]];
+            const isGold = dailyColors[i] === "gold";
             return (
               <span
                 key={i}
                 className={`inline-block transition-all duration-500 ${
                   (waving || celebrating) ? "animate-spike-wave" : ""
-                }`}
+                } ${isLit && isGold ? "gold-text-glow" : ""}`}
                 style={{
-                  color: isLit ? color : "rgba(255,255,255,0.9)",
-                  textShadow: isLit ? `0 0 24px ${color}40` : "none",
-                  animationDelay: (waving || celebrating) ? `${i * 100}ms` : "0ms",
+                  color: isLit && !isGold ? color : !isLit ? "rgba(255,255,255,0.9)" : undefined,
+                  textShadow: isLit && !isGold ? `0 0 24px ${color}40` : !isLit ? "none" : undefined,
+                  animationDelay: (waving || celebrating) ? `${i * 100}ms` : isLit && isGold ? `${i * 0.3}s` : "0ms",
                 }}
               >
                 {letter}
