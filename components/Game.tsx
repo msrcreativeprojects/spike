@@ -50,7 +50,7 @@ export default function Game({
   const [shareLabel, setShareLabel] = useState<string | null>(null);
   const [shareMode, setShareMode] = useState(false);
   const [tapeResult, setTapeResult] = useState<GameCompletionResult | null>(null);
-  const [selectedClue, setSelectedClue] = useState(0);
+  const [selectedClue, setSelectedClue] = useState<number | null>(null);
 
   // Clear entrance wave after animation finishes
   useEffect(() => {
@@ -188,12 +188,12 @@ export default function Game({
     setShareLabel(null);
     setShareMode(false);
     setTapeResult(null);
-    setSelectedClue(0);
+    setSelectedClue(null);
     import("canvas-confetti").then((m) => m.default.reset());
   };
 
   const handleShare = async () => {
-    if (!state) return;
+    if (!state || selectedClue === null) return;
     const result = await shareResult(state, puzzle, selectedClue, dailyColors);
     if (result === "shared") {
       setShareLabel("Shared!");
@@ -244,42 +244,18 @@ export default function Game({
         </h1>
       </header>
 
-      {/* Guess area — fixed-height slot, border lights up with daily colors on completion */}
-      <div
-        className={`mb-1 h-[48px] transition-all duration-700 ${
-          shareMode ? "animate-border-flow p-[1.5px]" : ""
-        }`}
-        style={
-          shareMode
-            ? {
-                backgroundImage: `linear-gradient(90deg, ${dailyColors
-                  .map((c) => ALL_COLORS[c])
-                  .join(", ")}, ${ALL_COLORS[dailyColors[0]]})`,
-                backgroundSize: "300% 100%",
-              }
-            : undefined
-        }
-      >
-        <div
-          className={`h-full ${
-            shareMode ? "bg-[#0a0a0c] flex items-center justify-center" : ""
-          }`}
-        >
-          {shareMode ? (
-            <p className="text-lg font-bold tracking-wide text-white/90 animate-fade-in">
-              {puzzle.answer}
-            </p>
-          ) : (
-            <GuessForm
-              onGuess={handleGuess}
-              disabled={state.completed}
-              lockedValue={state.completed ? lastGuess : undefined}
-              solved={state.solved}
-              failed={state.completed && !state.solved}
-              category={puzzle.category}
-            />
-          )}
-        </div>
+      {/* Guess area — same box throughout, just transitions visual state */}
+      <div className="mb-1 h-[48px]">
+        <GuessForm
+          onGuess={handleGuess}
+          disabled={state.completed}
+          lockedValue={shareMode ? puzzle.answer : state.completed ? lastGuess : undefined}
+          solved={!shareMode && state.solved}
+          failed={!shareMode && state.completed && !state.solved}
+          category={puzzle.category}
+          resolved={shareMode}
+          puzzleId={puzzle.puzzle_number ?? puzzle.id}
+        />
       </div>
 
       {/* Clues board */}
@@ -294,21 +270,45 @@ export default function Game({
         onSelectClue={setSelectedClue}
       />
 
-      {/* CTA button — "Send a friend a clue" */}
+      {/* CTA button — instruction state → active send */}
       {shareMode && (
         <div className="flex justify-center mt-3 animate-fade-in">
-          <button
-            onClick={handleShare}
-            className="
-              w-full max-w-xs rounded-none px-5 py-3 text-sm font-semibold uppercase tracking-widest
-              transition-all duration-500
-              border border-green-500/30 bg-green-500/15 text-green-300
-              hover:bg-green-500/25 hover:border-green-500/50 hover:text-green-200
-              active:scale-[0.98]
-            "
-          >
-            {shareLabel ?? "Send a friend a clue"}
-          </button>
+          {shareLabel ? (
+            <button
+              disabled
+              className="
+                w-full max-w-xs rounded-none px-5 py-3 text-sm font-semibold uppercase tracking-widest
+                border border-green-500/30 bg-green-500/15 text-green-300
+              "
+            >
+              {shareLabel}
+            </button>
+          ) : selectedClue !== null ? (
+            <button
+              onClick={handleShare}
+              className="
+                w-full max-w-xs rounded-none px-5 py-3 text-sm font-semibold uppercase tracking-widest
+                transition-all duration-500
+                border border-green-500/30 bg-green-500/15 text-green-300
+                hover:bg-green-500/25 hover:border-green-500/50 hover:text-green-200
+                active:scale-[0.98]
+              "
+            >
+              Send a friend a clue
+            </button>
+          ) : (
+            <button
+              disabled
+              className="
+                w-full max-w-xs rounded-none px-5 py-3 text-sm font-semibold uppercase tracking-widest
+                transition-all duration-500
+                border border-white/10 bg-white/[0.04] text-white/30
+                cursor-default
+              "
+            >
+              Tap a clue to send a friend
+            </button>
+          )}
         </div>
       )}
 

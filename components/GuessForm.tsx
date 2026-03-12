@@ -9,6 +9,8 @@ interface GuessFormProps {
   solved?: boolean;
   failed?: boolean;
   category?: string;
+  resolved?: boolean;
+  puzzleId?: number;
 }
 
 export default function GuessForm({
@@ -18,16 +20,16 @@ export default function GuessForm({
   solved,
   failed,
   category,
+  resolved,
+  puzzleId,
 }: GuessFormProps) {
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const isLocked = !!(solved || failed);
+  const isLocked = !!(solved || failed || resolved);
   const showGlow = !isLocked && !disabled;
 
   const displayValue = isLocked ? lockedValue ?? "" : value;
   const showCustomPlaceholder = !isLocked && !displayValue && category;
-
-
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,13 +59,15 @@ export default function GuessForm({
             px-4 py-3 text-base
             outline-none transition-all duration-500
             ${
-              solved
-                ? "border-green-500/30 bg-green-500/15 text-green-300 opacity-100"
-                : failed
-                  ? "border-red-500/30 bg-red-500/10 text-red-300 opacity-100"
-                  : showGlow
-                    ? "border-white/10 bg-white/[0.06] guess-glow text-white placeholder-white/50 disabled:opacity-40 disabled:cursor-not-allowed"
-                    : "border-white/10 bg-white/[0.06] text-white placeholder-white/50 focus:border-white/25 focus:bg-white/[0.08] disabled:opacity-40 disabled:cursor-not-allowed"
+              resolved
+                ? "border-white/10 bg-white/[0.06] text-white/90 font-bold"
+                : solved
+                  ? "border-green-500/30 bg-green-500/15 text-green-300 opacity-100"
+                  : failed
+                    ? "border-red-500/30 bg-red-500/10 text-red-300 opacity-100"
+                    : showGlow
+                      ? "border-white/10 bg-white/[0.06] guess-glow text-white placeholder-white/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                      : "border-white/10 bg-white/[0.06] text-white placeholder-white/50 focus:border-white/25 focus:bg-white/[0.08] disabled:opacity-40 disabled:cursor-not-allowed"
             }
           `}
         />
@@ -86,15 +90,23 @@ export default function GuessForm({
           rounded-none px-5 py-3 text-sm font-semibold
           transition-all duration-500
           ${
-            solved
-              ? "bg-green-500/80 text-white cursor-default"
-              : failed
-                ? "bg-red-500/40 text-white/60 cursor-default"
-                : "bg-white/90 text-black hover:bg-white active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-white/90 disabled:active:scale-100"
+            resolved
+              ? "bg-white/[0.06] border border-l-0 border-white/10 text-white/30 cursor-default tracking-widest"
+              : solved
+                ? "bg-green-500/80 text-white cursor-default"
+                : failed
+                  ? "bg-red-500/40 text-white/60 cursor-default"
+                  : "bg-white/90 text-black hover:bg-white active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-white/90 disabled:active:scale-100"
           }
         `}
       >
-        {solved ? "Correct!" : failed ? "X" : "Submit"}
+        {resolved && puzzleId
+          ? `#${String(puzzleId).padStart(3, "0")}`
+          : solved
+            ? "Correct!"
+            : failed
+              ? "X"
+              : "Submit"}
       </button>
     </form>
   );

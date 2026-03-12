@@ -6,6 +6,7 @@ export interface Puzzle {
   clues: [string, string, string, string, string];
   aliases?: string[];
   theme?: string;
+  puzzle_number?: number;
 }
 
 export interface GameState {

@@ -11,6 +11,11 @@ body {
   min-height: 100dvh;
 }
 
+/* Confetti canvas behind game UI */
+body > canvas {
+  z-index: 0 !important;
+}
+
 .font-title {
   font-family: var(--font-title), serif;
 }

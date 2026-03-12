@@ -36,7 +36,7 @@ export default async function PreviewPage({ params }: Props) {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col px-5 pt-[3vh] pb-4">
+    <main className="relative z-[1] mx-auto flex min-h-dvh max-w-md flex-col px-5 pt-[3vh] pb-4">
       <GameShell puzzle={puzzle} />
     </main>
   );

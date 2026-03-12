@@ -10,7 +10,7 @@ interface ClueListProps {
   revealing?: boolean;
   dailyColors: ClueColor[];
   shareMode?: boolean;
-  selectedClue?: number;
+  selectedClue?: number | null;
   onSelectClue?: (index: number) => void;
 }
 
