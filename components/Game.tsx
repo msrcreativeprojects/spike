@@ -217,7 +217,7 @@ export default function Game({
   return (
     <div className="flex flex-col gap-2">
       {/* Header */}
-      <header className="text-center mb-1">
+      <header className="text-center mb-3">
         <h1 className="font-title text-[7rem] leading-none tracking-wide">
           {["S", "P", "I", "K", "E"].map((letter, i) => {
             const isLit = state.completed
@@ -242,57 +242,44 @@ export default function Game({
             );
           })}
         </h1>
-        {state.completed && (
-          <p className="text-sm tracking-wide text-white/60 mt-1 animate-fade-in">
-            #{String(puzzle.id).padStart(3, "0")}: {puzzle.answer}
-          </p>
-        )}
       </header>
 
-      {/* Guess form / pick-a-clue prompt */}
-      <div className="flex flex-col mb-1">
-        {shareMode ? (
-          <p
-            key="pick-clue"
-            className="text-center text-sm font-semibold tracking-widest uppercase text-white/40 py-2 animate-fade-in"
-          >
-            {"send a friend a clue".split("").map((char, ci) => (
-              <span
-                key={ci}
-                className="inline-block animate-letter-in"
-                style={{ animationDelay: `${ci * 40}ms` }}
-              >
-                {char === " " ? "\u00A0" : char}
-              </span>
-            ))}
-          </p>
-        ) : (
-          <GuessForm
-            onGuess={handleGuess}
-            disabled={state.completed}
-            lockedValue={state.completed ? lastGuess : undefined}
-            solved={state.solved}
-            failed={state.completed && !state.solved}
-            category={puzzle.category}
-          />
-        )}
-        {/* Result message — only shown on loss */}
-        {state.completed && !state.solved && (
-          <p
-            key="result"
-            className="text-center text-xs tracking-wide text-white/50 py-2"
-          >
-            {`the answer was ${puzzle.answer}`.split("").map((char, ci) => (
-              <span
-                key={ci}
-                className="inline-block animate-letter-in"
-                style={{ animationDelay: `${ci * 28}ms` }}
-              >
-                {char === " " ? "\u00A0" : char}
-              </span>
-            ))}
-          </p>
-        )}
+      {/* Guess area — fixed-height slot, border lights up with daily colors on completion */}
+      <div
+        className={`mb-1 h-[48px] transition-all duration-700 ${
+          shareMode ? "animate-border-flow p-[1.5px]" : ""
+        }`}
+        style={
+          shareMode
+            ? {
+                backgroundImage: `linear-gradient(90deg, ${dailyColors
+                  .map((c) => ALL_COLORS[c])
+                  .join(", ")}, ${ALL_COLORS[dailyColors[0]]})`,
+                backgroundSize: "300% 100%",
+              }
+            : undefined
+        }
+      >
+        <div
+          className={`h-full ${
+            shareMode ? "bg-[#0a0a0c] flex items-center justify-center" : ""
+          }`}
+        >
+          {shareMode ? (
+            <p className="text-lg font-bold tracking-wide text-white/90 animate-fade-in">
+              {puzzle.answer}
+            </p>
+          ) : (
+            <GuessForm
+              onGuess={handleGuess}
+              disabled={state.completed}
+              lockedValue={state.completed ? lastGuess : undefined}
+              solved={state.solved}
+              failed={state.completed && !state.solved}
+              category={puzzle.category}
+            />
+          )}
+        </div>
       </div>
 
       {/* Clues board */}
@@ -307,20 +294,20 @@ export default function Game({
         onSelectClue={setSelectedClue}
       />
 
-      {/* Share button (below clues) */}
+      {/* CTA button — "Send a friend a clue" */}
       {shareMode && (
-        <div className="flex justify-center mt-2 animate-fade-in">
+        <div className="flex justify-center mt-3 animate-fade-in">
           <button
             onClick={handleShare}
             className="
-              w-48 rounded-none px-5 py-2.5 text-sm font-semibold uppercase tracking-widest
+              w-full max-w-xs rounded-none px-5 py-3 text-sm font-semibold uppercase tracking-widest
               transition-all duration-500
               border border-green-500/30 bg-green-500/15 text-green-300
               hover:bg-green-500/25 hover:border-green-500/50 hover:text-green-200
               active:scale-[0.98]
             "
           >
-            {shareLabel ?? "Share"}
+            {shareLabel ?? "Send a friend a clue"}
           </button>
         </div>
       )}

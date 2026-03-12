@@ -18,7 +18,7 @@ export default async function Home() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col px-5 pt-[2vh] pb-4">
+    <main className="mx-auto flex min-h-dvh max-w-md flex-col px-5 pt-[3vh] pb-4">
       <GameShell puzzle={puzzle} />
     </main>
   );
