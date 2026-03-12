@@ -218,7 +218,7 @@ export default function Game({
     <div className="flex flex-col gap-2">
       {/* Header */}
       <header className="text-center mb-4">
-        <h1 className="font-title text-8xl tracking-wide">
+        <h1 className="font-title text-[7rem] tracking-wide">
           {["S", "P", "I", "K", "E"].map((letter, i) => {
             const isLit = state.completed
               ? i >= 5 - state.score
