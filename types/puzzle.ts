@@ -21,9 +21,9 @@ export type ClueColor =
   | "purple"
   | "blue"
   | "green"
+  | "lime"
   | "yellow"
   | "orange"
-  | "cyan"
   | "red";
 export type TapeColor = ClueColor | "glow" | "white";
 
@@ -31,12 +31,12 @@ export type TapeColor = ClueColor | "glow" | "white";
 export const ALL_COLORS: Record<ClueColor, string> = {
   pink: "#ff2d8a",
   purple: "#bf5fff",
-  blue: "#00d4ff",
+  blue: "#00a2ff",
   green: "#39ff14",
+  lime: "#c8ff00",
   yellow: "#faff00",
   orange: "#ff6b2d",
-  cyan: "#00ffcc",
-  red: "#ff2d2d",
+  red: "#ff0050",
 };
 
 export const ALL_COLOR_NAMES: ClueColor[] = Object.keys(ALL_COLORS) as ClueColor[];
@@ -49,9 +49,9 @@ export const SHARE_EMOJIS: Record<ClueColor | "peeled", string> = {
   purple: "\uD83D\uDFEA", // 🟪
   blue: "\uD83D\uDFE6",   // 🟦
   green: "\uD83D\uDFE9",  // 🟩
+  lime: "\uD83D\uDFE8",   // 🟨 (closest emoji to lime)
   yellow: "\uD83D\uDFE8", // 🟨
   orange: "\uD83D\uDFE7", // 🟧
-  cyan: "\uD83E\uDE75",   // 🩵
   red: "\uD83D\uDFE5",    // 🟥
   peeled: "\u2B1C",        // ⬜
 };
