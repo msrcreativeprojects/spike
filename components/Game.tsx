@@ -217,7 +217,7 @@ export default function Game({
   return (
     <div className="flex flex-col gap-2">
       {/* Header */}
-      <header className="text-center mb-4">
+      <header className="text-center mb-2">
         <h1 className="font-title text-[7rem] tracking-wide">
           {["S", "P", "I", "K", "E"].map((letter, i) => {
             const isLit = state.completed
