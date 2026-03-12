@@ -29,7 +29,7 @@ export default function TapeCounter({ total, onClick, dailyColors }: TapeCounter
       onClick={onClick}
       aria-label={total !== null ? `${total} tape collected` : "Sign in"}
       className={`
-        fixed top-4 right-4 z-40
+        fixed bottom-4 left-4 z-40
         flex h-8 items-center justify-center gap-1.5 px-2.5
         border border-white/15 bg-white/[0.04]
         text-xs text-white/30

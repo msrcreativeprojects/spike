@@ -181,25 +181,27 @@ export default function GameShell({ puzzle }: GameShellProps) {
               dailyColors={dailyColors}
             />
           )}
-          {/* Person icon — bottom left */}
-          <button
-            onClick={isGuest ? handleGuestSignIn : () => tapeStats && setShowStats(true)}
-            aria-label={isGuest ? "Sign in" : "Your stats"}
-            className="
-              fixed bottom-4 left-4 z-40
-              flex h-8 w-8 items-center justify-center
-              border border-white/15 bg-white/[0.04]
-              text-white/30
-              transition-all duration-200
-              hover:border-white/30 hover:bg-white/[0.08] hover:text-white/60
-              animate-fade-in
-            "
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="8" cy="5" r="2.5" />
-              <path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5" />
-            </svg>
-          </button>
+          {/* Person icon — bottom left, guests only (logged-in users see tape counter here instead) */}
+          {isGuest && (
+            <button
+              onClick={handleGuestSignIn}
+              aria-label="Sign in"
+              className="
+                fixed bottom-4 left-4 z-40
+                flex h-8 w-8 items-center justify-center
+                border border-white/15 bg-white/[0.04]
+                text-white/30
+                transition-all duration-200
+                hover:border-white/30 hover:bg-white/[0.08] hover:text-white/60
+                animate-fade-in
+              "
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="8" cy="5" r="2.5" />
+                <path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5" />
+              </svg>
+            </button>
+          )}
           {/* ? icon — bottom right */}
           <button
             onClick={() => setShowTutorial(true)}
