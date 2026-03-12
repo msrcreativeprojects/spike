@@ -5,6 +5,7 @@ export interface Puzzle {
   category: string;
   clues: [string, string, string, string, string];
   aliases?: string[];
+  theme?: string;
 }
 
 export interface GameState {
@@ -24,7 +25,8 @@ export type ClueColor =
   | "lime"
   | "yellow"
   | "orange"
-  | "red";
+  | "red"
+  | "gold";
 export type TapeColor = ClueColor | "glow" | "white";
 
 // All 8 neon colors in the pool (daily shuffle picks 5)
@@ -37,9 +39,13 @@ export const ALL_COLORS: Record<ClueColor, string> = {
   yellow: "#faff00",
   orange: "#ff6b2d",
   red: "#ff0050",
+  gold: "#FFD700",
 };
 
-export const ALL_COLOR_NAMES: ClueColor[] = Object.keys(ALL_COLORS) as ClueColor[];
+// Only the 8 standard neon colors rotate daily — special colors (gold) are excluded
+export const ALL_COLOR_NAMES: ClueColor[] = [
+  "pink", "purple", "blue", "green", "lime", "yellow", "orange", "red",
+];
 
 export const GLOW_COLOR = "#c8ffc8";
 export const WHITE_TAPE_COLOR = "#e0e0e0";
@@ -53,6 +59,7 @@ export const SHARE_EMOJIS: Record<ClueColor | "peeled", string> = {
   yellow: "\uD83D\uDFE8", // 🟨
   orange: "\uD83D\uDFE7", // 🟧
   red: "\uD83D\uDFE5",    // 🟥
+  gold: "\uD83C\uDFC6",   // 🏆
   peeled: "\u2B1C",        // ⬜
 };
 

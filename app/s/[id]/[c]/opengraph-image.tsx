@@ -82,7 +82,9 @@ export default async function OGImage({ params }: Props) {
     );
   }
 
-  const dailyColors = getDailyColors(puzzle.date);
+  const dailyColors = puzzle.theme === "gold"
+    ? (["gold", "gold", "gold", "gold", "gold"] as const)
+    : getDailyColors(puzzle.date);
   const accentHex = ALL_COLORS[dailyColors[0]];
   const clue = puzzle.clues[clueIndex] ?? puzzle.clues[0];
 

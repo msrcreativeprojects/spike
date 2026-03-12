@@ -22,6 +22,7 @@ export default function TapeCounter({ total, onClick, dailyColors }: TapeCounter
     prevTotal.current = total;
   }, [total]);
 
+  const isGold = dailyColors.every((c) => c === "gold");
   const gradient = dailyColors.map((c) => ALL_COLORS[c]).join(", ");
 
   return (
@@ -42,9 +43,9 @@ export default function TapeCounter({ total, onClick, dailyColors }: TapeCounter
       {total !== null ? (
         <>
           <span
-            className="inline-block h-2.5 w-4"
+            className={`inline-block h-2.5 w-4 ${isGold ? "animate-gold-shimmer-sm" : ""}`}
             style={{
-              background: `linear-gradient(90deg, ${gradient})`,
+              background: isGold ? undefined : `linear-gradient(90deg, ${gradient})`,
             }}
           />
           <span className="font-semibold tabular-nums">{total}</span>

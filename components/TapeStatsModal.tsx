@@ -54,6 +54,7 @@ export default function TapeStatsModal({
     (c) => (stats.tapeByColor[c] ?? 0) > 0
   );
   const glowCount = stats.tapeByColor.glow ?? 0;
+  const goldCount = stats.tapeByColor.gold ?? 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -95,7 +96,7 @@ export default function TapeStatsModal({
         </div>
 
         {/* Per-color breakdown */}
-        {(collectedColors.length > 0 || glowCount > 0) && (
+        {(collectedColors.length > 0 || glowCount > 0 || goldCount > 0) && (
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mb-6">
             {collectedColors.map((color) => (
               <div key={color} className="flex items-center gap-1.5">
@@ -108,6 +109,15 @@ export default function TapeStatsModal({
                 </span>
               </div>
             ))}
+            {/* Gold */}
+            {goldCount > 0 && (
+              <div className="flex items-center gap-1.5">
+                <div className="h-2.5 w-4 animate-gold-shimmer-sm" />
+                <span className="text-sm tabular-nums text-white/60">
+                  {goldCount}
+                </span>
+              </div>
+            )}
             {/* Glow */}
             {glowCount > 0 && (
               <div className="flex items-center gap-1.5">
@@ -179,9 +189,9 @@ export default function TapeStatsModal({
                               key={i}
                               className={`h-2 w-3 ${
                                 color === "glow" ? "animate-glow-pulse" : ""
-                              }`}
+                              } ${color === "gold" ? "animate-gold-shimmer-sm" : ""}`}
                               style={{
-                                backgroundColor: getColorHex(color),
+                                backgroundColor: color === "gold" ? undefined : getColorHex(color),
                               }}
                             />
                           )

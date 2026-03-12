@@ -13,7 +13,7 @@ const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function fetchPuzzleById(id: number): Promise<Puzzle | null> {
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/puzzles?id=eq.${id}&status=eq.approved&select=id,date,answer,category,clues,aliases`,
+    `${SUPABASE_URL}/rest/v1/puzzles?id=eq.${id}&status=eq.approved&select=id,date,answer,category,clues,aliases,theme`,
     {
       headers: {
         apikey: SUPABASE_KEY,
@@ -36,5 +36,6 @@ export async function fetchPuzzleById(id: number): Promise<Puzzle | null> {
     category: row.category,
     clues: row.clues as [string, string, string, string, string],
     aliases: (row.aliases as string[]) ?? undefined,
+    theme: (row.theme as string) ?? undefined,
   };
 }

@@ -52,9 +52,9 @@ export default function TapeResult({
               key={i}
               className={`h-3.5 w-8 transition-all duration-300 ${
                 color === "glow" ? "animate-glow-pulse" : ""
-              }`}
+              } ${color === "gold" ? "animate-gold-shimmer" : ""}`}
               style={{
-                backgroundColor: getColorHex(color),
+                backgroundColor: color === "gold" ? undefined : getColorHex(color),
                 opacity: i < visibleCount ? 1 : 0,
                 transform: i < visibleCount ? "scale(1)" : "scale(0.5)",
               }}

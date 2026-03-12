@@ -161,6 +161,39 @@ body {
   animation: tape-peel 0.4s ease-out both;
 }
 
+/* Gold shimmer — moving light band across metallic surface */
+@keyframes gold-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.animate-gold-shimmer {
+  background: linear-gradient(
+    110deg,
+    #FFD700 0%,
+    #FFD700 40%,
+    #FFF8DC 50%,
+    #FFD700 60%,
+    #FFD700 100%
+  );
+  background-size: 200% 100%;
+  animation: gold-shimmer 3s ease-in-out infinite;
+}
+
+/* Smaller gold shimmer for tape stats and tape counter */
+.animate-gold-shimmer-sm {
+  background: linear-gradient(
+    110deg,
+    #FFD700 0%,
+    #FFD700 35%,
+    #FFF8DC 50%,
+    #FFD700 65%,
+    #FFD700 100%
+  );
+  background-size: 200% 100%;
+  animation: gold-shimmer 2.5s ease-in-out infinite;
+}
+
 /* Guess box glow — subtle glow-tape pulse on the input border */
 @keyframes guess-glow {
   0%, 100% {

@@ -101,6 +101,7 @@ export default function ClueList({
         const isPeeling = peelingSet.has(i);
         const isPeeled = peeledSet.has(i);
         const color = ALL_COLORS[dailyColors[i]];
+        const isGold = dailyColors[i] === "gold";
         const rotation = ROTATIONS[i];
 
         // Text is visible if: revealed by wrong guess, or peeling/peeled
@@ -147,8 +148,8 @@ export default function ClueList({
                 }}
               >
                 <div
-                  className="w-full h-full animate-tape-peel"
-                  style={{ backgroundColor: color }}
+                  className={`w-full h-full animate-tape-peel ${isGold ? "animate-gold-shimmer" : ""}`}
+                  style={{ backgroundColor: isGold ? undefined : color }}
                 />
               </div>
             )}
@@ -162,7 +163,10 @@ export default function ClueList({
                   zIndex: 1,
                 }}
               >
-                <div className="w-full h-full" style={{ backgroundColor: color }} />
+                <div
+                  className={`w-full h-full ${isGold ? "animate-gold-shimmer" : ""}`}
+                  style={{ backgroundColor: isGold ? undefined : color }}
+                />
               </div>
             )}
 
@@ -176,8 +180,8 @@ export default function ClueList({
                 }}
               >
                 <div
-                  className="w-full h-full animate-tape-fall"
-                  style={{ backgroundColor: color }}
+                  className={`w-full h-full animate-tape-fall ${isGold ? "animate-gold-shimmer" : ""}`}
+                  style={{ backgroundColor: isGold ? undefined : color }}
                 />
               </div>
             )}

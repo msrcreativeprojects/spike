@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Puzzle, type TapeStats } from "@/types/puzzle";
+import { Puzzle, type TapeStats, type ClueColor } from "@/types/puzzle";
 import { createClient } from "@/lib/supabase/client";
 import { loadTapeStats } from "@/lib/tapeService";
 import { hasSeenTutorial, markTutorialSeen } from "@/lib/tutorial";
@@ -28,8 +28,13 @@ export default function GameShell({ puzzle }: GameShellProps) {
   const [showTutorial, setShowTutorial] = useState(false);
   const [showStats, setShowStats] = useState(false);
 
-  // Compute daily colors once from puzzle date
-  const dailyColors = useMemo(() => getDailyColors(puzzle.date), [puzzle.date]);
+  // Compute daily colors once from puzzle date (or override for themed puzzles)
+  const dailyColors = useMemo(() => {
+    if (puzzle.theme === "gold") {
+      return ["gold", "gold", "gold", "gold", "gold"] as ClueColor[];
+    }
+    return getDailyColors(puzzle.date);
+  }, [puzzle.date, puzzle.theme]);
 
   const gameBlocked = overlay !== "none";
 

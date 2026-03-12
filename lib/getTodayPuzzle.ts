@@ -20,7 +20,7 @@ export async function getTodayPuzzle(): Promise<Puzzle | null> {
 
   const { data } = await supabase
     .from("puzzles")
-    .select("id, date, answer, category, clues, aliases")
+    .select("id, date, answer, category, clues, aliases, theme")
     .eq("date", today)
     .eq("status", "approved")
     .single();
@@ -34,5 +34,6 @@ export async function getTodayPuzzle(): Promise<Puzzle | null> {
     category: data.category,
     clues: data.clues as [string, string, string, string, string],
     aliases: (data.aliases as string[]) ?? undefined,
+    theme: (data.theme as string) ?? undefined,
   };
 }
