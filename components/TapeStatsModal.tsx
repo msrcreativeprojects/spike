@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   ALL_COLORS,
   ALL_COLOR_NAMES,
@@ -16,12 +16,49 @@ interface TapeStatsModalProps {
   onSignOut: () => void;
 }
 
+/* ── Count-up hook ─────────────────────────────────────────────── */
+function useCountUp(target: number, duration = 800) {
+  const [value, setValue] = useState(0);
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+
+    if (target === 0) {
+      setValue(0);
+      return;
+    }
+
+    const start = performance.now();
+    let raf: number;
+
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(eased * target));
+      if (progress < 1) {
+        raf = requestAnimationFrame(tick);
+      }
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+
+  return value;
+}
+
+/* ── Component ─────────────────────────────────────────────────── */
 export default function TapeStatsModal({
   stats,
   onClose,
   onSignOut,
 }: TapeStatsModalProps) {
   const [closing, setClosing] = useState(false);
+  const displayTotal = useCountUp(stats.totalTape);
 
   const handleClose = useCallback(() => {
     if (closing) return;
@@ -60,7 +97,7 @@ export default function TapeStatsModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className={`absolute inset-0 bg-black/80 transition-opacity duration-300 ${
+        className={`absolute inset-0 bg-black/85 transition-opacity duration-300 ${
           closing ? "opacity-0" : ""
         }`}
         onClick={handleClose}
@@ -68,7 +105,7 @@ export default function TapeStatsModal({
 
       {/* Panel */}
       <div
-        className={`relative z-10 w-full max-w-sm border border-white/10 bg-[#0a0a0c] p-6 pt-8 ${
+        className={`relative z-10 w-full max-w-sm border border-white/[0.08] bg-[#0a0a0c] px-8 py-10 ${
           closing ? "animate-curtain-down" : "animate-curtain-up"
         }`}
         style={{ maxHeight: "80dvh", overflowY: "auto" }}
@@ -76,56 +113,58 @@ export default function TapeStatsModal({
         {/* Close */}
         <button
           onClick={handleClose}
-          className="absolute top-3 right-4 text-white/25 hover:text-white/50 transition-colors text-sm"
+          className="absolute top-4 right-5 text-white/30 hover:text-white/60 transition-colors text-lg"
           aria-label="Close"
         >
           &times;
         </button>
 
         {/* Title */}
-        <h2 className="text-center text-[10px] font-semibold uppercase tracking-[0.3em] text-white/40 mb-5">
-          YOUR TAPE
+        <h2 className="text-center text-[10px] font-semibold uppercase tracking-[0.3em] text-white/40 mb-6">
+          Your Tape
         </h2>
 
-        {/* Big total */}
-        <div className="text-center mb-6">
-          <p className="font-title text-5xl tracking-wide">{stats.totalTape}</p>
-          <p className="text-xs text-white/30 mt-1 uppercase tracking-widest">
+        {/* Big total — Inter bold, count-up animation */}
+        <div className="text-center mb-8">
+          <p className="text-7xl font-bold tabular-nums text-white/90 leading-none">
+            {displayTotal}
+          </p>
+          <p className="text-[10px] text-white/40 mt-2 uppercase tracking-[0.2em]">
             tape collected
           </p>
         </div>
 
         {/* Per-color breakdown */}
         {(collectedColors.length > 0 || glowCount > 0 || goldCount > 0) && (
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mb-6">
+          <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 mb-8">
             {collectedColors.map((color) => (
-              <div key={color} className="flex items-center gap-1.5">
+              <div key={color} className="flex items-center gap-2">
                 <div
-                  className="h-2.5 w-4"
+                  className="h-3 w-6"
                   style={{ backgroundColor: ALL_COLORS[color] }}
                 />
-                <span className="text-sm tabular-nums text-white/60">
+                <span className="text-sm tabular-nums text-white/50">
                   {stats.tapeByColor[color] ?? 0}
                 </span>
               </div>
             ))}
             {/* Gold */}
             {goldCount > 0 && (
-              <div className="flex items-center gap-1.5">
-                <div className="h-2.5 w-4 animate-gold-shimmer-sm" />
-                <span className="text-sm tabular-nums text-white/60">
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-6 animate-gold-shimmer-sm" />
+                <span className="text-sm tabular-nums text-white/50">
                   {goldCount}
                 </span>
               </div>
             )}
             {/* Glow */}
             {glowCount > 0 && (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <div
-                  className="h-2.5 w-4 animate-glow-pulse"
+                  className="h-3 w-6 animate-glow-pulse"
                   style={{ backgroundColor: GLOW_COLOR }}
                 />
-                <span className="text-sm tabular-nums text-white/60">
+                <span className="text-sm tabular-nums text-white/50">
                   {glowCount}
                 </span>
               </div>
@@ -133,20 +172,19 @@ export default function TapeStatsModal({
           </div>
         )}
 
-        {/* Stats grid */}
-        <div className="grid grid-cols-2 gap-2 mb-5">
+        {/* Stats row — single line, no boxes */}
+        <div className="flex justify-between px-2 mb-6">
           {[
-            { value: stats.gamesPlayed, label: "PLAYED" },
-            { value: `${winRate}%`, label: "WIN %" },
-            { value: stats.currentStreak, label: "STREAK" },
-            { value: stats.longestStreak, label: "BEST" },
+            { value: stats.gamesPlayed, label: "Played" },
+            { value: `${winRate}%`, label: "Win" },
+            { value: stats.currentStreak, label: "Streak" },
+            { value: stats.longestStreak, label: "Best" },
           ].map(({ value, label }) => (
-            <div
-              key={label}
-              className="border border-white/[0.06] bg-white/[0.02] p-3 text-center"
-            >
-              <p className="text-lg font-semibold text-white/80">{value}</p>
-              <p className="text-[9px] uppercase tracking-widest text-white/30">
+            <div key={label} className="text-center">
+              <p className="text-xl font-semibold tabular-nums text-white/70">
+                {value}
+              </p>
+              <p className="text-[9px] uppercase tracking-widest text-white/35 mt-0.5">
                 {label}
               </p>
             </div>
@@ -155,20 +193,20 @@ export default function TapeStatsModal({
 
         {/* Next glow countdown */}
         {stats.currentStreak > 0 && nextGlow !== 7 && (
-          <p className="text-center text-xs text-white/25 mb-5">
+          <p className="text-center text-xs text-white/30 mb-6">
             Next glow tape in{" "}
-            <span className="text-white/40">{nextGlow}</span>{" "}
+            <span className="text-white/50">{nextGlow}</span>{" "}
             {nextGlow === 1 ? "day" : "days"}
           </p>
         )}
 
         {/* Recent history */}
         {recentHistory.length > 0 && (
-          <div className="border-t border-white/[0.06] pt-4">
-            <p className="text-[9px] uppercase tracking-widest text-white/30 mb-2">
+          <div className="border-t border-white/[0.08] pt-5">
+            <p className="text-[9px] uppercase tracking-widest text-white/35 mb-3">
               Recent
             </p>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
               {recentHistory.map((day) => {
                 const d = new Date(day.date + "T00:00:00");
                 const label = d.toLocaleDateString("en-US", {
@@ -180,14 +218,14 @@ export default function TapeStatsModal({
                     key={day.date}
                     className="flex items-center justify-between text-xs"
                   >
-                    <span className="text-white/30 w-14">{label}</span>
-                    <div className="flex gap-0.5 flex-1 justify-center">
+                    <span className="text-white/40 w-14">{label}</span>
+                    <div className="flex gap-1 flex-1 justify-center">
                       {day.colorsEarned.length > 0 ? (
                         day.colorsEarned.map(
                           (color: TapeColor, i: number) => (
                             <div
                               key={i}
-                              className={`h-2 w-3 ${
+                              className={`h-2.5 w-4 ${
                                 color === "glow" ? "animate-glow-pulse" : ""
                               } ${color === "gold" ? "animate-gold-shimmer-sm" : ""}`}
                               style={{
@@ -197,10 +235,10 @@ export default function TapeStatsModal({
                           )
                         )
                       ) : (
-                        <span className="text-white/15">&mdash;</span>
+                        <span className="text-white/20">&mdash;</span>
                       )}
                     </div>
-                    <span className="text-white/20 tabular-nums w-10 text-right">
+                    <span className="text-white/30 tabular-nums w-10 text-right">
                       {day.totalTapeAfter}
                     </span>
                   </div>
@@ -211,10 +249,10 @@ export default function TapeStatsModal({
         )}
 
         {/* Sign out */}
-        <div className="border-t border-white/[0.06] mt-5 pt-4 text-center">
+        <div className="border-t border-white/[0.08] mt-6 pt-5 text-center">
           <button
             onClick={onSignOut}
-            className="text-xs text-white/20 hover:text-white/40 transition-colors"
+            className="text-xs text-white/25 hover:text-white/50 transition-colors"
           >
             Sign out
           </button>
