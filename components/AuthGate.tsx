@@ -241,10 +241,10 @@ export default function AuthGate({ onAuth, onGuest }: AuthGateProps) {
         Not now
       </button>
 
-      <p className="text-[11px] text-white/15 text-center leading-relaxed">
-        Your info is private.
-        <br />
+      <p className="text-xs text-white/30 text-center leading-relaxed">
         Your show business is your own business.
+        <br />
+        Your info is private.
       </p>
     </div>
   );
