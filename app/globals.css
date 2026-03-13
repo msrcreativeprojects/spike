@@ -55,6 +55,22 @@ body > canvas {
   animation: slot-in 0.3s ease-out;
 }
 
+/* Slot-machine drop-down for tutorial category text */
+@keyframes slot-down {
+  from {
+    transform: translateY(-60%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slot-down {
+  animation: slot-down 0.35s ease-out;
+}
+
 /* Letter-by-letter fade for encouragement dialogue */
 @keyframes letter-in {
   0% {

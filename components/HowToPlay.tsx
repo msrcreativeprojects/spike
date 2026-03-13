@@ -16,7 +16,8 @@ const TAPE_X = [-8, 16, -18, 12, -3];
 
 /* ═══════════════════════════════════════════════════════════════════
    STEP 1 — THE SETUP
-   "Under five pieces of spike tape are five facts about a Broadway ___."
+   "Under five pieces of spike tape are five facts about a
+    Broadway [Musical/Play/Actor/Theater]."
    ═══════════════════════════════════════════════════════════════════ */
 function StepSetup({ colors }: { colors: ClueColor[] }) {
   const [wordIndex, setWordIndex] = useState(0);
@@ -30,7 +31,6 @@ function StepSetup({ colors }: { colors: ClueColor[] }) {
 
   return (
     <div className="flex flex-col items-center">
-      {/* Copy with inline rotating category */}
       <p className="text-base text-white/60 text-center leading-relaxed mb-8">
         Under five pieces of spike tape
         <br />
@@ -42,7 +42,11 @@ function StepSetup({ colors }: { colors: ClueColor[] }) {
         >
           <span
             key={wordIndex}
-            className="inline-block animate-slot-in font-semibold text-white/80"
+            className="inline-block animate-slot-down font-semibold"
+            style={{
+              color: GLOW_COLOR,
+              textShadow: `0 0 10px ${GLOW_COLOR}50, 0 0 25px ${GLOW_COLOR}20`,
+            }}
           >
             Broadway {CATEGORY_WORDS[wordIndex]}.
           </span>
@@ -50,7 +54,7 @@ function StepSetup({ colors }: { colors: ClueColor[] }) {
       </p>
 
       {/* Five tape strips covering facts */}
-      <div className="flex flex-col items-center gap-1.5 w-full max-w-[280px]">
+      <div className="flex flex-col items-center gap-1.5 w-3/4">
         {colors.map((color, i) => (
           <div
             key={i}
@@ -60,9 +64,7 @@ function StepSetup({ colors }: { colors: ClueColor[] }) {
               animationFillMode: "backwards",
             }}
           >
-            {/* Fact underneath (hidden by tape) */}
             <div className="h-8 bg-white/[0.03]" />
-            {/* Tape overlay */}
             <div
               className="absolute inset-0"
               style={{
@@ -79,13 +81,21 @@ function StepSetup({ colors }: { colors: ClueColor[] }) {
 
 /* ═══════════════════════════════════════════════════════════════════
    STEP 2 — THE MECHANICS
-   "Guess what's what before all the tape is gone.
+   "Guess the Broadway [Musical] before all the tape is gone.
     Wrong answers cost tape, but reveal facts."
    ═══════════════════════════════════════════════════════════════════ */
 function StepMechanics({ colors }: { colors: ClueColor[] }) {
+  const [wordIndex, setWordIndex] = useState(0);
   const [flash, setFlash] = useState(false);
   const [peeled, setPeeled] = useState(false);
   const [cycle, setCycle] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWordIndex((i) => (i + 1) % CATEGORY_WORDS.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const run = () => {
@@ -111,11 +121,27 @@ function StepMechanics({ colors }: { colors: ClueColor[] }) {
 
   return (
     <div className="flex flex-col items-center overflow-hidden">
-      {/* Copy above */}
+      {/* Copy with rotating category */}
       <p className="text-base text-white/60 text-center leading-relaxed mb-6">
-        Guess what&apos;s what before
+        Guess the
         <br />
-        all the tape is gone.
+        <span
+          className="inline-block overflow-hidden align-bottom"
+          style={{ height: "1.5em" }}
+        >
+          <span
+            key={wordIndex}
+            className="inline-block animate-slot-down font-semibold"
+            style={{
+              color: GLOW_COLOR,
+              textShadow: `0 0 10px ${GLOW_COLOR}50, 0 0 25px ${GLOW_COLOR}20`,
+            }}
+          >
+            Broadway {CATEGORY_WORDS[wordIndex]}
+          </span>
+        </span>
+        <br />
+        before all the tape is gone.
       </p>
 
       {/* Mock wrong guess */}
@@ -126,9 +152,15 @@ function StepMechanics({ colors }: { colors: ClueColor[] }) {
         <div
           className="flex-1 border border-r-0 px-4 py-3 text-sm transition-colors duration-300"
           style={{
-            borderColor: flash ? "rgba(239,68,68,0.4)" : "rgba(255,255,255,0.1)",
-            backgroundColor: flash ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.06)",
-            color: flash ? "rgba(239,68,68,0.8)" : "rgba(255,255,255,0.45)",
+            borderColor: flash
+              ? "rgba(239,68,68,0.4)"
+              : "rgba(255,255,255,0.1)",
+            backgroundColor: flash
+              ? "rgba(239,68,68,0.1)"
+              : "rgba(255,255,255,0.06)",
+            color: flash
+              ? "rgba(239,68,68,0.8)"
+              : "rgba(255,255,255,0.45)",
           }}
         >
           wrong answer
@@ -136,7 +168,9 @@ function StepMechanics({ colors }: { colors: ClueColor[] }) {
         <div
           className="px-5 py-3 text-sm font-semibold transition-colors duration-300"
           style={{
-            backgroundColor: flash ? "rgba(239,68,68,0.4)" : "rgba(255,255,255,0.9)",
+            backgroundColor: flash
+              ? "rgba(239,68,68,0.4)"
+              : "rgba(255,255,255,0.9)",
             color: flash ? "rgba(255,255,255,0.6)" : "black",
           }}
         >
@@ -146,7 +180,6 @@ function StepMechanics({ colors }: { colors: ClueColor[] }) {
 
       {/* Tape peels away to reveal fact */}
       <div className="relative w-full mt-3" style={{ height: "36px" }}>
-        {/* Revealed fact underneath */}
         <div
           className="absolute inset-0 flex items-center justify-center text-xs text-white/50 transition-opacity duration-500"
           style={{
@@ -156,7 +189,6 @@ function StepMechanics({ colors }: { colors: ClueColor[] }) {
         >
           A fact appears...
         </div>
-        {/* Tape on top */}
         <div
           className="absolute inset-0 transition-all duration-700"
           style={{
@@ -181,13 +213,12 @@ function StepMechanics({ colors }: { colors: ClueColor[] }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   STEP 3 — THE REWARD
+   STEP 3 — THE REWARD (compact — ~75% height)
    "Guess right and collect the leftover tape.
     (earn glow tape from streaks)"
    ═══════════════════════════════════════════════════════════════════ */
 function StepReward({ colors }: { colors: ClueColor[] }) {
   const letters = ["S", "P", "I", "K", "E"];
-  // 3/5 scenario — guessed right with 3 tapes left
   const collectedColors = colors.slice(2);
 
   return (
@@ -199,20 +230,19 @@ function StepReward({ colors }: { colors: ClueColor[] }) {
         the leftover tape.
       </p>
 
-      {/* SPIKE letters — 3 lit (I, K, E), 2 dim (S, P) */}
-      <div className="font-title text-5xl tracking-wide py-5">
+      {/* SPIKE letters — 3 lit, with wave dance */}
+      <div className="font-title text-5xl tracking-wide py-3">
         {letters.map((letter, i) => {
           const isLit = i >= 2;
           const color = ALL_COLORS[colors[i]];
           return (
             <span
               key={i}
-              className="inline-block animate-fade-in"
+              className="inline-block animate-spike-wave"
               style={{
                 color: isLit ? color : "rgba(255,255,255,0.18)",
                 textShadow: isLit ? `0 0 24px ${color}40` : "none",
-                animationDelay: `${200 + i * 80}ms`,
-                animationFillMode: "backwards",
+                animationDelay: `${i * 100}ms`,
               }}
             >
               {letter}
@@ -222,7 +252,7 @@ function StepReward({ colors }: { colors: ClueColor[] }) {
       </div>
 
       {/* Collected tape strips */}
-      <div className="flex gap-2.5 items-center mb-3">
+      <div className="flex gap-2.5 items-center mb-1">
         {collectedColors.map((c, i) => (
           <div
             key={i}
@@ -230,25 +260,25 @@ function StepReward({ colors }: { colors: ClueColor[] }) {
             style={{
               backgroundColor: ALL_COLORS[c],
               transform: `rotate(${ROTATIONS[i + 2]}deg)`,
-              animationDelay: `${600 + i * 120}ms`,
+              animationDelay: `${400 + i * 120}ms`,
               animationFillMode: "backwards",
             }}
           />
         ))}
       </div>
 
-      {/* Glow tape + parenthetical */}
+      {/* Parenthetical + glow tape (glow at the end) */}
       <div
-        className="flex items-center gap-3 mt-2 animate-fade-in"
-        style={{ animationDelay: "900ms", animationFillMode: "backwards" }}
+        className="flex items-center gap-3 mt-1 animate-fade-in"
+        style={{ animationDelay: "700ms", animationFillMode: "backwards" }}
       >
+        <p className="text-sm text-white/30 italic">
+          earn glow tape from streaks
+        </p>
         <div
           className="h-2 w-10 animate-glow-pulse"
           style={{ backgroundColor: GLOW_COLOR }}
         />
-        <p className="text-sm text-white/30 italic">
-          earn glow tape from streaks
-        </p>
       </div>
     </div>
   );
@@ -257,15 +287,15 @@ function StepReward({ colors }: { colors: ClueColor[] }) {
 /* ═══════════════════════════════════════════════════════════════════
    STEP 4 — THE SHARE
    "Then send a friend a clue and see how they do."
-   Animated sequence: facts → selection cycles → green send button →
-   iMessage blue bubble → typing dots → "Mamma Mia!" reply
+   Facts → selection → card moves into iMessage bubble →
+   typing dots → "Mamma Mia!" reply
    ═══════════════════════════════════════════════════════════════════ */
 function StepShare({ colors }: { colors: ClueColor[] }) {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [phase, setPhase] = useState(0);
   // phase 0: facts visible, selection cycling
-  // phase 1: landed on final selection, green button
-  // phase 2: blue bubble sent
+  // phase 1: landed on final pick, green button
+  // phase 2: facts gone, blue bubble with card
   // phase 3: typing dots
   // phase 4: reply
 
@@ -275,14 +305,14 @@ function StepShare({ colors }: { colors: ClueColor[] }) {
       setPhase(0);
 
       return [
-        // Selection bounces across facts before landing
+        // Selection bounces across facts
         setTimeout(() => setSelectedIdx(1), 400),
         setTimeout(() => setSelectedIdx(4), 800),
         setTimeout(() => {
           setSelectedIdx(2);
           setPhase(1);
         }, 1200),
-        // Send → iMessage
+        // Send — facts disappear, bubble appears
         setTimeout(() => setPhase(2), 2200),
         // Typing dots
         setTimeout(() => setPhase(3), 3000),
@@ -303,6 +333,8 @@ function StepShare({ colors }: { colors: ClueColor[] }) {
     };
   }, []);
 
+  const selectedColor = ALL_COLORS[colors[2]]; // Fact 3's tape color
+
   return (
     <div className="flex flex-col items-center">
       {/* Copy */}
@@ -312,62 +344,71 @@ function StepShare({ colors }: { colors: ClueColor[] }) {
         and see how they do.
       </p>
 
-      {/* Five revealed facts */}
-      <div
-        className="flex flex-col gap-1 w-full transition-opacity duration-300"
-        style={{ opacity: phase >= 2 ? 0.3 : 1 }}
-      >
-        {[1, 2, 3, 4, 5].map((n, i) => (
-          <div
-            key={i}
-            className="px-3 py-1.5 text-xs transition-all duration-200"
-            style={{
-              backgroundColor:
-                selectedIdx === i
-                  ? `${ALL_COLORS[colors[i]]}15`
-                  : "rgba(255,255,255,0.04)",
-              borderLeft:
-                selectedIdx === i
-                  ? `3px solid ${ALL_COLORS[colors[i]]}`
-                  : "3px solid transparent",
-              color: "rgba(255,255,255,0.45)",
-            }}
-          >
-            Fact {n}
+      {/* Phase 0–1: fact board + green button */}
+      {phase < 2 && (
+        <>
+          <div className="flex flex-col gap-1 w-full">
+            {[1, 2, 3, 4, 5].map((n, i) => (
+              <div
+                key={i}
+                className="px-3 py-1.5 text-xs transition-all duration-200"
+                style={{
+                  backgroundColor:
+                    selectedIdx === i
+                      ? `${ALL_COLORS[colors[i]]}15`
+                      : "rgba(255,255,255,0.04)",
+                  borderLeft:
+                    selectedIdx === i
+                      ? `3px solid ${ALL_COLORS[colors[i]]}`
+                      : "3px solid transparent",
+                  color: "rgba(255,255,255,0.45)",
+                }}
+              >
+                Fact {n}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* Green send button */}
-      {phase === 1 && (
-        <button
-          className="
-            w-full mt-2 py-2 text-xs font-semibold uppercase tracking-widest
-            border border-green-500/30 bg-green-500/15 text-green-300
-            animate-fade-in
-          "
-        >
-          Send a friend a clue
-        </button>
+          {phase === 1 && (
+            <button
+              className="
+                w-full mt-2 py-2 text-xs font-semibold uppercase tracking-widest
+                border border-green-500/30 bg-green-500/15 text-green-300
+                animate-fade-in
+              "
+            >
+              Send a friend a clue
+            </button>
+          )}
+        </>
       )}
 
-      {/* iMessage exchange */}
+      {/* Phase 2+: iMessage exchange (replaces fact board entirely) */}
       {phase >= 2 && (
-        <div className="w-full space-y-2 mt-3">
-          {/* Sent bubble (blue, right-aligned) */}
-          <div className="flex justify-end animate-fade-in">
+        <div className="w-full space-y-2.5 animate-fade-in">
+          {/* Sent bubble — card inside blue bubble */}
+          <div className="flex justify-end">
             <div
-              className="text-white text-xs px-3.5 py-2"
+              className="px-2 py-2"
               style={{
                 backgroundColor: "#007AFF",
                 borderRadius: "16px 16px 4px 16px",
               }}
             >
-              Fact 3
+              <div
+                className="px-3 py-2 text-xs text-white/90"
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  borderRadius: "8px",
+                  borderLeft: `3px solid ${selectedColor}`,
+                }}
+              >
+                Fact 3
+              </div>
             </div>
           </div>
 
-          {/* Typing dots → reply (gray, left-aligned) */}
+          {/* Typing dots → reply */}
           {phase >= 3 && (
             <div
               key={phase >= 4 ? "reply" : "dots"}
@@ -383,13 +424,22 @@ function StepShare({ colors }: { colors: ClueColor[] }) {
               >
                 {phase === 3 ? (
                   <span className="flex gap-1 items-center h-4">
-                    <span className="typing-dot" style={{ animationDelay: "0ms" }}>
+                    <span
+                      className="typing-dot"
+                      style={{ animationDelay: "0ms" }}
+                    >
                       &bull;
                     </span>
-                    <span className="typing-dot" style={{ animationDelay: "200ms" }}>
+                    <span
+                      className="typing-dot"
+                      style={{ animationDelay: "200ms" }}
+                    >
                       &bull;
                     </span>
-                    <span className="typing-dot" style={{ animationDelay: "400ms" }}>
+                    <span
+                      className="typing-dot"
+                      style={{ animationDelay: "400ms" }}
+                    >
                       &bull;
                     </span>
                   </span>
