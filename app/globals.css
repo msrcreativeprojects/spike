@@ -164,6 +164,22 @@ body > canvas {
   animation: glow-text-pulse 2s ease-in-out infinite;
 }
 
+@keyframes tape-color-cycle {
+  0%    { color: #ff2d8a; text-shadow: 0 0 16px #ff2d8a60; }
+  12.5% { color: #bf5fff; text-shadow: 0 0 16px #bf5fff60; }
+  25%   { color: #00a2ff; text-shadow: 0 0 16px #00a2ff60; }
+  37.5% { color: #39ff14; text-shadow: 0 0 16px #39ff1460; }
+  50%   { color: #c8ff00; text-shadow: 0 0 16px #c8ff0060; }
+  62.5% { color: #faff00; text-shadow: 0 0 16px #faff0060; }
+  75%   { color: #ff6b2d; text-shadow: 0 0 16px #ff6b2d60; }
+  87.5% { color: #ff0050; text-shadow: 0 0 16px #ff005060; }
+  100%  { color: #ff2d8a; text-shadow: 0 0 16px #ff2d8a60; }
+}
+
+.animate-tape-color-cycle {
+  animation: tape-color-cycle 6s linear infinite;
+}
+
 /* Tape fall — gravity drop off the bottom of the viewport */
 @keyframes tape-fall {
   0% {

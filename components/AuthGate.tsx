@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { GLOW_COLOR } from "@/types/puzzle";
 
 // SMS-ready helpers — uncomment + enable Supabase Phone provider when A2P 10DLC is registered
 // function formatPhone(raw: string): string {
@@ -162,10 +161,7 @@ export default function AuthGate({ onAuth, onGuest }: AuthGateProps) {
         {step === "input" ? (
           <>
             Start your{" "}
-            <span
-              className="font-semibold animate-glow-text-pulse"
-              style={{ color: GLOW_COLOR }}
-            >
+            <span className="font-semibold animate-tape-color-cycle">
               spike tape
             </span>{" "}
             collection.
