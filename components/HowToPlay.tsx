@@ -122,7 +122,7 @@ function StepMechanics({ colors }: { colors: ClueColor[] }) {
   return (
     <div className="flex flex-col items-center overflow-hidden">
       {/* Copy with rotating category */}
-      <div className="text-base text-white/60 text-center leading-relaxed mb-6">
+      <div className="text-base text-white/60 text-center leading-relaxed mb-3">
         <div className="flex items-baseline justify-center gap-1.5 flex-wrap">
           <span>Guess the</span>
           <span
@@ -137,12 +137,14 @@ function StepMechanics({ colors }: { colors: ClueColor[] }) {
                 textShadow: `0 0 10px ${GLOW_COLOR}50, 0 0 25px ${GLOW_COLOR}20`,
               }}
             >
-              {DEMO_CATEGORIES[wordIndex]}
+              {DEMO_CATEGORIES[wordIndex]}.
             </span>
           </span>
         </div>
-        <div>before all the tape is gone.</div>
       </div>
+      <p className="text-sm text-white/40 text-center mb-6">
+        Wrong answers cost tape, but reveal facts.
+      </p>
 
       {/* Mock wrong guess */}
       <div className="w-4/5">
@@ -188,7 +190,7 @@ function StepMechanics({ colors }: { colors: ClueColor[] }) {
               opacity: peeled ? 1 : 0,
             }}
           >
-            A fact appears...
+            A fact!
           </div>
           <div
             className="absolute inset-0 transition-all duration-700"
@@ -203,13 +205,6 @@ function StepMechanics({ colors }: { colors: ClueColor[] }) {
         </div>
       </div>
 
-      {/* Copy below */}
-      <p
-        className="text-sm text-white/40 text-center mt-5 animate-fade-in"
-        style={{ animationDelay: "400ms", animationFillMode: "backwards" }}
-      >
-        Wrong answers cost tape, but reveal facts.
-      </p>
     </div>
   );
 }
@@ -298,7 +293,7 @@ function StepReward({ colors }: { colors: ClueColor[] }) {
    STEP 4 — THE SHARE
    "Then send a friend a clue and see how they do."
    Facts → selection → card moves into iMessage bubble →
-   typing dots → "Mamma Mia!" reply
+   typing dots → friend replies "MAMMA MIA 2!!" → you reply "omg"
    ═══════════════════════════════════════════════════════════════════ */
 function StepShare({ colors }: { colors: ClueColor[] }) {
   const SELECTED = 2; // Fact 3 is always the pick
@@ -306,9 +301,10 @@ function StepShare({ colors }: { colors: ClueColor[] }) {
   const [phase, setPhase] = useState(0);
   // phase 0: facts visible, selection cycling
   // phase 1: selection landed on Fact 3, green button
-  // phase 2: iMessage — blue bubble with card
-  // phase 3: typing dots
-  // phase 4: reply
+  // phase 2: iMessage — blue bubble with card (you send a clue)
+  // phase 3: typing dots (friend typing)
+  // phase 4: friend replies "MAMMA MIA 2!!"
+  // phase 5: you text back "omg"
 
   useEffect(() => {
     const run = () => {
@@ -323,11 +319,13 @@ function StepShare({ colors }: { colors: ClueColor[] }) {
           setPhase(1);
         }, 1200),
         // Click → straight to iMessage
-        setTimeout(() => setPhase(2), 2200),
+        setTimeout(() => setPhase(2), 2000),
         // Typing dots
-        setTimeout(() => setPhase(3), 3200),
-        // Reply
-        setTimeout(() => setPhase(4), 4000),
+        setTimeout(() => setPhase(3), 2800),
+        // Friend replies "MAMMA MIA 2!!"
+        setTimeout(() => setPhase(4), 3200),
+        // You text back "omg" — quickly after
+        setTimeout(() => setPhase(5), 3800),
       ];
     };
 
@@ -335,7 +333,7 @@ function StepShare({ colors }: { colors: ClueColor[] }) {
     const loop = setInterval(() => {
       timers.forEach(clearTimeout);
       timers = run();
-    }, 6000);
+    }, 5500);
 
     return () => {
       timers.forEach(clearTimeout);
@@ -397,7 +395,7 @@ function StepShare({ colors }: { colors: ClueColor[] }) {
         {/* Phase 2+: iMessage exchange */}
         {phase >= 2 && (
           <div className="w-full space-y-2.5 animate-fade-in">
-            {/* Sent bubble — card inside blue bubble */}
+            {/* Sent bubble — clue card inside blue bubble (you send a clue) */}
             <div className="flex justify-end">
               <div
                 className="px-2 py-2"
@@ -419,7 +417,7 @@ function StepShare({ colors }: { colors: ClueColor[] }) {
               </div>
             </div>
 
-            {/* Typing dots → reply */}
+            {/* Typing dots → friend replies "Mamma Mia" */}
             {phase >= 3 && (
               <div
                 key={phase >= 4 ? "reply" : "dots"}
@@ -459,6 +457,22 @@ function StepShare({ colors }: { colors: ClueColor[] }) {
                       MAMMA MIA 2!!
                     </span>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* You text back "omg" */}
+            {phase >= 5 && (
+              <div className="flex justify-end animate-fade-in">
+                <div
+                  className="text-sm font-semibold px-3.5 py-2"
+                  style={{
+                    backgroundColor: "#007AFF",
+                    borderRadius: "16px 16px 4px 16px",
+                    color: "rgba(255,255,255,0.9)",
+                  }}
+                >
+                  omg
                 </div>
               </div>
             )}
