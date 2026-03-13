@@ -24,6 +24,18 @@ const FILTERS: { key: LibraryFilter; label: string }[] = [
   { key: "archived", label: "Archived" },
 ];
 
+// ─── Sort config ──────────────────────────────────────────────────
+type LibrarySort = "default" | "name-asc" | "name-desc" | "date-newest" | "date-oldest" | "category";
+
+const SORTS: { key: LibrarySort; label: string }[] = [
+  { key: "default", label: "Default" },
+  { key: "name-asc", label: "Title A→Z" },
+  { key: "name-desc", label: "Title Z→A" },
+  { key: "date-newest", label: "Newest" },
+  { key: "date-oldest", label: "Oldest" },
+  { key: "category", label: "Category" },
+];
+
 // ─── Helpers ──────────────────────────────────────────────────────
 function fmt(d: Date): string {
   const y = d.getFullYear();
@@ -75,6 +87,7 @@ export default function AdminLibrary({
 
   const [filter, setFilter] = useState<LibraryFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sort, setSort] = useState<LibrarySort>("default");
   const [busy, setBusy] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [editingDateId, setEditingDateId] = useState<number | null>(null);
@@ -121,7 +134,7 @@ export default function AdminLibrary({
     [libraryItems]
   );
 
-  // ── Filter + search ──
+  // ── Filter + search + sort ──
   const filtered = useMemo(() => {
     let list = libraryItems;
     if (filter !== "all") {
@@ -134,14 +147,31 @@ export default function AdminLibrary({
       const q = searchQuery.toLowerCase();
       list = list.filter((item) => item.name.toLowerCase().includes(q));
     }
-    // Sort scheduled/live items by date ascending (soonest first)
-    if (filter === "scheduled") {
-      list = [...list].sort((a, b) =>
-        (a.puzzle?.date ?? "").localeCompare(b.puzzle?.date ?? "")
-      );
+
+    // Sort — "default" preserves scheduled-by-date, otherwise applies chosen sort
+    list = [...list];
+    const activeSort = sort === "default" && filter === "scheduled" ? "date-oldest" : sort;
+
+    switch (activeSort) {
+      case "name-asc":
+        list.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "name-desc":
+        list.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      case "date-newest":
+        list.sort((a, b) => (b.puzzle?.date ?? "").localeCompare(a.puzzle?.date ?? ""));
+        break;
+      case "date-oldest":
+        list.sort((a, b) => (a.puzzle?.date ?? "").localeCompare(b.puzzle?.date ?? ""));
+        break;
+      case "category":
+        list.sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
+        break;
     }
+
     return list;
-  }, [libraryItems, filter, searchQuery]);
+  }, [libraryItems, filter, searchQuery, sort]);
 
   // ── Stats ──
   const scheduledPuzzles = allPuzzles.filter(
@@ -296,17 +326,32 @@ export default function AdminLibrary({
           })}
         </div>
 
-        {/* Search */}
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search..."
-          className={`w-full sm:w-56 px-3 py-1.5 text-sm border focus:outline-none transition-colors ${c(
-            "bg-white/[0.03] border-white/10 text-white/70 placeholder-white/20 focus:border-white/25",
-            "bg-white border-gray-200 text-gray-700 placeholder-gray-300 focus:border-gray-400"
-          )}`}
-        />
+        {/* Sort + Search */}
+        <div className="flex gap-2">
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as LibrarySort)}
+            className={`px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider border focus:outline-none transition-colors appearance-none cursor-pointer ${c(
+              "bg-white/[0.03] border-white/10 text-white/40 focus:border-white/25",
+              "bg-white border-gray-200 text-gray-500 focus:border-gray-400"
+            )}`}
+          >
+            {SORTS.map((s) => (
+              <option key={s.key} value={s.key} className="bg-[#141418] text-white/70">{s.label}</option>
+            ))}
+          </select>
+
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search..."
+            className={`w-full sm:w-48 px-3 py-1.5 text-sm border focus:outline-none transition-colors ${c(
+              "bg-white/[0.03] border-white/10 text-white/70 placeholder-white/20 focus:border-white/25",
+              "bg-white border-gray-200 text-gray-700 placeholder-gray-300 focus:border-gray-400"
+            )}`}
+          />
+        </div>
       </div>
 
       {/* ── List ── */}
@@ -384,12 +429,13 @@ function LibraryRow({
         "border-gray-100 hover:border-gray-200"
       )} ${expanded ? c("bg-white/[0.02]", "bg-gray-50") : ""}`}
     >
-      {/* Main row */}
+      {/* Main row — fixed-width columns for alignment */}
       <div
         className="flex items-center gap-3 px-4 py-3 cursor-pointer"
         onClick={item.puzzle ? onToggleExpand : undefined}
       >
-        <span className={`flex-1 text-sm truncate ${
+        {/* Title — flexible */}
+        <span className={`flex-1 min-w-0 text-sm truncate ${
           item.type === "unbuilt"
             ? c("text-white/40", "text-gray-400")
             : item.type === "archived"
@@ -399,56 +445,60 @@ function LibraryRow({
           {item.name}
         </span>
 
-        <span className={`text-xs hidden sm:inline ${c("text-white/15", "text-gray-300")}`}>
+        {/* Category — fixed width */}
+        <span className={`w-28 shrink-0 text-xs text-right truncate hidden sm:block ${c("text-white/15", "text-gray-300")}`}>
           {item.category}
         </span>
 
-        {/* Date for scheduled / live — click to edit */}
-        {(item.type === "scheduled" || item.type === "live") && item.puzzle?.date && (
-          editingDateId === item.puzzle.id ? (
-            <input
-              type="date"
-              defaultValue={item.puzzle.date}
-              autoFocus
-              onClick={(e) => e.stopPropagation()}
-              onBlur={(e) => {
-                if (e.target.value && e.target.value !== item.puzzle!.date) {
-                  onDateChange(item.puzzle!.id, e.target.value);
-                } else {
-                  onStartDateEdit(-1);
-                }
-              }}
-              onChange={(e) => {
-                if (e.target.value) {
-                  onDateChange(item.puzzle!.id, e.target.value);
-                }
-              }}
-              className={`text-xs tabular-nums w-28 px-1 py-0.5 border focus:outline-none ${c(
-                "bg-white/5 border-white/20 text-green-400/70 focus:border-green-400/40",
-                "bg-white border-gray-300 text-green-600 focus:border-green-500"
-              )}`}
-            />
-          ) : (
-            <button
-              onClick={(e) => { e.stopPropagation(); onStartDateEdit(item.puzzle!.id); }}
-              className={`text-xs tabular-nums hover:underline ${c("text-green-400/50 hover:text-green-400/80", "text-green-600 hover:text-green-700")}`}
-            >
-              {item.type === "live" ? "Today" : formatShortDate(item.puzzle.date)}
-            </button>
-          )
-        )}
+        {/* Date — fixed width (empty placeholder for types without dates) */}
+        <div className={`w-14 shrink-0 hidden sm:flex justify-end`}>
+          {(item.type === "scheduled" || item.type === "live") && item.puzzle?.date && (
+            editingDateId === item.puzzle.id ? (
+              <input
+                type="date"
+                defaultValue={item.puzzle.date}
+                autoFocus
+                onClick={(e) => e.stopPropagation()}
+                onBlur={(e) => {
+                  if (e.target.value && e.target.value !== item.puzzle!.date) {
+                    onDateChange(item.puzzle!.id, e.target.value);
+                  } else {
+                    onStartDateEdit(-1);
+                  }
+                }}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    onDateChange(item.puzzle!.id, e.target.value);
+                  }
+                }}
+                className={`text-xs tabular-nums w-28 px-1 py-0.5 border focus:outline-none ${c(
+                  "bg-white/5 border-white/20 text-green-400/70 focus:border-green-400/40",
+                  "bg-white border-gray-300 text-green-600 focus:border-green-500"
+                )}`}
+              />
+            ) : (
+              <button
+                onClick={(e) => { e.stopPropagation(); onStartDateEdit(item.puzzle!.id); }}
+                className={`text-xs tabular-nums hover:underline ${c("text-green-400/50 hover:text-green-400/80", "text-green-600 hover:text-green-700")}`}
+              >
+                {item.type === "live" ? "Today" : formatShortDate(item.puzzle.date)}
+              </button>
+            )
+          )}
+          {item.type === "archived" && item.puzzle?.date && (
+            <span className={`text-xs tabular-nums ${c("text-white/15", "text-gray-300")}`}>
+              {formatShortDate(item.puzzle.date)}
+            </span>
+          )}
+        </div>
 
-        {/* Date for archived */}
-        {item.type === "archived" && item.puzzle?.date && (
-          <span className={`text-xs tabular-nums ${c("text-white/15", "text-gray-300")}`}>
-            {formatShortDate(item.puzzle.date)}
-          </span>
-        )}
+        {/* Status — fixed width */}
+        <div className="w-20 shrink-0 flex justify-end">
+          <StatusBadge type={item.type} />
+        </div>
 
-        <StatusBadge type={item.type} />
-
-        {/* Quick actions */}
-        <div className="flex gap-2 ml-2">
+        {/* Quick actions — fixed width */}
+        <div className="w-24 shrink-0 flex justify-end">
           {item.type === "unbuilt" && (
             <button
               onClick={(e) => { e.stopPropagation(); onBuild(); }}
@@ -461,7 +511,6 @@ function LibraryRow({
               Build →
             </button>
           )}
-
           {item.type === "built" && (
             <button
               onClick={(e) => { e.stopPropagation(); onSchedule(); }}
