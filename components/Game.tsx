@@ -245,7 +245,7 @@ export default function Game({
       </header>
 
       {/* Guess area — same box throughout, just transitions visual state */}
-      <div className="shrink-0 mb-1 h-[48px]">
+      <div className="shrink-0 mb-1 relative z-20">
         <GuessForm
           onGuess={handleGuess}
           disabled={state.completed}
