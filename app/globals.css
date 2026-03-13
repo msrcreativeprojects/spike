@@ -263,4 +263,13 @@ body > canvas {
   animation: final-guess-glow 2.5s ease-in-out infinite;
 }
 
+/* Typing indicator dots (iMessage-style) */
+@keyframes typing-dot {
+  0%, 60%, 100% { opacity: 0.2; }
+  30% { opacity: 1; transform: translateY(-1px); }
+}
 
+.typing-dot {
+  display: inline-block;
+  animation: typing-dot 1.4s ease-in-out infinite;
+}
