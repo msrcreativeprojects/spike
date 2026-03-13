@@ -77,6 +77,7 @@ export default function AdminLibrary({
   const [searchQuery, setSearchQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [editingDateId, setEditingDateId] = useState<number | null>(null);
 
   // ── Derive the full library ──
   const libraryItems = useMemo(() => {
@@ -132,6 +133,12 @@ export default function AdminLibrary({
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       list = list.filter((item) => item.name.toLowerCase().includes(q));
+    }
+    // Sort scheduled/live items by date ascending (soonest first)
+    if (filter === "scheduled") {
+      list = [...list].sort((a, b) =>
+        (a.puzzle?.date ?? "").localeCompare(b.puzzle?.date ?? "")
+      );
     }
     return list;
   }, [libraryItems, filter, searchQuery]);
@@ -227,6 +234,21 @@ export default function AdminLibrary({
     [supabase, onRefetch]
   );
 
+  const handleDateChange = useCallback(
+    async (puzzleId: number, newDate: string) => {
+      if (!newDate) return;
+      setBusy(true);
+      setEditingDateId(null);
+      const { error } = await supabase
+        .from("puzzles")
+        .update({ date: newDate, status: "approved" })
+        .eq("id", puzzleId);
+      if (!error) await onRefetch();
+      setBusy(false);
+    },
+    [supabase, onRefetch]
+  );
+
   return (
     <div className="space-y-6">
       {/* ── Stats bar ── */}
@@ -311,6 +333,9 @@ export default function AdminLibrary({
             onDelete={() => item.puzzle && handleDelete(item.puzzle.id)}
             onClone={() => item.puzzle && handleClone(item.puzzle)}
             onRequeue={() => item.puzzle && handleRequeue(item.puzzle)}
+            editingDateId={editingDateId}
+            onStartDateEdit={(id) => setEditingDateId(id)}
+            onDateChange={handleDateChange}
           />
         ))}
       </div>
@@ -331,6 +356,9 @@ function LibraryRow({
   onDelete,
   onClone,
   onRequeue,
+  editingDateId,
+  onStartDateEdit,
+  onDateChange,
 }: {
   item: LibraryItem;
   busy: boolean;
@@ -343,6 +371,9 @@ function LibraryRow({
   onDelete: () => void;
   onClone: () => void;
   onRequeue: () => void;
+  editingDateId: number | null;
+  onStartDateEdit: (id: number) => void;
+  onDateChange: (puzzleId: number, newDate: string) => void;
 }) {
   const c = useThemeClass();
 
@@ -372,11 +403,39 @@ function LibraryRow({
           {item.category}
         </span>
 
-        {/* Date for scheduled / live */}
+        {/* Date for scheduled / live — click to edit */}
         {(item.type === "scheduled" || item.type === "live") && item.puzzle?.date && (
-          <span className={`text-xs tabular-nums ${c("text-green-400/50", "text-green-600")}`}>
-            {item.type === "live" ? "Today" : formatShortDate(item.puzzle.date)}
-          </span>
+          editingDateId === item.puzzle.id ? (
+            <input
+              type="date"
+              defaultValue={item.puzzle.date}
+              autoFocus
+              onClick={(e) => e.stopPropagation()}
+              onBlur={(e) => {
+                if (e.target.value && e.target.value !== item.puzzle!.date) {
+                  onDateChange(item.puzzle!.id, e.target.value);
+                } else {
+                  onStartDateEdit(-1);
+                }
+              }}
+              onChange={(e) => {
+                if (e.target.value) {
+                  onDateChange(item.puzzle!.id, e.target.value);
+                }
+              }}
+              className={`text-xs tabular-nums w-28 px-1 py-0.5 border focus:outline-none ${c(
+                "bg-white/5 border-white/20 text-green-400/70 focus:border-green-400/40",
+                "bg-white border-gray-300 text-green-600 focus:border-green-500"
+              )}`}
+            />
+          ) : (
+            <button
+              onClick={(e) => { e.stopPropagation(); onStartDateEdit(item.puzzle!.id); }}
+              className={`text-xs tabular-nums hover:underline ${c("text-green-400/50 hover:text-green-400/80", "text-green-600 hover:text-green-700")}`}
+            >
+              {item.type === "live" ? "Today" : formatShortDate(item.puzzle.date)}
+            </button>
+          )
         )}
 
         {/* Date for archived */}
@@ -438,8 +497,27 @@ function LibraryRow({
                   Edit Clues
                 </ActionBtn>
                 <ActionBtn onClick={onSchedule} disabled={busy} variant="green">
-                  Schedule
+                  Schedule Next
                 </ActionBtn>
+                <label className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${c(
+                  "border border-white/15 text-white/40 hover:text-white/70 hover:border-white/30",
+                  "border border-gray-300 text-gray-400 hover:text-gray-700 hover:border-gray-400"
+                )}`}>
+                  <span>Date:</span>
+                  <input
+                    type="date"
+                    disabled={busy}
+                    onChange={(e) => {
+                      if (e.target.value && item.puzzle) {
+                        onDateChange(item.puzzle.id, e.target.value);
+                      }
+                    }}
+                    className={`text-xs bg-transparent focus:outline-none cursor-pointer disabled:opacity-40 ${c(
+                      "text-white/60",
+                      "text-gray-600"
+                    )}`}
+                  />
+                </label>
                 <ActionBtn onClick={onDelete} disabled={busy} variant="red">
                   Delete
                 </ActionBtn>

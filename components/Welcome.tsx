@@ -40,14 +40,14 @@ export default function Welcome({ onClose, dailyColors }: WelcomeProps) {
 
       {/* Panel */}
       <div
-        className={`relative z-10 w-full max-w-sm border border-white/10 bg-[#0a0a0c] p-6 pt-8 ${
+        className={`relative z-10 w-full max-w-md border border-white/10 bg-[#0a0a0c] p-8 pt-10 ${
           closing ? "animate-curtain-down" : "animate-curtain-up"
         }`}
         style={{ maxHeight: "80dvh", overflowY: "auto" }}
       >
         {/* Personal note */}
-        <div className="flex flex-col gap-4 text-sm text-white/55 leading-relaxed" style={{ textWrap: "pretty" }}>
-          <p className="text-base text-white/70">
+        <div className="flex flex-col gap-5 text-[15px] text-white/55 leading-relaxed" style={{ textWrap: "pretty" }}>
+          <p className="text-lg text-white/70">
             Welcome to{" "}
             <strong>
               {["S", "P", "I", "K", "E"].map((letter, i) => (
@@ -85,11 +85,11 @@ export default function Welcome({ onClose, dailyColors }: WelcomeProps) {
         </div>
 
         {/* Mini tape strips decoration */}
-        <div className="flex justify-center gap-1.5 mt-6 mb-4">
+        <div className="flex justify-center gap-2 mt-8 mb-5">
           {colors.map((c, i) => (
             <div
               key={i}
-              className="h-2 w-8"
+              className="h-2.5 w-10"
               style={{
                 backgroundColor: ALL_COLORS[c],
                 transform: `rotate(${[-1.5, 2, -1, 1.8, -0.8][i]}deg)`,
@@ -101,7 +101,7 @@ export default function Welcome({ onClose, dailyColors }: WelcomeProps) {
         {/* CTA */}
         <button
           onClick={handleClose}
-          className="w-full rounded-none bg-white/90 px-4 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-black hover:bg-white active:scale-[0.98] transition-all mt-2"
+          className="w-full rounded-none bg-white/90 px-5 py-3.5 text-sm font-semibold uppercase tracking-[0.25em] text-black hover:bg-white active:scale-[0.98] transition-all mt-2"
         >
           Places
         </button>

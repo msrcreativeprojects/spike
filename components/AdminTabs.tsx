@@ -145,6 +145,7 @@ function AdminTabsInner({ initialPuzzles, shows, todayStr }: AdminTabsProps) {
       {activeTab === "calendar" && (
         <AdminCalendar
           initialScheduled={allApproved}
+          queuedPuzzles={queued}
           onRefetch={refetchAll}
         />
       )}

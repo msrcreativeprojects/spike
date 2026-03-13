@@ -29,6 +29,7 @@ import type { PuzzleRow } from "@/lib/adminTypes";
 // ─── Props ────────────────────────────────────────────────────────
 interface AdminCalendarProps {
   initialScheduled: PuzzleRow[];
+  queuedPuzzles: PuzzleRow[];
   onRefetch: () => Promise<void>;
 }
 
@@ -236,19 +237,67 @@ function StaticRow({
   );
 }
 
-// ─── Gap indicator ────────────────────────────────────────────────
-function GapIndicator({ days }: { days: number }) {
+// ─── Gap indicator with fill action ──────────────────────────────
+function GapIndicator({
+  days,
+  gapDate,
+  queuedPuzzles,
+  onFill,
+  busy,
+}: {
+  days: number;
+  gapDate: string;
+  queuedPuzzles: PuzzleRow[];
+  onFill: (puzzleId: number, date: string) => void;
+  busy: boolean;
+}) {
   const c = useThemeClass();
+  const [showPicker, setShowPicker] = useState(false);
+  const { shortDate } = formatDateSlot(gapDate);
+
   return (
     <div className="flex items-start gap-4">
-      <div className="w-14 shrink-0" />
-      <div className={`flex-1 flex items-center gap-2 px-4 py-2 border border-dashed ${c(
+      <div className="w-14 shrink-0 pt-2 text-right">
+        <div className={`text-xs tabular-nums ${c("text-red-400/30", "text-red-300")}`}>{shortDate}</div>
+      </div>
+      <div className={`flex-1 border border-dashed ${c(
         "border-red-400/20 bg-red-400/[0.03]",
         "border-red-300 bg-red-50"
       )}`}>
-        <span className={`text-xs ${c("text-red-400/50", "text-red-400")}`}>
-          ⚠ {days} day{days > 1 ? "s" : ""} gap
-        </span>
+        <div className="flex items-center gap-2 px-4 py-2">
+          <span className={`text-xs flex-1 ${c("text-red-400/50", "text-red-400")}`}>
+            ⚠ {days} day{days > 1 ? "s" : ""} gap
+          </span>
+          {queuedPuzzles.length > 0 && (
+            <button
+              onClick={() => setShowPicker(!showPicker)}
+              disabled={busy}
+              className={`text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 transition-colors disabled:opacity-40 ${c(
+                "text-amber-400/60 hover:text-amber-400 border border-amber-400/20 hover:border-amber-400/40",
+                "text-amber-600 hover:text-amber-700 border border-amber-300 hover:border-amber-400"
+              )}`}
+            >
+              Fill
+            </button>
+          )}
+        </div>
+        {showPicker && queuedPuzzles.length > 0 && (
+          <div className={`px-4 pb-3 flex flex-wrap gap-1.5`}>
+            {queuedPuzzles.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => { onFill(p.id, gapDate); setShowPicker(false); }}
+                disabled={busy}
+                className={`text-xs px-2.5 py-1 transition-colors disabled:opacity-40 ${c(
+                  "bg-white/[0.04] border border-white/10 text-white/50 hover:text-white/80 hover:border-white/25",
+                  "bg-white border border-gray-200 text-gray-500 hover:text-gray-800 hover:border-gray-400"
+                )}`}
+              >
+                {p.answer}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -341,6 +390,7 @@ function EditRow({
 // ─── Main Calendar ────────────────────────────────────────────────
 export default function AdminCalendar({
   initialScheduled,
+  queuedPuzzles,
   onRefetch,
 }: AdminCalendarProps) {
   const c = useThemeClass();
@@ -369,18 +419,20 @@ export default function AdminCalendar({
 
   const daysOfCoverage = futurePuzzles.length + (todayPuzzle ? 1 : 0);
 
-  // Detect gaps in future schedule
+  // Detect gaps in future schedule (with first missing date for filling)
   const futureWithGaps = useMemo(() => {
-    const items: { type: "puzzle" | "gap"; puzzle?: PuzzleRow; gapDays?: number }[] = [];
+    const items: { type: "puzzle" | "gap"; puzzle?: PuzzleRow; gapDays?: number; gapDate?: string }[] = [];
     for (let i = 0; i < futurePuzzles.length; i++) {
-      // Check gap from previous date
       const prevDate =
         i === 0
           ? todayPuzzle?.date ?? todayStr
           : futurePuzzles[i - 1].date!;
       const gap = daysBetween(prevDate, futurePuzzles[i].date!);
       if (gap > 1) {
-        items.push({ type: "gap", gapDays: gap - 1 });
+        // First missing date in the gap
+        const firstGap = new Date(prevDate + "T00:00:00");
+        firstGap.setDate(firstGap.getDate() + 1);
+        items.push({ type: "gap", gapDays: gap - 1, gapDate: fmt(firstGap) });
       }
       items.push({ type: "puzzle", puzzle: futurePuzzles[i] });
     }
@@ -538,6 +590,23 @@ export default function AdminCalendar({
 
   const cancelEdit = useCallback(() => setEditingId(null), []);
 
+  // ─── Fill a gap with a queued puzzle ───
+  const handleFillGap = useCallback(
+    async (puzzleId: number, date: string) => {
+      setBusy(true);
+      const { error } = await supabase
+        .from("puzzles")
+        .update({ status: "approved", date })
+        .eq("id", puzzleId);
+      if (!error) {
+        await refetchScheduled();
+        await onRefetch();
+      }
+      setBusy(false);
+    },
+    [supabase, refetchScheduled, onRefetch]
+  );
+
   const activePuzzle = activeId ? futurePuzzles.find((p) => p.id === activeId) : null;
 
   return (
@@ -611,7 +680,14 @@ export default function AdminCalendar({
             >
               {futureWithGaps.map((item, i) =>
                 item.type === "gap" ? (
-                  <GapIndicator key={`gap-${i}`} days={item.gapDays!} />
+                  <GapIndicator
+                    key={`gap-${i}`}
+                    days={item.gapDays!}
+                    gapDate={item.gapDate!}
+                    queuedPuzzles={queuedPuzzles}
+                    onFill={handleFillGap}
+                    busy={busy}
+                  />
                 ) : (
                   <SortableRow
                     key={item.puzzle!.id}
