@@ -144,7 +144,7 @@ export default function GameShell({ puzzle }: GameShellProps) {
       {overlay === "auth" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80" onClick={handleGuest} />
-          <div className="relative z-10 w-full max-w-sm border border-white/10 bg-[#0a0a0c] p-6 pt-8 animate-curtain-up">
+          <div className="relative z-10 w-full max-w-md border border-white/10 bg-[#0a0a0c] p-8 pt-10 flex flex-col items-center animate-curtain-up">
             <AuthGate onAuth={handleAuth} onGuest={handleGuest} />
           </div>
         </div>

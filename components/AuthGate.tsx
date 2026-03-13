@@ -1,25 +1,45 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { GLOW_COLOR } from "@/types/puzzle";
+
+// SMS-ready helpers — uncomment + enable Supabase Phone provider when A2P 10DLC is registered
+// function formatPhone(raw: string): string {
+//   const d = raw.slice(0, 10);
+//   if (d.length <= 3) return d;
+//   if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+//   return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+// }
+// function toE164(digits: string): string { return `+1${digits}`; }
+// function maskPhone(digits: string): string { return `••• ••• ${digits.slice(6)}`; }
 
 interface AuthGateProps {
   onAuth: () => void;
   onGuest: () => void;
 }
 
+const DIGIT_COUNT = 6;
+
 export default function AuthGate({ onAuth, onGuest }: AuthGateProps) {
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [step, setStep] = useState<"email" | "code">("email");
+  const [digits, setDigits] = useState<string[]>(Array(DIGIT_COUNT).fill(""));
+  const [step, setStep] = useState<"input" | "code">("input");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const digitRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useEffect(() => {
+    if (step === "code") {
+      digitRefs.current[0]?.focus();
+    }
+  }, [step]);
 
   const handleSendCode = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!email.trim() || loading) return;
+      if (loading || !email.trim()) return;
 
       setLoading(true);
       setError("");
@@ -37,15 +57,16 @@ export default function AuthGate({ onAuth, onGuest }: AuthGateProps) {
         return;
       }
 
+      setDigits(Array(DIGIT_COUNT).fill(""));
       setStep("code");
     },
     [email, loading]
   );
 
-  const handleVerifyCode = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!code.trim() || loading) return;
+  const submitCode = useCallback(
+    async (codeDigits: string[]) => {
+      const token = codeDigits.join("");
+      if (token.length < DIGIT_COUNT || loading) return;
 
       setLoading(true);
       setError("");
@@ -53,101 +74,164 @@ export default function AuthGate({ onAuth, onGuest }: AuthGateProps) {
       const supabase = createClient();
       const { error: authError } = await supabase.auth.verifyOtp({
         email: email.trim(),
-        token: code.trim(),
+        token,
         type: "email",
       });
+
+      // SMS path (when Twilio + A2P 10DLC ready):
+      // const { error: authError } = await supabase.auth.verifyOtp({
+      //   phone: toE164(phone),
+      //   token,
+      //   type: "sms",
+      // });
 
       setLoading(false);
 
       if (authError) {
         setError("Invalid code. Try again.");
+        setDigits(Array(DIGIT_COUNT).fill(""));
+        digitRefs.current[0]?.focus();
         return;
       }
 
       onAuth();
     },
-    [email, code, loading, onAuth]
+    [email, loading, onAuth]
   );
 
-  return (
-    <div className="flex flex-col items-center justify-center gap-8 animate-fade-in">
-      <div className="text-center">
-        <p className="text-sm text-white/50">
-          {step === "email" ? (
-            <>
-              Start your{" "}
-              <span
-                className="font-semibold animate-glow-text-pulse"
-                style={{ color: GLOW_COLOR }}
-              >
-                spike tape
-              </span>{" "}
-              collection.
-            </>
-          ) : (
-            `We sent a code to ${email}`
-          )}
-        </p>
-      </div>
+  const handleDigitChange = useCallback(
+    (index: number, value: string) => {
+      const digit = value.replace(/\D/g, "").slice(-1);
+      const next = [...digits];
+      next[index] = digit;
+      setDigits(next);
+      setError("");
 
-      {step === "email" ? (
-        <form onSubmit={handleSendCode} className="w-full max-w-[280px]">
-          <div className="flex gap-0">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              autoFocus
-              className="flex-1 border border-r-0 border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:border-white/20 transition-colors"
-            />
-            <button
-              type="submit"
-              disabled={loading || !email.trim()}
-              className="px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest bg-[#ff2d8a] text-white hover:bg-[#ff45a0] active:scale-[0.97] transition-all disabled:opacity-40 disabled:hover:bg-[#ff2d8a]"
-              style={{ boxShadow: "0 0 12px rgba(255,45,138,0.3)" }}
+      if (digit && index < DIGIT_COUNT - 1) {
+        digitRefs.current[index + 1]?.focus();
+      }
+
+      if (next.every((d) => d !== "")) {
+        submitCode(next);
+      }
+    },
+    [digits, submitCode]
+  );
+
+  const handleDigitKeyDown = useCallback(
+    (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Backspace") {
+        if (digits[index]) {
+          const next = [...digits];
+          next[index] = "";
+          setDigits(next);
+        } else if (index > 0) {
+          digitRefs.current[index - 1]?.focus();
+          const next = [...digits];
+          next[index - 1] = "";
+          setDigits(next);
+        }
+      }
+    },
+    [digits]
+  );
+
+  const handleDigitPaste = useCallback(
+    (e: React.ClipboardEvent) => {
+      e.preventDefault();
+      const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, DIGIT_COUNT);
+      if (!pasted) return;
+      const next = Array(DIGIT_COUNT).fill("");
+      pasted.split("").forEach((ch, i) => { next[i] = ch; });
+      setDigits(next);
+      setError("");
+      const focusIndex = Math.min(pasted.length, DIGIT_COUNT - 1);
+      digitRefs.current[focusIndex]?.focus();
+      if (pasted.length === DIGIT_COUNT) {
+        submitCode(next);
+      }
+    },
+    [submitCode]
+  );
+
+  const canSend = email.trim().length > 0;
+
+  return (
+    <div className="flex flex-col items-center gap-6 animate-fade-in w-full">
+      <p className="text-sm text-white/50 text-center">
+        {step === "input" ? (
+          <>
+            Start your{" "}
+            <span
+              className="font-semibold animate-glow-text-pulse"
+              style={{ color: GLOW_COLOR }}
             >
-              {loading ? "..." : "Go"}
-            </button>
-          </div>
-        </form>
-      ) : (
-        <form onSubmit={handleVerifyCode} className="w-full max-w-[280px]">
-          <div className="flex gap-0">
-            <input
-              type="text"
-              inputMode="numeric"
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              placeholder="6-digit code"
-              autoFocus
-              maxLength={6}
-              className="flex-1 border border-r-0 border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-white text-center tracking-[0.3em] placeholder:text-white/25 placeholder:tracking-normal outline-none focus:border-white/20 transition-colors"
-            />
-            <button
-              type="submit"
-              disabled={loading || code.length < 6}
-              className="px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest bg-white/90 text-black hover:bg-white active:scale-[0.97] transition-all disabled:opacity-40 disabled:hover:bg-white/90"
-            >
-              {loading ? "..." : "Verify"}
-            </button>
-          </div>
+              spike tape
+            </span>{" "}
+            collection.
+          </>
+        ) : (
+          <span>Check your email.</span>
+        )}
+      </p>
+
+      {step === "input" ? (
+        <form onSubmit={handleSendCode} className="w-full flex flex-col gap-3">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); setError(""); }}
+            placeholder="your@email.com"
+            autoFocus
+            className="w-full border border-white/10 bg-white/[0.04] px-3 py-3 text-sm text-white placeholder:text-white/25 outline-none focus:border-white/20 transition-colors"
+          />
+
           <button
-            type="button"
-            onClick={() => {
-              setStep("email");
-              setCode("");
-              setError("");
-            }}
-            className="mt-3 w-full text-center text-xs text-white/25 hover:text-white/40 transition-colors"
+            type="submit"
+            disabled={loading || !canSend}
+            className="w-full py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] bg-white/90 text-black hover:bg-white active:scale-[0.98] transition-all disabled:opacity-40"
           >
-            Use a different email
+            {loading ? "Sending…" : "Send Code"}
           </button>
         </form>
+      ) : (
+        <div className="w-full flex flex-col gap-3 items-center">
+          <p className="text-xs text-white/30 text-center">Code sent to {email}</p>
+
+          <div className="flex gap-2 justify-center" onPaste={handleDigitPaste}>
+            {digits.map((d, i) => (
+              <input
+                key={i}
+                ref={(el) => { digitRefs.current[i] = el; }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={d}
+                onChange={(e) => handleDigitChange(i, e.target.value)}
+                onKeyDown={(e) => handleDigitKeyDown(i, e)}
+                disabled={loading}
+                className="w-11 h-12 text-center text-lg font-semibold text-white bg-white/[0.04] border border-white/10 outline-none focus:border-[#ff2d8a]/60 transition-colors disabled:opacity-40"
+                style={d ? { borderColor: "rgba(255,45,138,0.3)" } : undefined}
+              />
+            ))}
+          </div>
+
+          {loading && (
+            <p className="text-xs text-white/30">Verifying…</p>
+          )}
+
+          <button
+            type="button"
+            onClick={() => { setStep("input"); setDigits(Array(DIGIT_COUNT).fill("")); setError(""); }}
+            className="text-xs text-white/25 hover:text-white/45 transition-colors"
+          >
+            Use a different email.
+          </button>
+        </div>
       )}
 
       {error && (
-        <p className="text-xs text-red-400/70">{error}</p>
+        <p className="text-xs text-red-400/70 text-center -mt-2">{error}</p>
       )}
 
       <button
@@ -157,8 +241,8 @@ export default function AuthGate({ onAuth, onGuest }: AuthGateProps) {
         Not now
       </button>
 
-      <p className="text-[11px] text-white/15 text-center leading-relaxed max-w-[260px]">
-        We keep your email private.
+      <p className="text-[11px] text-white/15 text-center leading-relaxed">
+        Your info is private.
         <br />
         Your show business is your own business.
       </p>
