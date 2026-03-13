@@ -22,30 +22,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
-
-interface ShowInfo {
-  name: string;
-  category: string;
-  hasExisting: boolean;
-}
-
-interface ClueRow {
-  id: number;
-  show_name: string;
-  category: string;
-  level: number;
-  clue_text: string;
-  clue_type: string | null;
-  specificity: string | null;
-  notes: string | null;
-  used: boolean;
-}
-
-interface PickedClue {
-  text: string;
-  bankId: number | null;
-  clueType: string | null;
-}
+import type { ShowInfo, ClueRow, PickedClue } from "@/lib/adminTypes";
 
 // Stable IDs for the 5 sortable slots
 const SLOT_IDS = ["slot-0", "slot-1", "slot-2", "slot-3", "slot-4"];
@@ -110,10 +87,10 @@ function SortableSlot({
           "border-gray-200 bg-gray-50/50"
         )}`}
       >
-        <span className={`text-xs font-semibold w-5 ${c("text-white/15", "text-gray-300")}`}>
+        <span className={`text-sm font-semibold w-5 ${c("text-white/15", "text-gray-300")}`}>
           {index + 1}
         </span>
-        <span className={`text-sm italic ${c("text-white/15", "text-gray-300")}`}>
+        <span className={`text-sm italic ${c("text-white/15", "text-gray-400")}`}>
           Click a clue below to fill
         </span>
       </div>
@@ -142,7 +119,7 @@ function SortableSlot({
         <GripIcon />
       </button>
 
-      <span className={`text-xs font-semibold w-5 shrink-0 ${c("text-green-400/70", "text-green-600")}`}>
+      <span className={`text-sm font-semibold w-5 shrink-0 ${c("text-green-400/70", "text-green-700")}`}>
         {index + 1}
       </span>
 
@@ -151,11 +128,11 @@ function SortableSlot({
           <textarea
             value={editText}
             onChange={e => onEditChange(e.target.value)}
-            className={`w-full px-3 py-2 text-sm focus:outline-none resize-none border ${c(
+            className={`w-full px-3 py-2 text-sm leading-relaxed focus:outline-none resize-none border ${c(
               "bg-white/5 border-white/10 text-white/80 focus:border-white/30",
               "bg-gray-50 border-gray-200 text-gray-800 focus:border-gray-400"
             )}`}
-            rows={2}
+            rows={3}
             autoFocus
           />
           <div className="flex gap-2">
@@ -181,7 +158,7 @@ function SortableSlot({
         </div>
       ) : (
         <span
-          className={`flex-1 text-sm cursor-pointer ${c("text-white/60 hover:text-white/80", "text-gray-600 hover:text-gray-900")}`}
+          className={`flex-1 text-sm leading-relaxed cursor-pointer ${c("text-white/60 hover:text-white/80", "text-gray-700 hover:text-gray-900")}`}
           onClick={onEditStart}
           title="Click to edit"
         >
@@ -192,27 +169,27 @@ function SortableSlot({
       {!isEditing && (
         <>
           {clue.clueType && (
-            <span className={`text-[10px] px-1.5 py-0.5 shrink-0 border ${c(
-              "border-white/10 text-white/20",
-              "border-gray-200 text-gray-400"
+            <span className={`text-[11px] px-2 py-0.5 shrink-0 border ${c(
+              "border-white/10 text-white/25",
+              "border-gray-200 text-gray-500"
             )}`}>
               {clue.clueType}
             </span>
           )}
           {clue.bankId === null && (
-            <span className={`text-[10px] italic shrink-0 ${c("text-white/20", "text-gray-400")}`}>
+            <span className={`text-[11px] italic shrink-0 ${c("text-white/25", "text-gray-400")}`}>
               edited
             </span>
           )}
           <button
             onClick={onRemove}
-            className={`text-xs shrink-0 transition-colors ${c(
+            className={`text-sm shrink-0 transition-colors ${c(
               "text-red-400/40 hover:text-red-400/80",
               "text-red-400 hover:text-red-600"
             )}`}
             title="Remove from slot"
           >
-            x
+            ✕
           </button>
         </>
       )}
@@ -221,12 +198,22 @@ function SortableSlot({
 }
 
 /* ─── Main Builder ─── */
-export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo[] }) {
+export default function PuzzleBuilder({
+  shows: initialShows,
+  preSelectedShow,
+  editPuzzleId,
+  onSaveComplete,
+}: {
+  shows: ShowInfo[];
+  preSelectedShow?: string | null;
+  editPuzzleId?: number | null;
+  onSaveComplete?: () => void;
+}) {
   const supabase = createClient();
   const c = useThemeClass();
 
   const [shows, setShows] = useState<ShowInfo[]>(initialShows);
-  const [selectedShow, setSelectedShow] = useState<string | null>(null);
+  const [selectedShow, setSelectedShow] = useState<string | null>(preSelectedShow ?? null);
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
   const [selectedCategory, setSelectedCategory] = useState<string>("Broadway Musical");
   const [clues, setClues] = useState<ClueRow[]>([]);
@@ -234,6 +221,11 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [aliases, setAliases] = useState("");
+
+  // Edit mode state
+  const [isEditMode, setIsEditMode] = useState(!!editPuzzleId);
+  const [editingPuzzleId, setEditingPuzzleId] = useState<number | null>(editPuzzleId ?? null);
+  const [editLoading, setEditLoading] = useState(false);
 
   // Pick-5 state
   const [picked, setPicked] = useState<(PickedClue | null)[]>([null, null, null, null, null]);
@@ -249,9 +241,68 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
   );
 
-  // Fetch clues when show selected
+  // Auto-select show from URL param (Library → Build flow)
+  useEffect(() => {
+    if (preSelectedShow && preSelectedShow !== selectedShow) {
+      setSelectedShow(preSelectedShow);
+    }
+  }, [preSelectedShow]);
+
+  // Load existing puzzle for editing
+  useEffect(() => {
+    if (!editPuzzleId) return;
+
+    setEditLoading(true);
+    setIsEditMode(true);
+    setEditingPuzzleId(editPuzzleId);
+
+    supabase
+      .from("puzzles")
+      .select("*")
+      .eq("id", editPuzzleId)
+      .single()
+      .then(async ({ data: puzzle, error }) => {
+        if (error || !puzzle) {
+          setSaveMessage("Error: Puzzle not found");
+          setEditLoading(false);
+          return;
+        }
+
+        // Auto-select the show
+        setSelectedShow(puzzle.answer);
+        setSelectedCategory(puzzle.category);
+        setAliases(puzzle.aliases ? puzzle.aliases.join(", ") : "");
+
+        // Fetch clue_bank for this show
+        const { data: bankClues } = await supabase
+          .from("clue_bank")
+          .select("*")
+          .eq("show_name", puzzle.answer)
+          .order("id");
+
+        const bank = bankClues ?? [];
+        setClues(bank);
+
+        // Match existing puzzle clues back to bank rows
+        const pickedSlots: (PickedClue | null)[] = puzzle.clues.map((clueText: string) => {
+          const match = bank.find((b: ClueRow) => b.clue_text === clueText);
+          return {
+            text: clueText,
+            bankId: match ? match.id : null,
+            clueType: match ? match.clue_type : null,
+          };
+        });
+        while (pickedSlots.length < 5) pickedSlots.push(null);
+
+        setPicked(pickedSlots);
+        setEditLoading(false);
+      });
+  }, [editPuzzleId]);
+
+  // Fetch clues when show selected (skip in edit mode — edit load handles it)
   useEffect(() => {
     if (!selectedShow) return;
+    if (editingPuzzleId) return;
     setLoading(true);
     setPicked([null, null, null, null, null]);
     setEditingSlot(null);
@@ -271,7 +322,7 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
 
     const showInfo = shows.find(s => s.name === selectedShow);
     if (showInfo) setSelectedCategory(showInfo.category);
-  }, [selectedShow]);
+  }, [selectedShow, editingPuzzleId]);
 
   // Set of picked bankIds for graying out pool items
   const pickedBankIds = useMemo(() => {
@@ -387,52 +438,99 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
     const clueTexts = picked.map(p => p!.text);
     const aliasArr = aliases.split(",").map(a => a.trim()).filter(Boolean);
 
-    const { error } = await supabase.from("puzzles").insert({
-      answer: selectedShow,
-      category: selectedCategory,
-      clues: clueTexts,
-      aliases: aliasArr.length > 0 ? aliasArr : null,
-      status: "queued",
-    });
+    if (isEditMode && editingPuzzleId) {
+      // ── UPDATE existing puzzle ──
+      const { error } = await supabase
+        .from("puzzles")
+        .update({
+          clues: clueTexts,
+          aliases: aliasArr.length > 0 ? aliasArr : null,
+        })
+        .eq("id", editingPuzzleId);
 
-    if (error) {
-      setSaveMessage(`Error: ${error.message}`);
-      setSaving(false);
-      return;
-    }
-
-    // Mark used clues
-    const usedIds = picked
-      .map(p => p?.bankId)
-      .filter((id): id is number => id != null);
-
-    if (usedIds.length > 0) {
-      await supabase
-        .from("clue_bank")
-        .update({ used: true })
-        .in("id", usedIds);
-    }
-
-    setSaveMessage("Saved to queue!");
-    setSaving(false);
-
-    setShows(prev => prev.map(s =>
-      s.name === selectedShow ? { ...s, hasExisting: true } : s
-    ));
-
-    setTimeout(() => {
-      setPicked([null, null, null, null, null]);
-      setEditingSlot(null);
-      setAliases("");
-      setSaveMessage(null);
-      const filtered = shows.filter(s =>
-        !s.hasExisting && s.name !== selectedShow &&
-        (categoryFilter === "All" || s.category === categoryFilter)
-      );
-      if (filtered.length > 0) {
-        setSelectedShow(filtered[0].name);
+      if (error) {
+        setSaveMessage(`Error: ${error.message}`);
+        setSaving(false);
+        return;
       }
-    }, 1500);
+
+      // Mark used clues
+      const usedIds = picked
+        .map(p => p?.bankId)
+        .filter((id): id is number => id != null);
+
+      if (usedIds.length > 0) {
+        await supabase
+          .from("clue_bank")
+          .update({ used: true })
+          .in("id", usedIds);
+      }
+
+      setSaveMessage("Updated!");
+      setSaving(false);
+
+      setTimeout(() => {
+        onSaveComplete?.();
+      }, 1200);
+    } else {
+      // ── INSERT new puzzle ──
+      const { error } = await supabase.from("puzzles").insert({
+        answer: selectedShow,
+        category: selectedCategory,
+        clues: clueTexts,
+        aliases: aliasArr.length > 0 ? aliasArr : null,
+        status: "queued",
+      });
+
+      if (error) {
+        setSaveMessage(`Error: ${error.message}`);
+        setSaving(false);
+        return;
+      }
+
+      // Mark used clues
+      const usedIds = picked
+        .map(p => p?.bankId)
+        .filter((id): id is number => id != null);
+
+      if (usedIds.length > 0) {
+        await supabase
+          .from("clue_bank")
+          .update({ used: true })
+          .in("id", usedIds);
+      }
+
+      setSaveMessage("Saved to queue!");
+      setSaving(false);
+
+      setShows(prev => prev.map(s =>
+        s.name === selectedShow ? { ...s, hasExisting: true } : s
+      ));
+
+      setTimeout(() => {
+        setPicked([null, null, null, null, null]);
+        setEditingSlot(null);
+        setAliases("");
+        setSaveMessage(null);
+        const filtered = shows.filter(s =>
+          !s.hasExisting && s.name !== selectedShow &&
+          (categoryFilter === "All" || s.category === categoryFilter)
+        );
+        if (filtered.length > 0) {
+          setSelectedShow(filtered[0].name);
+        }
+      }, 1500);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    setEditingPuzzleId(null);
+    setPicked([null, null, null, null, null]);
+    setSelectedShow(null);
+    setClues([]);
+    setAliases("");
+    setSaveMessage(null);
   };
 
   // Category/show filtering (unchanged)
@@ -455,32 +553,53 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
 
   return (
     <div className="space-y-8">
-      {/* Category filter tabs */}
-      <div className="flex flex-wrap gap-2">
-        {categories.map(cat => {
-          const count = cat === "All"
-            ? shows.filter(s => !s.hasExisting).length
-            : shows.filter(s => s.category === cat && !s.hasExisting).length;
-          const total = cat === "All" ? shows.length : shows.filter(s => s.category === cat).length;
-          return (
-            <button
-              key={cat}
-              onClick={() => {
-                setCategoryFilter(cat);
-                setSelectedShow(null);
-              }}
-              className={`px-3 py-1.5 text-xs transition-colors border ${
-                categoryFilter === cat
-                  ? c("border-white/30 bg-white/10 text-white/80", "border-gray-400 bg-gray-200 text-gray-800")
-                  : c("border-white/10 text-white/30 hover:text-white/60 hover:border-white/20", "border-gray-200 text-gray-400 hover:text-gray-700 hover:border-gray-300")
-              }`}
-            >
-              {cat}{" "}
-              <span className={c("text-white/20", "text-gray-400")}>{count}/{total}</span>
-            </button>
-          );
-        })}
-      </div>
+      {/* Editing banner */}
+      {isEditMode && (
+        <div className={`flex items-center justify-between px-4 py-3 border ${c(
+          "border-amber-400/20 bg-amber-400/[0.04]",
+          "border-amber-300 bg-amber-50"
+        )}`}>
+          <span className={`text-sm ${c("text-amber-400/80", "text-amber-700")}`}>
+            Editing puzzle #{editingPuzzleId}
+            {selectedShow && <> &mdash; {selectedShow}</>}
+          </span>
+          <button
+            onClick={handleCancelEdit}
+            className={`text-xs ${c("text-white/30 hover:text-white/60", "text-gray-400 hover:text-gray-700")}`}
+          >
+            Cancel Edit
+          </button>
+        </div>
+      )}
+
+      {/* Category filter tabs (hidden in edit mode) */}
+      {!isEditMode && (
+        <div className="flex flex-wrap gap-2">
+          {categories.map(cat => {
+            const count = cat === "All"
+              ? shows.filter(s => !s.hasExisting).length
+              : shows.filter(s => s.category === cat && !s.hasExisting).length;
+            const total = cat === "All" ? shows.length : shows.filter(s => s.category === cat).length;
+            return (
+              <button
+                key={cat}
+                onClick={() => {
+                  setCategoryFilter(cat);
+                  setSelectedShow(null);
+                }}
+                className={`px-3 py-1.5 text-xs transition-colors border ${
+                  categoryFilter === cat
+                    ? c("border-white/30 bg-white/10 text-white/80", "border-gray-400 bg-gray-200 text-gray-800")
+                    : c("border-white/10 text-white/30 hover:text-white/60 hover:border-white/20", "border-gray-200 text-gray-400 hover:text-gray-700 hover:border-gray-300")
+                }`}
+              >
+                {cat}{" "}
+                <span className={c("text-white/20", "text-gray-400")}>{count}/{total}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Show picker */}
       <div className="flex gap-3 items-end">
@@ -491,7 +610,10 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
           <select
             value={selectedShow ?? ""}
             onChange={e => setSelectedShow(e.target.value || null)}
-            className={`w-full px-4 py-2.5 text-sm focus:outline-none appearance-none ${c(
+            disabled={isEditMode}
+            className={`w-full px-4 py-2.5 text-sm focus:outline-none appearance-none ${
+              isEditMode ? "opacity-60 cursor-not-allowed " : ""
+            }${c(
               "bg-white/5 border border-white/10 text-white/80 focus:border-white/30",
               "bg-gray-50 border border-gray-200 text-gray-800 focus:border-gray-400"
             )}`}
@@ -509,7 +631,7 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
             </optgroup>
           </select>
         </div>
-        {nextUnbuilt && (
+        {!isEditMode && nextUnbuilt && (
           <button
             onClick={() => setSelectedShow(nextUnbuilt.name)}
             className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border transition-colors whitespace-nowrap ${c(
@@ -522,18 +644,20 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
         )}
       </div>
 
-      {loading && (
-        <p className={`text-sm animate-pulse ${c("text-white/30", "text-gray-400")}`}>Loading clues...</p>
+      {(loading || editLoading) && (
+        <p className={`text-sm animate-pulse ${c("text-white/30", "text-gray-400")}`}>
+          {editLoading ? "Loading puzzle..." : "Loading clues..."}
+        </p>
       )}
 
-      {selectedShow && !loading && clues.length > 0 && (
+      {selectedShow && !loading && !editLoading && clues.length > 0 && (
         <div className="space-y-6">
           {/* ── Picked Clues (5 DnD slots) ── */}
           <div className={`p-5 space-y-2 border ${c(
             "border-white/15 bg-white/[0.02]",
             "border-gray-300 bg-gray-50"
           )}`}>
-            <h3 className={`text-xs font-semibold uppercase tracking-[3px] mb-3 ${c("text-white/25", "text-gray-400")}`}>
+            <h3 className={`text-xs font-semibold uppercase tracking-[3px] mb-4 ${c("text-white/25", "text-gray-500")}`}>
               Picked Clues
             </h3>
 
@@ -571,10 +695,10 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
                     "border-gray-400 bg-white text-gray-800 shadow-gray-300"
                   )}`}>
                     <GripIcon />
-                    <span className={`text-xs font-semibold w-5 ${c("text-green-400/70", "text-green-600")}`}>
+                    <span className={`text-sm font-semibold w-5 ${c("text-green-400/70", "text-green-700")}`}>
                       {activeSlotIndex + 1}
                     </span>
-                    <span className="flex-1 text-sm truncate">{activeClue.text}</span>
+                    <span className="flex-1 text-sm leading-relaxed truncate">{activeClue.text}</span>
                   </div>
                 )}
               </DragOverlay>
@@ -599,7 +723,7 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
                   "bg-green-600 hover:bg-green-500"
                 )}`}
               >
-                {saving ? "Saving..." : "Save to Queue"}
+                {saving ? "Saving..." : isEditMode ? "Update Puzzle" : "Save to Queue"}
               </button>
             </div>
 
@@ -615,9 +739,9 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
             "border-white/10 bg-white/[0.01]",
             "border-gray-200 bg-white"
           )}`}>
-            <h3 className={`text-xs font-semibold uppercase tracking-[3px] mb-1 ${c("text-white/25", "text-gray-400")}`}>
+            <h3 className={`text-xs font-semibold uppercase tracking-[3px] mb-1 ${c("text-white/25", "text-gray-500")}`}>
               Clue Pool
-              <span className={`ml-2 font-normal tracking-normal ${c("text-white/15", "text-gray-300")}`}>
+              <span className={`ml-2 font-normal tracking-normal ${c("text-white/15", "text-gray-400")}`}>
                 {pool.length} clues
               </span>
             </h3>
@@ -628,10 +752,10 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
                 <button
                   key={type}
                   onClick={() => setTypeFilter(type)}
-                  className={`px-2 py-1 text-[10px] transition-colors border ${
+                  className={`px-2.5 py-1 text-xs transition-colors border ${
                     typeFilter === type
                       ? c("border-white/30 bg-white/10 text-white/70", "border-gray-400 bg-gray-200 text-gray-700")
-                      : c("border-white/[0.06] text-white/20 hover:text-white/40 hover:border-white/15", "border-gray-100 text-gray-400 hover:text-gray-600 hover:border-gray-300")
+                      : c("border-white/[0.06] text-white/20 hover:text-white/40 hover:border-white/15", "border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300")
                   }`}
                 >
                   {type}
@@ -640,7 +764,7 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
             </div>
 
             {/* Clue list */}
-            <div className="space-y-0.5 max-h-[60vh] overflow-y-auto">
+            <div className="space-y-px max-h-[60vh] overflow-y-auto">
               {pool.map(clue => {
                 const isPicked = pickedBankIds.has(clue.id);
                 return (
@@ -648,26 +772,28 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
                     key={clue.id}
                     onClick={() => handlePickClue(clue)}
                     disabled={isPicked || allFilled}
-                    className={`w-full text-left flex items-start gap-3 px-3 py-2 transition-colors ${
+                    className={`w-full text-left flex items-start gap-3 px-3 py-2.5 transition-colors border-b ${
                       isPicked
-                        ? c("text-white/10 line-through cursor-default", "text-gray-300 line-through cursor-default")
+                        ? c("text-white/10 line-through cursor-default border-white/5", "text-gray-300 line-through cursor-default border-gray-100")
                         : allFilled
-                          ? c("text-white/20 cursor-default", "text-gray-400 cursor-default")
-                          : c("text-white/50 hover:text-white/80 hover:bg-white/5 cursor-pointer", "text-gray-600 hover:text-gray-900 hover:bg-gray-50 cursor-pointer")
+                          ? c("text-white/20 cursor-default border-white/5", "text-gray-400 cursor-default border-gray-100")
+                          : c("text-white/50 hover:text-white/80 hover:bg-white/5 cursor-pointer border-white/5", "text-gray-700 hover:text-gray-900 hover:bg-gray-50 cursor-pointer border-gray-100")
                     }`}
                   >
-                    <span className="flex-1 text-xs leading-relaxed">{clue.clue_text}</span>
-                    <span className="flex items-center gap-2 shrink-0">
+                    <span className="flex-1 min-w-0">
+                      <span className="text-sm leading-relaxed block">{clue.clue_text}</span>
+                    </span>
+                    <span className="flex items-center gap-2 shrink-0 pt-0.5">
                       {clue.clue_type && (
-                        <span className={`text-[10px] px-1.5 py-0.5 border ${c(
-                          "border-white/[0.06] text-white/15",
-                          "border-gray-100 text-gray-300"
+                        <span className={`text-[11px] px-2 py-0.5 border ${c(
+                          "border-white/[0.06] text-white/20",
+                          "border-gray-200 text-gray-400"
                         )}`}>
                           {clue.clue_type}
                         </span>
                       )}
                       {clue.used && (
-                        <span className={`text-[10px] ${c("text-yellow-400/40", "text-yellow-600/60")}`}>used</span>
+                        <span className={`text-[11px] ${c("text-yellow-400/40", "text-yellow-600/60")}`}>used</span>
                       )}
                     </span>
                   </button>
@@ -678,7 +804,7 @@ export default function PuzzleBuilder({ shows: initialShows }: { shows: ShowInfo
         </div>
       )}
 
-      {selectedShow && !loading && clues.length === 0 && (
+      {selectedShow && !loading && !editLoading && clues.length === 0 && (
         <p className={`text-sm ${c("text-white/30", "text-gray-400")}`}>No clues found for this show in the clue bank.</p>
       )}
     </div>

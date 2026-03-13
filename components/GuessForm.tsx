@@ -11,6 +11,7 @@ interface GuessFormProps {
   category?: string;
   resolved?: boolean;
   puzzleId?: number;
+  isFinalGuess?: boolean;
 }
 
 export default function GuessForm({
@@ -22,14 +23,17 @@ export default function GuessForm({
   category,
   resolved,
   puzzleId,
+  isFinalGuess,
 }: GuessFormProps) {
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const isLocked = !!(solved || failed || resolved);
   const showGlow = !isLocked && !disabled;
+  const showFinalGlow = !!(isFinalGuess && showGlow);
 
   const displayValue = isLocked ? lockedValue ?? "" : value;
-  const showCustomPlaceholder = !isLocked && !displayValue && category;
+  const showCustomPlaceholder = !isLocked && !displayValue && !isFinalGuess && category;
+  const showFinalPlaceholder = !isLocked && !displayValue && isFinalGuess;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,9 +69,11 @@ export default function GuessForm({
                   ? "border-green-500/30 bg-green-500/15 text-green-300 opacity-100"
                   : failed
                     ? "border-red-500/30 bg-red-500/10 text-red-300 opacity-100"
-                    : showGlow
-                      ? "border-white/10 bg-white/[0.06] guess-glow text-white placeholder-white/50 disabled:opacity-40 disabled:cursor-not-allowed"
-                      : "border-white/10 bg-white/[0.06] text-white placeholder-white/50 focus:border-white/25 focus:bg-white/[0.08] disabled:opacity-40 disabled:cursor-not-allowed"
+                    : showFinalGlow
+                      ? "border-amber-500/40 bg-amber-500/[0.08] final-guess-glow text-white placeholder-amber-300/60 disabled:opacity-40 disabled:cursor-not-allowed"
+                      : showGlow
+                        ? "border-white/10 bg-white/[0.06] guess-glow text-white placeholder-white/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                        : "border-white/10 bg-white/[0.06] text-white placeholder-white/50 focus:border-white/25 focus:bg-white/[0.08] disabled:opacity-40 disabled:cursor-not-allowed"
             }
           `}
         />
@@ -80,6 +86,15 @@ export default function GuessForm({
             <span className="text-white/40">Guess a&nbsp;</span>
             <span className="text-white/70">{category}</span>
             <span className="text-white/40">...</span>
+          </div>
+        )}
+        {/* Final guess placeholder — amber-tinted "Last guess..." */}
+        {showFinalPlaceholder && (
+          <div
+            className="absolute inset-0 flex items-center px-4 text-base pointer-events-none"
+            aria-hidden="true"
+          >
+            <span className="text-amber-400/70">Last guess...</span>
           </div>
         )}
       </div>

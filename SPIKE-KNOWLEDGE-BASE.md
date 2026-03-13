@@ -220,22 +220,25 @@ Clues are inserted into Supabase via the REST API using the service role key. Th
 
 ## Current State
 
-*Last updated: March 10, 2026*
+*Last updated: March 11, 2026*
 
 ### Clue Bank
-- **375 clues** total in database
+- **1,150 clues** total in database
 - **Category:** Broadway Musical only (other categories not yet populated)
-- **Shows (15):** A Chorus Line, Beetlejuice, Chicago, Come From Away, Dear Evan Hansen, Hadestown, Hamilton, Into the Woods, Les Miserables, Rent, Six, Sweeney Todd, The Lion King, The Phantom of the Opera, Wicked
-- **Next batch:** 15 more Broadway Musicals in progress
+- **Shows (46):** 15 from Batch 1 + 16 from Batch 2 + 15 from Batch 3
+- **Batch 1 (15 shows):** A Chorus Line, Beetlejuice, Chicago, Come From Away, Dear Evan Hansen, Hadestown, Hamilton, Into the Woods, Les Miserables, Rent, Six, Sweeney Todd, The Lion King, The Phantom of the Opera, Wicked
+- **Batch 2 (16 shows):** & Juliet, Avenue Q, Back to the Future, Cabaret, Company, Dreamgirls, Fiddler on the Roof, Funny Girl, Guys and Dolls, MJ the Musical, Moulin Rouge!, Spring Awakening, The Book of Mormon, The Music Man, The Outsiders, West Side Story
+- **Batch 3 (15 shows — pre-2000 / golden age):** 42nd Street, Annie, Beauty and the Beast, Cats, Grease, Gypsy, Hair, Hello Dolly!, Jesus Christ Superstar, Miss Saigon, My Fair Lady, Oklahoma!, South Pacific, The King and I, The Sound of Music
 
 ### Puzzles
 - **3 approved** (played): Hamilton (Mar 7), Wicked (Mar 8), A Chorus Line (Mar 9)
-- **12 queued:** Phantom, Rent, Les Mis, DEH, Hadestown, Lion King, A Chorus Line (duplicate), Sweeney Todd, Into the Woods, Chicago, Come From Away, Beetlejuice
-- **Not yet built:** Hamilton (new clues), Wicked (new clues), Six
+- **12 queued (Batch 1):** Phantom, Rent, Les Mis, DEH, Hadestown, Lion King, A Chorus Line (duplicate), Sweeney Todd, Into the Woods, Chicago, Come From Away, Beetlejuice
+- **9 queued (Batch 2):** Guys and Dolls, Book of Mormon, Spring Awakening, West Side Story, The Music Man, Fiddler on the Roof, Moulin Rouge!, Cabaret, Avenue Q
+- **Not yet built:** Hamilton (new clues), Wicked (new clues), Six, + remaining Batch 2 shows + all 15 Batch 3 shows
 
 ### What's Next
-1. Add next batch of 15 Broadway Musicals to clue bank
-2. Build puzzles for remaining shows (Hamilton rebuild, Wicked rebuild, Six, + new batch)
+1. Build puzzles for Batch 3 golden age shows (15 new shows ready for the builder)
+2. Build remaining Batch 2 shows
 3. Once musicals are solid, expand to: Broadway Plays, Broadway Theaters, Broadway Actors, Touring Cities
 
 ---

@@ -230,4 +230,18 @@ body > canvas {
   animation: guess-glow 4s ease-in-out infinite;
 }
 
+/* Final guess glow — warm amber pulse to signal "last chance" */
+@keyframes final-guess-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(245, 158, 11, 0);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.2), 0 0 4px rgba(245, 158, 11, 0.12);
+  }
+}
+
+.final-guess-glow {
+  animation: final-guess-glow 2.5s ease-in-out infinite;
+}
+
 

@@ -2,15 +2,7 @@
 
 import { useThemeClass } from "@/lib/adminTheme";
 
-export default function AdminHeader({
-  subtitle,
-  navHref,
-  navLabel,
-}: {
-  subtitle: string;
-  navHref: string;
-  navLabel: string;
-}) {
+export default function AdminHeader() {
   const c = useThemeClass();
 
   return (
@@ -22,18 +14,9 @@ export default function AdminHeader({
         <span
           className={`text-base font-sans tracking-normal ${c("text-white/30", "text-gray-400")}`}
         >
-          {subtitle}
+          Admin
         </span>
       </h1>
-      <a
-        href={navHref}
-        className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider border transition-colors ${c(
-          "border-white/15 text-white/40 hover:text-white/70 hover:border-white/30",
-          "border-gray-300 text-gray-400 hover:text-gray-700 hover:border-gray-400"
-        )}`}
-      >
-        {navLabel}
-      </a>
     </div>
   );
 }

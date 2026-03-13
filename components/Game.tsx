@@ -255,6 +255,7 @@ export default function Game({
           category={puzzle.category}
           resolved={shareMode}
           puzzleId={puzzle.puzzle_number ?? puzzle.id}
+          isFinalGuess={state.revealedClues >= 5 && !state.completed}
         />
       </div>
 
