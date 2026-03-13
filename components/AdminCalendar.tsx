@@ -303,6 +303,84 @@ function GapIndicator({
   );
 }
 
+// ─── Add puzzle row (+ button at bottom) ────────────────────────
+function AddPuzzleRow({
+  nextDate,
+  queuedPuzzles,
+  onAdd,
+  busy,
+}: {
+  nextDate: string;
+  queuedPuzzles: PuzzleRow[];
+  onAdd: (puzzleId: number, date: string) => void;
+  busy: boolean;
+}) {
+  const c = useThemeClass();
+  const [showPicker, setShowPicker] = useState(false);
+  const { dayOfWeek, shortDate } = formatDateSlot(nextDate);
+
+  if (queuedPuzzles.length === 0) return null;
+
+  return (
+    <div className="flex items-start gap-4">
+      <div className="w-14 shrink-0 pt-3 text-right">
+        {showPicker && (
+          <>
+            <div className={`text-[10px] font-semibold tracking-wider ${c("text-white/25", "text-gray-400")}`}>{dayOfWeek}</div>
+            <div className={`text-xs tabular-nums ${c("text-white/15", "text-gray-300")}`}>{shortDate}</div>
+          </>
+        )}
+      </div>
+      <div className="flex-1">
+        {!showPicker ? (
+          <button
+            onClick={() => setShowPicker(true)}
+            disabled={busy}
+            className={`w-full border border-dashed px-4 py-3 flex items-center justify-center transition-colors disabled:opacity-40 ${c(
+              "border-white/10 hover:border-white/25 text-white/20 hover:text-white/50",
+              "border-gray-200 hover:border-gray-400 text-gray-300 hover:text-gray-500"
+            )}`}
+          >
+            <span className="text-lg leading-none">+</span>
+          </button>
+        ) : (
+          <div className={`border border-dashed px-4 py-3 ${c(
+            "border-white/15 bg-white/[0.02]",
+            "border-gray-300 bg-gray-50"
+          )}`}>
+            <div className="flex items-center justify-between mb-2">
+              <span className={`text-xs ${c("text-white/40", "text-gray-500")}`}>
+                Add puzzle for {shortDate}
+              </span>
+              <button
+                onClick={() => setShowPicker(false)}
+                className={`text-xs transition-colors ${c("text-white/25 hover:text-white/50", "text-gray-400 hover:text-gray-600")}`}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {queuedPuzzles.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => { onAdd(p.id, nextDate); setShowPicker(false); }}
+                  disabled={busy}
+                  className={`text-xs px-2.5 py-1 transition-colors disabled:opacity-40 ${c(
+                    "bg-white/[0.04] border border-white/10 text-white/50 hover:text-white/80 hover:border-white/25",
+                    "bg-white border border-gray-200 text-gray-500 hover:text-gray-800 hover:border-gray-400"
+                  )}`}
+                >
+                  {p.answer}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Inline edit form ─────────────────────────────────────────────
 function EditRow({
   form,
@@ -437,6 +515,17 @@ export default function AdminCalendar({
       items.push({ type: "puzzle", puzzle: futurePuzzles[i] });
     }
     return items;
+  }, [futurePuzzles, todayPuzzle, todayStr]);
+
+  // Next available date (day after last scheduled, or tomorrow if empty)
+  const nextDate = useMemo(() => {
+    const lastDate =
+      futurePuzzles.length > 0
+        ? futurePuzzles[futurePuzzles.length - 1].date!
+        : todayPuzzle?.date ?? todayStr;
+    const d = new Date(lastDate + "T00:00:00");
+    d.setDate(d.getDate() + 1);
+    return fmt(d);
   }, [futurePuzzles, todayPuzzle, todayStr]);
 
   // ─── DnD sensors ───
@@ -719,6 +808,13 @@ export default function AdminCalendar({
               )}
             </DragOverlay>
           </DndContext>
+
+          <AddPuzzleRow
+            nextDate={nextDate}
+            queuedPuzzles={queuedPuzzles}
+            onAdd={handleFillGap}
+            busy={busy}
+          />
         </div>
       </section>
     </div>
