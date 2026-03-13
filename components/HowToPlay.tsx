@@ -10,71 +10,107 @@ interface HowToPlayProps {
 
 const TOTAL_STEPS = 4;
 const ROTATIONS = [-1.5, 2, -1, 1.8, -0.8];
-
-// Fallback colors if dailyColors not yet available
 const FALLBACK_COLORS: ClueColor[] = ["pink", "purple", "blue", "green", "yellow"];
-
-// Categories that rotate in the guess box demo
 const DEMO_CATEGORIES = ["Broadway Musical", "Play", "Actor", "Theater"];
 
-/* ─── Step 1: THE QUEST (goal first) ─── */
-function StepTheQuest() {
+// Organic x-offsets for "marks on a stage" layout
+const TAPE_X = [-8, 16, -18, 12, -3];
+
+/* ═══════════════════════════════════════════════════════════════════
+   STEP 1 — THE GOAL
+   "Collect tape. Build streaks. Earn glow tape."
+   ═══════════════════════════════════════════════════════════════════ */
+function StepGoal({ colors }: { colors: ClueColor[] }) {
   const allHexes = ALL_COLOR_NAMES.map((c) => ALL_COLORS[c]).join(", ");
+
   return (
-    <div className="flex flex-col items-center gap-4">
-      {/* Glow tape pulsing */}
-      <div className="flex flex-col items-center gap-2 py-2">
+    <div className="flex flex-col items-center">
+      {/* Tape marks — staggered like marks on a stage floor */}
+      <div className="flex flex-col items-center gap-1.5 py-6">
+        {colors.map((color, i) => (
+          <div
+            key={i}
+            className="animate-fade-in"
+            style={{
+              height: "10px",
+              width: "5rem",
+              backgroundColor: ALL_COLORS[color],
+              transform: `translateX(${TAPE_X[i]}px) rotate(${ROTATIONS[i]}deg)`,
+              animationDelay: `${i * 100}ms`,
+              animationFillMode: "backwards",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Glow tape + counter */}
+      <div
+        className="flex items-center gap-4 mt-2 animate-fade-in"
+        style={{ animationDelay: "600ms", animationFillMode: "backwards" }}
+      >
         <div
-          className="h-6 w-24 animate-glow-pulse"
+          className="h-2.5 w-12 animate-glow-pulse"
           style={{ backgroundColor: GLOW_COLOR }}
         />
-        <p className="text-xs uppercase tracking-widest text-white/30">
-          glow tape
+        <div className="flex items-center gap-2 border border-white/15 bg-white/[0.04] px-3 py-1.5">
+          <span
+            className="inline-block h-2 w-3.5"
+            style={{ background: `linear-gradient(90deg, ${allHexes})` }}
+          />
+          <span className="text-xs font-semibold text-white/40 tabular-nums">47</span>
+        </div>
+      </div>
+
+      {/* Copy */}
+      <div
+        className="mt-8 text-center animate-fade-in"
+        style={{ animationDelay: "800ms", animationFillMode: "backwards" }}
+      >
+        <p className="text-base text-white/60 leading-relaxed">
+          Collect tape. Build streaks.
+          <br />
+          Earn glow tape.
+        </p>
+        <p className="text-sm text-white/30 mt-3">
+          New puzzle every day.
         </p>
       </div>
-      {/* Mini tape counter mockup */}
-      <div className="flex items-center gap-2 border border-white/15 bg-white/[0.04] px-4 py-2">
-        <span
-          className="inline-block h-2.5 w-4"
-          style={{
-            background: `linear-gradient(90deg, ${allHexes})`,
-          }}
-        />
-        <span className="text-xs font-semibold text-white/40 tabular-nums">47</span>
-      </div>
-      <p className="text-[15px] text-white/50 text-center leading-relaxed">
-        Collect tape. Build streaks.
-        <br />
-        Earn glow tape.
-        <br />
-        New puzzle every day.
-      </p>
     </div>
   );
 }
 
-/* ─── Step 2: COLLECT YOUR TAPE ─── */
-function StepCollect({ colors }: { colors: ClueColor[] }) {
+/* ═══════════════════════════════════════════════════════════════════
+   STEP 2 — HOW YOU EARN IT
+   "Guess right and keep your remaining tape."
+   ═══════════════════════════════════════════════════════════════════ */
+function StepEarn({ colors }: { colors: ClueColor[] }) {
   const letters = ["S", "P", "I", "K", "E"];
+  // 3/5 scenario — guessed right with 3 tapes left
   const collectedColors = colors.slice(2);
+
   return (
-    <div className="flex flex-col items-center gap-4">
-      <p className="text-[15px] text-white/50 text-center leading-relaxed">
-        Guess right and collect
+    <div className="flex flex-col items-center">
+      {/* Copy above */}
+      <p className="text-base text-white/60 text-center leading-relaxed">
+        Guess right and keep
         <br />
-        your spike tape.
+        your remaining tape.
       </p>
-      <div className="font-title text-5xl tracking-wide py-2">
+
+      {/* SPIKE letters — 3 lit (I, K, E), 2 dim (S, P) */}
+      <div className="font-title text-5xl tracking-wide py-5">
         {letters.map((letter, i) => {
           const isLit = i >= 2;
           const color = ALL_COLORS[colors[i]];
           return (
             <span
               key={i}
-              className="inline-block"
+              className="inline-block animate-fade-in"
               style={{
-                color: isLit ? color : "rgba(255,255,255,0.25)",
+                color: isLit ? color : "rgba(255,255,255,0.18)",
                 textShadow: isLit ? `0 0 24px ${color}40` : "none",
+                animationDelay: `${200 + i * 80}ms`,
+                animationFillMode: "backwards",
               }}
             >
               {letter}
@@ -82,41 +118,55 @@ function StepCollect({ colors }: { colors: ClueColor[] }) {
           );
         })}
       </div>
-      <div className="flex gap-2 items-center">
+
+      {/* Collected tape strips */}
+      <div className="flex gap-2.5 items-center mb-2">
         {collectedColors.map((c, i) => (
           <div
             key={i}
-            className="h-3 w-10"
-            style={{ backgroundColor: ALL_COLORS[c] }}
+            className="h-3 w-11 animate-fade-in"
+            style={{
+              backgroundColor: ALL_COLORS[c],
+              transform: `rotate(${ROTATIONS[i + 2]}deg)`,
+              animationDelay: `${600 + i * 120}ms`,
+              animationFillMode: "backwards",
+            }}
           />
         ))}
       </div>
-      <p className="text-[15px] text-white/40 text-center leading-relaxed italic">
-        (New colors every day!!)
+
+      <p
+        className="text-sm text-white/30 text-center mt-4 animate-fade-in"
+        style={{ animationDelay: "900ms", animationFillMode: "backwards" }}
+      >
+        New colors every day.
       </p>
     </div>
   );
 }
 
-/* ─── Step 3: WRONG ANSWERS ─── */
-function StepWrongAnswers({ colors }: { colors: ClueColor[] }) {
+/* ═══════════════════════════════════════════════════════════════════
+   STEP 3 — THE TRADEOFF
+   "Wrong answers cost tape — but reveal clues."
+   ═══════════════════════════════════════════════════════════════════ */
+function StepCost({ colors }: { colors: ClueColor[] }) {
   const [flash, setFlash] = useState(false);
-  const [autoPeeled, setAutoPeeled] = useState(false);
-  const [lostCount, setLostCount] = useState(0);
+  const [peeled, setPeeled] = useState(false);
+  const [cycle, setCycle] = useState(0);
 
   useEffect(() => {
     const run = () => {
       setFlash(true);
-      setAutoPeeled(false);
+      setPeeled(false);
       setTimeout(() => setFlash(false), 500);
       setTimeout(() => {
-        setAutoPeeled(true);
-        setLostCount((c) => c + 1);
+        setPeeled(true);
+        setCycle((c) => c + 1);
       }, 700);
     };
     run();
     const interval = setInterval(() => {
-      setAutoPeeled(false);
+      setPeeled(false);
       setFlash(false);
       setTimeout(run, 400);
     }, 3500);
@@ -124,13 +174,15 @@ function StepWrongAnswers({ colors }: { colors: ClueColor[] }) {
   }, []);
 
   return (
-    <div className="flex flex-col items-center gap-4 overflow-hidden">
-      <p className="text-[15px] text-white/50 text-center leading-relaxed">
+    <div className="flex flex-col items-center overflow-hidden">
+      {/* Copy above */}
+      <p className="text-base text-white/60 text-center leading-relaxed mb-6">
         Wrong answers cost tape,
         <br />
         but reveal clues.
       </p>
-      {/* Mini input mockup */}
+
+      {/* Mock wrong guess */}
       <div
         className="flex gap-0 w-full transition-all duration-300"
         style={{ transform: flash ? "translateX(-3px)" : "none" }}
@@ -140,7 +192,7 @@ function StepWrongAnswers({ colors }: { colors: ClueColor[] }) {
           style={{
             borderColor: flash ? "rgba(239,68,68,0.4)" : "rgba(255,255,255,0.1)",
             backgroundColor: flash ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.06)",
-            color: flash ? "rgba(239,68,68,0.8)" : "rgba(255,255,255,0.5)",
+            color: flash ? "rgba(239,68,68,0.8)" : "rgba(255,255,255,0.45)",
           }}
         >
           wrong answer
@@ -155,25 +207,28 @@ function StepWrongAnswers({ colors }: { colors: ClueColor[] }) {
           {flash ? "X" : "Submit"}
         </div>
       </div>
-      {/* Mini tape that auto-peels */}
-      <div className="relative w-full" style={{ height: "32px" }}>
+
+      {/* Tape → clue reveal */}
+      <div className="relative w-full mt-3" style={{ height: "36px" }}>
+        {/* Revealed clue underneath */}
         <div
-          className="absolute inset-0 flex items-center justify-center text-xs text-white/60 transition-opacity duration-500"
+          className="absolute inset-0 flex items-center justify-center text-xs text-white/55 transition-opacity duration-500"
           style={{
             backgroundColor: "rgba(255,255,255,0.06)",
-            opacity: autoPeeled ? 1 : 0,
+            opacity: peeled ? 1 : 0,
           }}
         >
           A clue appears...
         </div>
+        {/* Tape on top */}
         <div
-          className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-black/25 transition-all duration-700"
+          className="absolute inset-0 transition-all duration-700"
           style={{
-            backgroundColor: ALL_COLORS[colors[lostCount % colors.length]],
-            transform: autoPeeled
+            backgroundColor: ALL_COLORS[colors[cycle % colors.length]],
+            transform: peeled
               ? `translateX(120%) rotate(${ROTATIONS[0] + 5}deg)`
               : `rotate(${ROTATIONS[0]}deg)`,
-            opacity: autoPeeled ? 0 : 1,
+            opacity: peeled ? 0 : 1,
           }}
         />
       </div>
@@ -181,8 +236,11 @@ function StepWrongAnswers({ colors }: { colors: ClueColor[] }) {
   );
 }
 
-/* ─── Step 4: TAKE A GUESS (last — so it's fresh when you close) ─── */
-function StepTakeAGuess() {
+/* ═══════════════════════════════════════════════════════════════════
+   STEP 4 — YOUR TURN
+   "The category tells you what to guess."
+   ═══════════════════════════════════════════════════════════════════ */
+function StepPlay() {
   const [catIndex, setCatIndex] = useState(0);
 
   useEffect(() => {
@@ -193,11 +251,15 @@ function StepTakeAGuess() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <p className="text-[15px] text-white/50 text-center leading-relaxed">
-        The category tells you what to guess.
+    <div className="flex flex-col items-center">
+      {/* Copy above */}
+      <p className="text-base text-white/60 text-center leading-relaxed mb-6">
+        The category tells you
+        <br />
+        what to guess.
       </p>
-      {/* Mock guess box with rotating category */}
+
+      {/* Mock input with rotating category */}
       <div className="flex gap-0 w-full">
         <div
           className="flex-1 border border-r-0 px-4 py-3 text-sm overflow-hidden"
@@ -224,13 +286,19 @@ function StepTakeAGuess() {
           Submit
         </div>
       </div>
-      <p className="text-[15px] text-white/50 text-center leading-relaxed">
-        Type a guess and hit submit.
+
+      {/* Copy below */}
+      <p className="text-base text-white/60 text-center leading-relaxed mt-6">
+        Type your answer and hit submit.
       </p>
     </div>
   );
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+   Goal → Earn → Cost → Play → "Places"
+   ═══════════════════════════════════════════════════════════════════ */
 export default function HowToPlay({ onClose, dailyColors }: HowToPlayProps) {
   const [step, setStep] = useState(0);
   const [closing, setClosing] = useState(false);
@@ -267,13 +335,12 @@ export default function HowToPlay({ onClose, dailyColors }: HowToPlayProps) {
 
   const isLast = step === TOTAL_STEPS - 1;
 
-  // Reversed order: goal → reward → cost → action
   const renderStep = () => {
     switch (step) {
-      case 0: return <StepTheQuest />;
-      case 1: return <StepCollect colors={colors} />;
-      case 2: return <StepWrongAnswers colors={colors} />;
-      case 3: return <StepTakeAGuess />;
+      case 0: return <StepGoal colors={colors} />;
+      case 1: return <StepEarn colors={colors} />;
+      case 2: return <StepCost colors={colors} />;
+      case 3: return <StepPlay />;
       default: return null;
     }
   };
@@ -282,7 +349,7 @@ export default function HowToPlay({ onClose, dailyColors }: HowToPlayProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className={`absolute inset-0 bg-black/80 transition-opacity duration-300 ${
+        className={`absolute inset-0 bg-black/85 transition-opacity duration-300 ${
           closing ? "opacity-0" : ""
         }`}
         onClick={handleClose}
@@ -290,22 +357,22 @@ export default function HowToPlay({ onClose, dailyColors }: HowToPlayProps) {
 
       {/* Panel */}
       <div
-        className={`relative z-10 w-full max-w-md border border-white/10 bg-[#0a0a0c] p-8 pt-10 ${
+        className={`relative z-10 w-full max-w-md border border-white/[0.08] bg-[#0a0a0c] px-8 py-10 ${
           closing ? "animate-curtain-down" : "animate-curtain-up"
         }`}
         style={{ maxHeight: "80dvh", overflowY: "auto" }}
       >
-        {/* Step content (no header titles) */}
-        <div key={`content-${step}`} className="animate-fade-in">
+        {/* Step content */}
+        <div key={`step-${step}`} className="animate-fade-in">
           {renderStep()}
         </div>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between mt-8 pt-5 border-t border-white/[0.06]">
+        <div className="flex items-center justify-between mt-10 pt-5 border-t border-white/[0.06]">
           {/* Back */}
           <button
             onClick={prev}
-            className={`text-base text-white/30 hover:text-white/60 transition-colors w-12 ${
+            className={`text-base text-white/25 hover:text-white/55 transition-colors w-12 ${
               step === 0 ? "invisible" : ""
             }`}
             aria-label="Previous step"
@@ -314,14 +381,15 @@ export default function HowToPlay({ onClose, dailyColors }: HowToPlayProps) {
           </button>
 
           {/* Dots */}
-          <div className="flex gap-2">
+          <div className="flex gap-2.5">
             {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
               <div
                 key={i}
-                className="h-2 w-2 transition-all duration-300"
+                className="h-1.5 w-1.5 rounded-full transition-all duration-300"
                 style={{
                   backgroundColor:
-                    i === step ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.15)",
+                    i === step ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.12)",
+                  transform: i === step ? "scale(1.3)" : "scale(1)",
                 }}
               />
             ))}
