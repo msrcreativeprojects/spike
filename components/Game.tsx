@@ -215,9 +215,9 @@ export default function Game({
   const lastGuess = state.guesses[state.guesses.length - 1] ?? "";
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-1 min-h-0 flex-col">
       {/* Header */}
-      <header className="text-center mb-3">
+      <header className="shrink-0 text-center mb-1">
         <h1 className="font-title text-[7rem] leading-none tracking-wide">
           {["S", "P", "I", "K", "E"].map((letter, i) => {
             const isLit = state.completed
@@ -245,7 +245,7 @@ export default function Game({
       </header>
 
       {/* Guess area — same box throughout, just transitions visual state */}
-      <div className="mb-1 h-[48px]">
+      <div className="shrink-0 mb-1 h-[48px]">
         <GuessForm
           onGuess={handleGuess}
           disabled={state.completed}
@@ -259,21 +259,23 @@ export default function Game({
         />
       </div>
 
-      {/* Clues board */}
-      <ClueList
-        clues={puzzle.clues}
-        revealedCount={state.revealedClues}
-        completed={state.completed}
-        revealing={revealing}
-        dailyColors={dailyColors}
-        shareMode={shareMode}
-        selectedClue={selectedClue}
-        onSelectClue={setSelectedClue}
-      />
+      {/* Clues board — flex-1 so it fills remaining viewport space */}
+      <div className="no-scrollbar flex-1 min-h-0 overflow-y-auto py-1">
+        <ClueList
+          clues={puzzle.clues}
+          revealedCount={state.revealedClues}
+          completed={state.completed}
+          revealing={revealing}
+          dailyColors={dailyColors}
+          shareMode={shareMode}
+          selectedClue={selectedClue}
+          onSelectClue={setSelectedClue}
+        />
+      </div>
 
       {/* CTA button — instruction state → active send */}
       {shareMode && (
-        <div className="flex justify-center mt-3 animate-fade-in">
+        <div className="shrink-0 flex justify-center mt-2 animate-fade-in">
           {shareLabel ? (
             <button
               disabled
@@ -315,6 +317,7 @@ export default function Game({
 
       {/* Tape result (shown after completion, below clues) */}
       {state.completed && tapeResult && shareMode && (
+        <div className="shrink-0">
         <TapeResult
           colorsEarned={tapeResult.colorsEarned}
           totalTape={tapeResult.newTotal}
@@ -322,12 +325,13 @@ export default function Game({
           isGuest={isGuest}
           onSignIn={onGuestSignIn}
         />
+        </div>
       )}
 
       {/* Dev reset — visible for testing */}
       <button
         onClick={handleReset}
-        className="mx-auto mt-2 text-[10px] text-white/20 hover:text-white/50 transition-colors uppercase tracking-widest"
+        className="shrink-0 mx-auto mt-1 text-[10px] text-white/20 hover:text-white/50 transition-colors uppercase tracking-widest"
       >
         reset puzzle
       </button>

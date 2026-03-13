@@ -11,6 +11,9 @@ body {
   min-height: 100dvh;
 }
 
+/* Hide scrollbar on clue container (keeps overflow-y-auto functional) */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
 /* Confetti canvas behind game UI */
 body > canvas {
   z-index: 0 !important;

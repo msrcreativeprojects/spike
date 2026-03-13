@@ -123,7 +123,7 @@ export default function GameShell({ puzzle }: GameShellProps) {
     <>
       {/* Game always renders — blurred + dimmed when an overlay is active */}
       <div
-        className="transition-all duration-500"
+        className="flex flex-1 min-h-0 flex-col transition-all duration-500"
         style={{
           filter: gameBlocked ? "blur(6px) brightness(0.4)" : "none",
           pointerEvents: gameBlocked ? "none" : "auto",

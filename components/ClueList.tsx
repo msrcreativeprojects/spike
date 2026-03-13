@@ -93,7 +93,7 @@ export default function ClueList({
   }, [revealing, revealedCount, clues.length, completed]);
 
   return (
-    <div className="relative flex flex-col items-center gap-2">
+    <div className="relative flex flex-col items-center gap-1.5">
       {clues.map((clue, i) => {
         const isRevealed = i < revealedCount;
         const isUnrevealed = !isRevealed;
@@ -123,7 +123,7 @@ export default function ClueList({
           >
             {/* Clue text — always present for sizing */}
             <div
-              className="px-8 py-3 text-center text-sm font-semibold text-balance transition-all duration-200"
+              className="px-8 py-2 text-center text-sm font-semibold text-balance transition-all duration-200"
               style={{
                 backgroundColor: isSelected
                   ? `${color}18`
