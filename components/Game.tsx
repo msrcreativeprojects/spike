@@ -259,8 +259,8 @@ export default function Game({
         />
       </div>
 
-      {/* Clues board */}
-      <div className="py-1">
+      {/* Clues board — overflow-hidden clips the tape-fall animation */}
+      <div className="py-1 overflow-hidden">
         <ClueList
           clues={puzzle.clues}
           revealedCount={state.revealedClues}
