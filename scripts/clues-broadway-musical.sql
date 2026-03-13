@@ -68,7 +68,7 @@ INSERT INTO clue_bank (show_name, category, level, clue_text, clue_type, specifi
 ('The Phantom of the Opera', 'Broadway Musical', 0, 'Fifty pyro elements fire with 5 different effects during each performance', 'technical', 'fact', 'Prepping pyrotechnics takes 30 minutes before every show'),
 ('The Phantom of the Opera', 'Broadway Musical', 0, 'Ten fog and smoke machines run throughout each performance', 'technical', 'fact', 'Plus 250 kg of dry ice per show'),
 ('The Phantom of the Opera', 'Broadway Musical', 0, 'Two hundred and eighty-one candles are used per performance', 'backstage', 'fact', 'Mix of real flame and electric effects'),
-('The Phantom of the Opera', 'Broadway Musical', 0, 'The Venetian gondola is remote-controlled wirelessly from offstage using a device resembling a large Atari joystick', 'backstage', 'fact', 'Steered by a single operator for the underground lake scene'),
+('The Phantom of the Opera', 'Broadway Musical', 0, 'The Venetian gondola is remote-controlled wirelessly from offstage using a device resembling a large Atari', 'backstage', 'fact', 'Steered by a single operator for the underground lake scene'),
 ('The Phantom of the Opera', 'Broadway Musical', 0, 'Over the Broadway run the production consumed 791,250 gallons of shot powder for flash pots', 'numbers', 'fact', 'Plus 10,550 sheets of flash paper and 37,980 lbs of dry ice'),
 ('The Phantom of the Opera', 'Broadway Musical', 0, 'The production maintained 230 costumes designed by Maria Bjornson', 'design', 'fact', 'Bjornson designed both sets and costumes, a rarity on Broadway'),
 ('The Phantom of the Opera', 'Broadway Musical', 0, 'One hundred and eleven wigs made of human, yak, and synthetic hair were used in each production', 'design', 'fact', 'Wig maintenance was a full-time operation'),
@@ -83,7 +83,7 @@ INSERT INTO clue_bank (show_name, category, level, clue_text, clue_type, specifi
 ('The Phantom of the Opera', 'Broadway Musical', 0, 'Opened January 26, 1988, at the Majestic Theatre where it ran for its entire Broadway life', 'production', 'fact', 'Previews began January 9, 1988'),
 ('The Phantom of the Opera', 'Broadway Musical', 0, 'Directed by Harold Prince with musical staging by Gillian Lynne', 'production', 'fact', 'Prince also directed Sweeney Todd and Evita'),
 ('The Phantom of the Opera', 'Broadway Musical', 0, 'Maria Bjornson served as both set and costume designer, winning Tonys for both', 'production', 'fact', 'Unusual for one designer to handle both disciplines'),
-('The Phantom of the Opera', 'Broadway Musical', 0, 'The candelabra that rise from the stage during the lake sequence use hydraulic lifts built into the stage floor', 'technical', 'fact', 'Synchronized with the gondola movement'),
+('The Phantom of the Opera', 'Broadway Musical', 0, 'The candelabra that rise from the stage during the lake sequence use hydraulic lifts built into the stage', 'technical', 'fact', 'Synchronized with the gondola movement'),
 ('The Phantom of the Opera', 'Broadway Musical', 0, 'Martin Levan''s sound design balanced a 27-piece orchestra with intimate vocal moments in a 1,681-seat house', 'technical', 'fact', 'Pioneered techniques for mixing large orchestras in Broadway theaters'),
 ('The Phantom of the Opera', 'Broadway Musical', 0, 'The original London production opened in 1986 at Her Majesty''s Theatre and is still running', 'history', 'fact', 'The longest-running show in West End history'),
 ('The Phantom of the Opera', 'Broadway Musical', 0, 'Based on Gaston Leroux''s 1910 French novel', 'history', 'fact', 'Andrew Lloyd Webber composed the score'),
@@ -180,8 +180,8 @@ INSERT INTO clue_bank (show_name, category, level, clue_text, clue_type, specifi
 -- ============================================================
 -- HADESTOWN
 -- ============================================================
-('Hadestown', 'Broadway Musical', 0, 'The stage splits apart and moves back approximately 7 feet to expose a third turntable for the underworld descent', 'backstage', 'fact', 'Multiple turntable elements create the journey between worlds'),
-('Hadestown', 'Broadway Musical', 0, 'Bradley King''s lighting rig features a circular truss over the stage with Martin MAC Encore Spots and Viper Washes', 'technical', 'fact', 'Won the Tony for Best Lighting Design'),
+('Hadestown', 'Broadway Musical', 0, 'The stage splits apart and moves back approximately 7 feet to expose a third turntable for the underworld', 'backstage', 'fact', 'Multiple turntable elements create the journey between worlds'),
+('Hadestown', 'Broadway Musical', 0, 'Bradley King''s lighting rig features a circular truss over the stage with Martin MAC Encore Spots and Viper', 'technical', 'fact', 'Won the Tony for Best Lighting Design'),
 ('Hadestown', 'Broadway Musical', 0, 'MAC III AirFXs in the grid create shaft-of-light effects for the underworld sequences', 'technical', 'fact', 'Dramatic narrow beams cut through haze'),
 ('Hadestown', 'Broadway Musical', 0, 'The Wait for Me sequence features swinging lamps inspired by highway headlights', 'technical', 'fact', 'Director Rachel Chavkin''s original vision from early workshops'),
 ('Hadestown', 'Broadway Musical', 0, 'Four-lite blinder units are embedded in the back and side walls of the set', 'technical', 'fact', 'Create harsh industrial lighting for Hades'' factory'),
@@ -209,7 +209,7 @@ INSERT INTO clue_bank (show_name, category, level, clue_text, clue_type, specifi
 -- ============================================================
 -- THE LION KING
 -- ============================================================
-('The Lion King', 'Broadway Musical', 0, 'The production uses 232 puppets including rod puppets, shadow puppets, full-body puppets, and bunraku-style figures', 'design', 'fact', 'Designed by Julie Taymor and Michael Curry'),
+('The Lion King', 'Broadway Musical', 0, 'The production uses 232 puppets including rod puppets, shadow puppets, full-body puppets', 'design', 'fact', 'Designed by Julie Taymor and Michael Curry'),
 ('The Lion King', 'Broadway Musical', 0, 'It took 37,000 hours to create the original masks and puppets', 'backstage', 'fact', 'Three puppeteers travel with the show for maintenance and actor training'),
 ('The Lion King', 'Broadway Musical', 0, 'Mufasa and Scar''s mechanical headpieces use cables that raise and lower to simulate lunging', 'backstage', 'fact', 'Reduced from 10 cables to about 4 over the years for reliability'),
 ('The Lion King', 'Broadway Musical', 0, 'Pride Rock is mechanically operated from 35 feet up in the wings and collapses to only 8 feet long', 'technical', 'fact', 'Moves and turns in multiple directions'),
@@ -232,13 +232,13 @@ INSERT INTO clue_bank (show_name, category, level, clue_text, clue_type, specifi
 ('The Lion King', 'Broadway Musical', 0, 'The opening Circle of Life sequence features a procession of animal puppets through the audience', 'backstage', 'fact', 'One of Broadway''s most iconic opening moments'),
 ('The Lion King', 'Broadway Musical', 0, 'Shadow puppetry is used for the wildebeest stampede sequence', 'design', 'fact', 'Creates the illusion of a vast herd'),
 ('The Lion King', 'Broadway Musical', 0, 'The grasslands are represented by performers wearing grass-like headdresses that sway in unison', 'design', 'fact', 'Actors become the environment through Taymor''s design'),
-('The Lion King', 'Broadway Musical', 0, 'Instrumentation includes wood flute, concertmistress, French horns, trombone, tuba, and 3 keyboard synthesizers', 'orchestra', 'fact', 'Blends Western orchestral and African instruments'),
+('The Lion King', 'Broadway Musical', 0, 'Instrumentation includes wood flute, concertmistress, French horns, trombone, tuba', 'orchestra', 'fact', 'Blends Western orchestral and African instruments'),
 ('The Lion King', 'Broadway Musical', 0, 'Received 11 Tony nominations in 1998', 'award', 'fact', 'Competed against Ragtime for Best Musical'),
 
 -- ============================================================
 -- COME FROM AWAY
 -- ============================================================
-('Come From Away', 'Broadway Musical', 0, 'The entire set consists of a wood floor, wood wall backdrop, a turntable, and approximately 12 chairs plus tables', 'design', 'fact', 'One of the most minimal sets for a major Broadway musical'),
+('Come From Away', 'Broadway Musical', 0, 'The entire set consists of a wood floor, wood wall backdrop, a turntable', 'design', 'fact', 'One of the most minimal sets for a major Broadway musical'),
 ('Come From Away', 'Broadway Musical', 0, 'The 12 chairs become everything: airplane cabins, buses, Tim Hortons, and the Gander Legion hall', 'backstage', 'fact', 'Actors transform the space through choreographed chair movement'),
 ('Come From Away', 'Broadway Musical', 0, 'Character transformations are achieved with one or two costume pieces maximum: hats, glasses, or scarves', 'design', 'fact', 'Each actor has a single base costume'),
 ('Come From Away', 'Broadway Musical', 0, '12 actors play approximately 100 real people from Gander, Newfoundland and stranded passengers', 'cast', 'fact', 'Characters based on real people the writers interviewed'),
@@ -297,18 +297,18 @@ INSERT INTO clue_bank (show_name, category, level, clue_text, clue_type, specifi
 -- BEETLEJUICE
 -- ============================================================
 ('Beetlejuice', 'Broadway Musical', 0, 'David Korins called it the most complicated set he has ever done, by a magnitude of 10', 'design', 'fact', 'Korins also designed Hamilton and Dear Evan Hansen'),
-('Beetlejuice', 'Broadway Musical', 0, 'Every piece of scenery contains a light, special effect, trap door, smoke machine, projection surface, speaker, or automation element', 'technical', 'fact', 'No purely decorative scenic pieces'),
+('Beetlejuice', 'Broadway Musical', 0, 'Every piece of scenery contains a light, special effect, trap door, smoke machine, projection surface', 'technical', 'fact', 'No purely decorative scenic pieces'),
 ('Beetlejuice', 'Broadway Musical', 0, 'Three versions of every set piece exist to accommodate all versions of the haunted house', 'backstage', 'fact', 'Living, dead, and in-between states'),
 ('Beetlejuice', 'Broadway Musical', 0, 'Crew assembles and transforms sets live on stage during the show', 'backstage', 'fact', 'Visible stagecraft is part of the design concept'),
 ('Beetlejuice', 'Broadway Musical', 0, 'The sandworm is one of the largest puppets in Broadway history, designed by Michael Curry', 'design', 'fact', 'Curry also designed The Lion King puppets'),
-('Beetlejuice', 'Broadway Musical', 0, 'Actors playing the title character use ventricular fold phonation to sustain the gravelly voice without vocal cord damage', 'technical', 'fact', 'A specialized vocal technique for the demanding role'),
+('Beetlejuice', 'Broadway Musical', 0, 'Actors playing the title character use ventricular fold phonation to sustain the gravelly voice without vocal', 'technical', 'fact', 'A specialized vocal technique for the demanding role'),
 ('Beetlejuice', 'Broadway Musical', 0, 'Look Solutions fog machines create slow eerie fog for supernatural sequences', 'technical', 'fact', 'Fog effects run nearly continuously'),
 ('Beetlejuice', 'Broadway Musical', 0, 'The production uses trap doors, on-stage pyrotechnics, and strobe lighting effects', 'technical', 'fact', 'Jeremy Chernick designed the special effects'),
 ('Beetlejuice', 'Broadway Musical', 0, 'All wallpaper was hand-drawn and every floorboard was hand-painted', 'design', 'fact', 'Extreme attention to scenic detail'),
 ('Beetlejuice', 'Broadway Musical', 0, 'Peter Nigrini''s projection design layers digital effects over every physical surface', 'technical', 'fact', 'Nigrini also designed Dear Evan Hansen''s projections'),
 ('Beetlejuice', 'Broadway Musical', 0, 'Kenneth Posner''s lighting design includes over-the-top concert and horror effects', 'technical', 'fact', 'Posner also designed Wicked''s lighting'),
 ('Beetlejuice', 'Broadway Musical', 0, 'At the Winter Garden, the rhythm section was isolated in a back room with clear glass panels for sightlines', 'orchestra', 'fact', 'Drums, percussion, bass, and 2 guitars behind glass'),
-('Beetlejuice', 'Broadway Musical', 0, 'The full orchestra includes reeds, 3 trumpets, 3 trombones, horn, 2 percussion, drums, 2 keyboards, and strings', 'orchestra', 'fact', 'One of the larger pit orchestras for a contemporary musical'),
+('Beetlejuice', 'Broadway Musical', 0, 'The full orchestra includes reeds, 3 trumpets, 3 trombones, horn, 2 percussion, drums, 2 keyboards', 'orchestra', 'fact', 'One of the larger pit orchestras for a contemporary musical'),
 ('Beetlejuice', 'Broadway Musical', 0, 'Michael Weber designed stage illusions including disappearances and transformations', 'backstage', 'fact', 'Weber is a renowned magic consultant for Broadway'),
 ('Beetlejuice', 'Broadway Musical', 0, 'Received 8 Tony nominations in 2019 but won zero', 'award', 'fact', 'Lost across all categories to Hadestown and others'),
 ('Beetlejuice', 'Broadway Musical', 0, 'The original run played 366 performances at the Winter Garden before COVID closed it March 2020', 'numbers', 'fact', 'Returned at the Marquis Theatre in April 2022'),
@@ -325,7 +325,7 @@ INSERT INTO clue_bank (show_name, category, level, clue_text, clue_type, specifi
 -- ============================================================
 -- CHICAGO
 -- ============================================================
-('Chicago', 'Broadway Musical', 0, 'The revival uses the same golden bandstand frame from the original 1996 Encores! concert staging, still in use today', 'design', 'fact', 'The frame has been used for nearly 30 years'),
+('Chicago', 'Broadway Musical', 0, 'The revival uses the same golden bandstand frame from the original 1996 Encores! concert staging', 'design', 'fact', 'The frame has been used for nearly 30 years'),
 ('Chicago', 'Broadway Musical', 0, 'The full jazz orchestra performs on stage throughout the show rather than in a pit', 'orchestra', 'fact', 'A defining feature of the revival''s staging'),
 ('Chicago', 'Broadway Musical', 0, 'The orchestra sits within the golden frame center stage, visually evoking a jury box', 'design', 'fact', 'John Lee Beatty''s minimalist set design'),
 ('Chicago', 'Broadway Musical', 0, 'Ken Billington''s lighting uses heavy spotlights and vaudeville-style theatrical effects', 'technical', 'fact', 'Won the Tony for Best Lighting Design'),
@@ -383,11 +383,11 @@ INSERT INTO clue_bank (show_name, category, level, clue_text, clue_type, specifi
 -- ============================================================
 -- SWEENEY TODD
 -- ============================================================
-('Sweeney Todd', 'Broadway Musical', 0, 'Eugene Lee dismantled a real factory and rebuilt parts of it inside the theater for the original 1979 production', 'design', 'fact', 'Created the largest single stage set in Broadway history at that time'),
+('Sweeney Todd', 'Broadway Musical', 0, 'Eugene Lee dismantled a real factory and rebuilt parts of it inside the theater for the original 1979', 'design', 'fact', 'Created the largest single stage set in Broadway history at that time'),
 ('Sweeney Todd', 'Broadway Musical', 0, 'The original set could rotate 360 degrees with moving grids and removable bridges in near-constant motion', 'backstage', 'fact', 'Mechanical elements ran throughout the entire performance'),
-('Sweeney Todd', 'Broadway Musical', 0, 'Jonathan Tunick''s original orchestration uses a 26-player orchestra, one of the largest in Broadway musical history', 'orchestra', 'fact', 'Instrumentation includes harp, organ, celesta, and harmonium'),
+('Sweeney Todd', 'Broadway Musical', 0, 'Jonathan Tunick''s original orchestration uses a 26-player orchestra', 'orchestra', 'fact', 'Instrumentation includes harp, organ, celesta, and harmonium'),
 ('Sweeney Todd', 'Broadway Musical', 0, 'The 2023 revival restored Tunick''s full 26-player orchestration for the first time since 1980', 'orchestra', 'fact', 'Starring Josh Groban and Annaleigh Ashford'),
-('Sweeney Todd', 'Broadway Musical', 0, 'The orchestra includes flute/piccolo/recorder, oboe/English horn, clarinets, bassoon, horns, trumpets, trombones, percussion, harp, and strings', 'orchestra', 'fact', 'Plus organ, celesta, and harmonium for the keyboard book'),
+('Sweeney Todd', 'Broadway Musical', 0, 'The orchestra includes flute/piccolo/recorder, oboe/English horn, clarinets, bassoon, horns, trumpets', 'orchestra', 'fact', 'Plus organ, celesta, and harmonium for the keyboard book'),
 ('Sweeney Todd', 'Broadway Musical', 0, 'The 2023 revival features a massive steel crane that delivers the barber chair in Act 2', 'backstage', 'fact', 'Dramatic mechanical staging element'),
 ('Sweeney Todd', 'Broadway Musical', 0, 'The 2023 set includes a rotating staircase and moving pie shop that transform between scenes', 'technical', 'fact', 'Upper platform shifts in two dimensions'),
 ('Sweeney Todd', 'Broadway Musical', 0, 'Natasha Katz won the 2023 Tony for Best Lighting Design for the revival', 'award', 'fact', 'Her seventh Tony win'),
@@ -413,14 +413,14 @@ INSERT INTO clue_bank (show_name, category, level, clue_text, clue_type, specifi
 -- INTO THE WOODS
 -- ============================================================
 ('Into the Woods', 'Broadway Musical', 0, 'The 2022 revival placed the orchestra on stage as a central design element', 'orchestra', 'fact', 'The live onstage orchestra defined the revival''s intimate aesthetic'),
-('Into the Woods', 'Broadway Musical', 0, 'Tony Straiges''s original set design featured a storybook forest that transformed into a darker landscape in Act 2', 'design', 'fact', 'Trees and scenic elements physically changed between acts'),
+('Into the Woods', 'Broadway Musical', 0, 'Tony Straiges''s original set design featured a storybook forest that transformed into a darker landscape', 'design', 'fact', 'Trees and scenic elements physically changed between acts'),
 ('Into the Woods', 'Broadway Musical', 0, 'James Ortiz designed puppets for the 2022 revival including Milky White the cow', 'design', 'fact', 'Puppet design brought a new tactile quality to the revival'),
 ('Into the Woods', 'Broadway Musical', 0, 'Ann Hould-Ward won the Tony for Best Costume Design for the original production', 'award', 'fact', 'Based on concepts by Patricia Zipprodt who died before opening'),
-('Into the Woods', 'Broadway Musical', 0, 'The original production''s orchestra included violin, violas, cello, bass, flute, clarinet, bassoon, trumpet, 2 French horns, and 2 keyboards', 'orchestra', 'fact', 'Jonathan Tunick''s orchestration'),
+('Into the Woods', 'Broadway Musical', 0, 'The original production''s orchestra included violin, violas, cello, bass, flute, clarinet, bassoon, trumpet', 'orchestra', 'fact', 'Jonathan Tunick''s orchestration'),
 ('Into the Woods', 'Broadway Musical', 0, 'Paul Gemignani served as music director, his frequent collaboration with Sondheim', 'orchestra', 'fact', 'Gemignani MD''d most of Sondheim''s major works'),
 ('Into the Woods', 'Broadway Musical', 0, 'Richard Nelson''s lighting design for the original shifted from fairy-tale warmth to ominous shadow in Act 2', 'technical', 'fact', 'The tonal shift is one of the show''s signature theatrical moments'),
 ('Into the Woods', 'Broadway Musical', 0, 'Tyler Micoleau''s lighting design for the 2022 revival created an intimate woodland glow', 'technical', 'fact', 'Complementing the onstage orchestra setup'),
-('Into the Woods', 'Broadway Musical', 0, 'David Rockwell''s set for the 2022 revival transformed the St. James Theatre stage into an intimate playing space', 'design', 'fact', 'Integrated the orchestra into the scenic design'),
+('Into the Woods', 'Broadway Musical', 0, 'David Rockwell''s set for the 2022 revival transformed the St. James Theatre stage into an intimate playing', 'design', 'fact', 'Integrated the orchestra into the scenic design'),
 ('Into the Woods', 'Broadway Musical', 0, 'Charles Reynolds served as magic consultant for the original production', 'backstage', 'fact', 'Created effects for the Witch''s transformation and magic bean sequences'),
 ('Into the Woods', 'Broadway Musical', 0, 'The Witch''s transformation from hag to beautiful woman requires a quick-change backstage assist', 'backstage', 'fact', 'One of the show''s most challenging costume moments'),
 ('Into the Woods', 'Broadway Musical', 0, 'Breakaway props are used for Jack''s beanstalk and other fairy tale elements', 'backstage', 'fact', 'Must be rebuilt for each performance'),

@@ -29,11 +29,11 @@ INSERT INTO clue_bank (show_name, category, level, clue_text, clue_type, specifi
 ('Lin-Manuel Miranda', 'Broadway Actor', 2, 'Known for working collaboratively with diverse creative teams in multiple entertainment mediums', 'collaboration', 'broad', 'Demonstrates versatility across theater, film, television'),
 -- Level 3: Narrowing (6 clues)
 ('Lin-Manuel Miranda', 'Broadway Actor', 3, 'Composed for the show in which all main characters are non-white immigrants or first-generation Americans', 'role', 'narrowing', 'Reflects actual Washington Heights demographics'),
-('Lin-Manuel Miranda', 'Broadway Actor', 3, 'Created the concept album for a music-driven show that blended sung-through structure with modern hip-hop delivery', 'career', 'narrowing', 'Unusually structured for Broadway'),
+('Lin-Manuel Miranda', 'Broadway Actor', 3, 'Created the concept album for a music-driven show that blended sung-through structure with modern hip-hop', 'career', 'narrowing', 'Unusually structured for Broadway'),
 ('Lin-Manuel Miranda', 'Broadway Actor', 3, 'His most famous musical uses a diverse cast to portray 18th-century American historical figures', 'role', 'narrowing', 'Historical revisionist casting approach'),
 ('Lin-Manuel Miranda', 'Broadway Actor', 3, 'Wrote songs for an animated film about a girl discovering her family connection to ocean magic', 'crossover', 'narrowing', 'Moana mythology-based film'),
 ('Lin-Manuel Miranda', 'Broadway Actor', 3, 'Created the enchanted house that sings in a 2021 Disney animated film', 'crossover', 'narrowing', 'Encanto featured sentient architecture'),
-('Lin-Manuel Miranda', 'Broadway Actor', 3, 'Played multiple historical figures in a show where he performed for 492 consecutive performances off-Broadway before moving to Broadway', 'role', 'narrowing', 'Very specific run length'),
+('Lin-Manuel Miranda', 'Broadway Actor', 3, 'Played multiple historical figures in a show where he performed for 492 consecutive performances off-Broadway', 'role', 'narrowing', 'Very specific run length'),
 -- Level 4: Recognition (6 clues)
 ('Lin-Manuel Miranda', 'Broadway Actor', 4, 'Originated Alexander Hamilton in the Broadway musical of that name', 'role', 'recognition', 'Specific historical-musical role identification'),
 ('Lin-Manuel Miranda', 'Broadway Actor', 4, 'Composed "How Does a Bastard, Orphan, Son of a Whore" as the opening number', 'role', 'recognition', 'Distinctive opening lyric'),
@@ -73,7 +73,7 @@ INSERT INTO clue_bank (show_name, category, level, clue_text, clue_type, specifi
 ('Hugh Jackman', 'Broadway Actor', 2, 'Portrayed a character searching for his biological father in a musical theater production', 'role', 'broad', 'The Boy from Oz plot element'),
 -- Level 3: Narrowing (6 clues)
 ('Hugh Jackman', 'Broadway Actor', 3, 'Maintained his role as a mutant superhero across two decades of interconnected films', 'role', 'narrowing', 'X-Men franchise longevity is exceptional'),
-('Hugh Jackman', 'Broadway Actor', 3, 'Originated the role of a circus promoter in a musical that became one of the highest-grossing theatrical releases of its year', 'role', 'narrowing', 'The Greatest Showman 2017 success'),
+('Hugh Jackman', 'Broadway Actor', 3, 'Originated the role of a circus promoter in a musical that became one of the highest-grossing theatrical', 'role', 'narrowing', 'The Greatest Showman 2017 success'),
 ('Hugh Jackman', 'Broadway Actor', 3, 'Appeared in a Stephen Sondheim-inspired musical revival that opened at the St. James Theatre', 'role', 'narrowing', 'Oklahoma! specific venue detail'),
 ('Hugh Jackman', 'Broadway Actor', 3, 'Performed a Tony-winning musical role based on a performer who died of AIDS-related complications', 'role', 'narrowing', 'Peter Allen biography element'),
 ('Hugh Jackman', 'Broadway Actor', 3, 'Sang "The Man. The Music. The Show" as part of his Tony-winning performance', 'role', 'narrowing', 'Specific song from The Boy from Oz'),
@@ -132,7 +132,7 @@ INSERT INTO clue_bank (show_name, category, level, clue_text, clue_type, specifi
 -- Level 5: Giveaway (4 clues)
 ('Nathan Lane', 'Broadway Actor', 5, 'Three-time Tony Award winner known for comedic genius in The Producers, A Funny Thing Happened, and Company', 'award', 'giveaway', 'Specific award count and show titles'),
 ('Nathan Lane', 'Broadway Actor', 5, 'Originated Max Bialystock in The Producers and voiced Timon in Disney''s The Lion King', 'role', 'giveaway', 'Two of his most iconic roles'),
-('Nathan Lane', 'Broadway Actor', 5, 'The comedic actor who won a Tony for playing Pseudolus opposite Kelsey Grammer in A Funny Thing Happened on the Way to the Forum', 'role', 'giveaway', 'Specific casting and character details'),
+('Nathan Lane', 'Broadway Actor', 5, 'The comedic actor who won a Tony for playing Pseudolus opposite Kelsey Grammer in A Funny Thing Happened', 'role', 'giveaway', 'Specific casting and character details'),
 ('Nathan Lane', 'Broadway Actor', 5, 'Broadway''s premier comedy actor, known for his neurotic, high-energy characterizations', 'career', 'giveaway', 'Definitive description of his career'),
 
 -- ============================================================
@@ -211,7 +211,7 @@ INSERT INTO clue_bank (show_name, category, level, clue_text, clue_type, specifi
 ('Audra McDonald', 'Broadway Actor', 3, 'Appeared opposite Michael Bublé in a musical about Frankie and Johnny''s romantic relationship', 'role', 'narrowing', 'Specific casting in the revival'),
 ('Audra McDonald', 'Broadway Actor', 3, 'Known as a Broadway icon with a career spanning multiple decades of major productions', 'career', 'narrowing', 'Her exceptional longevity'),
 -- Level 4: Recognition (6 clues)
-('Audra McDonald', 'Broadway Actor', 4, 'Won Tony Awards for roles in Carousel, Ragtime, A Raisin in the Sun, Master Class, Porgy and Bess, and Lady Day at Emerson''s Bar and Grill', 'award', 'recognition', 'All 6 Tony-winning roles'),
+('Audra McDonald', 'Broadway Actor', 4, 'Won Tony Awards for roles in Carousel, Ragtime, A Raisin in the Sun, Master Class, Porgy and Bess', 'award', 'recognition', 'All 6 Tony-winning roles'),
 ('Audra McDonald', 'Broadway Actor', 4, 'Originated Julie Jordan in the 1998 Carousel revival at Lincoln Center', 'role', 'recognition', 'Specific venue and year'),
 ('Audra McDonald', 'Broadway Actor', 4, 'Originated Billie Holiday in Lady Day at Emerson''s Bar and Grill', 'role', 'recognition', 'Biographical one-woman show role'),
 ('Audra McDonald', 'Broadway Actor', 4, 'Performed in multiple revivals of classic musicals and contemporary works', 'career', 'recognition', 'Her versatile repertoire'),
@@ -397,7 +397,7 @@ INSERT INTO clue_bank (show_name, category, level, clue_text, clue_type, specifi
 ('Daveed Diggs', 'Broadway Actor', 5, 'Tony Award-winning actor who originated Lafayette and Thomas Jefferson in Hamilton', 'award', 'giveaway', 'His breakthrough and most famous role'),
 ('Daveed Diggs', 'Broadway Actor', 5, 'The performer who rapid-fires through "Yorktown (The World Turned Upside Down)" as Lafayette in Hamilton', 'role', 'giveaway', 'Most iconic song moment'),
 ('Daveed Diggs', 'Broadway Actor', 5, 'Hip-hop theater pioneer known for Clipping, Hamilton, and co-writing Blindspotting', 'career', 'giveaway', 'All major career elements'),
-('Daveed Diggs', 'Broadway Actor', 5, 'Broadway star and rapper/producer who originated Lafayette/Jefferson in Hamilton and voiced Sebastian in The Little Mermaid remake', 'career', 'giveaway', 'Multiple iconic roles combined'),
+('Daveed Diggs', 'Broadway Actor', 5, 'Broadway star and rapper/producer who originated Lafayette/Jefferson in Hamilton and voiced Sebastian', 'career', 'giveaway', 'Multiple iconic roles combined'),
 
 -- ============================================================
 -- BRIAN STOKES MITCHELL (35 clues)
@@ -616,7 +616,7 @@ INSERT INTO clue_bank (show_name, category, level, clue_text, clue_type, specifi
 -- Level 5: Giveaway (4 clues)
 ('Aaron Tveit', 'Broadway Actor', 5, 'Tony Award winner known for originating Gabe in Next to Normal and winning for Moulin Rouge!', 'award', 'giveaway', 'Award and both major musicals'),
 ('Aaron Tveit', 'Broadway Actor', 5, 'The actor who won the Tony Award for Moulin Rouge! as sole nominee in his category', 'award', 'giveaway', 'Unique award circumstance'),
-('Aaron Tveit', 'Broadway Actor', 5, 'Broadway star who originated Gabe in Next to Normal, Frank in Catch Me If You Can, and won a Tony for Moulin Rouge!', 'award', 'giveaway', 'Multiple major roles and award'),
+('Aaron Tveit', 'Broadway Actor', 5, 'Broadway star who originated Gabe in Next to Normal, Frank in Catch Me If You Can', 'award', 'giveaway', 'Multiple major roles and award'),
 ('Aaron Tveit', 'Broadway Actor', 5, 'Tony-winning actor known for powerful vocal performances in Next to Normal, Moulin Rouge!, and Les Misérables', 'award', 'giveaway', 'Multiple significant roles combined'),
 
 -- ============================================================
@@ -660,6 +660,6 @@ INSERT INTO clue_bank (show_name, category, level, clue_text, clue_type, specifi
 -- Level 5: Giveaway (4 clues)
 ('Jeremy Jordan', 'Broadway Actor', 5, 'Tony-nominated actor who originated Jack Kelly singing "Santa Fe" in Newsies', 'award', 'giveaway', 'Nomination and iconic role'),
 ('Jeremy Jordan', 'Broadway Actor', 5, 'The actor who originated Jack Kelly and sang the iconic "Santa Fe" in the 2012 Newsies musical', 'role', 'giveaway', 'Character and most famous song'),
-('Jeremy Jordan', 'Broadway Actor', 5, 'Broadway star known for powerful belt voice and originating Jack Kelly in Newsies and Clyde Barrow in Bonnie & Clyde', 'career', 'giveaway', 'Two major roles and vocal signature'),
+('Jeremy Jordan', 'Broadway Actor', 5, 'Broadway star known for powerful belt voice and originating Jack Kelly in Newsies and Clyde Barrow in Bonnie', 'career', 'giveaway', 'Two major roles and vocal signature'),
 ('Jeremy Jordan', 'Broadway Actor', 5, 'Tony-nominated performer famous for "Santa Fe" in Newsies and Supergirl television series', 'career', 'giveaway', 'Both stage and TV recognition')
 ;

@@ -259,8 +259,8 @@ export default function Game({
         />
       </div>
 
-      {/* Clues board — flex-1 so it fills remaining viewport space */}
-      <div className="no-scrollbar flex-1 min-h-0 overflow-y-auto py-1">
+      {/* Clues board */}
+      <div className="py-1">
         <ClueList
           clues={puzzle.clues}
           revealedCount={state.revealedClues}
