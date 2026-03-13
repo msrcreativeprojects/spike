@@ -21,12 +21,40 @@ const TAPE_X = [-8, 16, -18, 12, -3];
    ═══════════════════════════════════════════════════════════════════ */
 function StepSetup({ colors }: { colors: ClueColor[] }) {
   const [wordIndex, setWordIndex] = useState(0);
+  const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setWordIndex((i) => (i + 1) % DEMO_CATEGORIES.length);
     }, 2000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Cycle: tapes visible → fade away (reveal facts) → fade back
+  useEffect(() => {
+    let cancelled = false;
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const cycle = (delay: number) => {
+      timeout = setTimeout(() => {
+        if (cancelled) return;
+        setRevealed(true);
+        timeout = setTimeout(() => {
+          if (cancelled) return;
+          setRevealed(false);
+          // Wait 2.5s with tapes visible, then reveal again
+          cycle(2500);
+        }, 2000);
+      }, delay);
+    };
+
+    // First reveal after initial fade-in settles
+    cycle(2000);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
   }, []);
 
   return (
@@ -64,12 +92,26 @@ function StepSetup({ colors }: { colors: ClueColor[] }) {
               animationFillMode: "backwards",
             }}
           >
-            <div className="h-8 bg-white/[0.03]" />
+            {/* Fact label underneath */}
             <div
-              className="absolute inset-0"
+              className="h-8 flex items-center justify-center text-xs uppercase tracking-widest transition-opacity duration-500"
+              style={{
+                backgroundColor: "rgba(255,255,255,0.03)",
+                color: "rgba(255,255,255,0.35)",
+                opacity: revealed ? 1 : 0,
+                transitionDelay: revealed ? `${i * 80}ms` : "0ms",
+              }}
+            >
+              Fact {i + 1}
+            </div>
+            {/* Tape overlay */}
+            <div
+              className="absolute inset-0 transition-all duration-500"
               style={{
                 backgroundColor: ALL_COLORS[color],
                 transform: `translateX(${TAPE_X[i]}px) rotate(${ROTATIONS[i]}deg)`,
+                opacity: revealed ? 0 : 1,
+                transitionDelay: revealed ? `${i * 80}ms` : `${(4 - i) * 60}ms`,
               }}
             />
           </div>
