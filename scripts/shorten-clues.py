@@ -151,6 +151,7 @@ def main():
         'scripts/clues-broadway-theater.sql',
         'scripts/clues-broadway-actor.sql',
         'scripts/clues-broadway-play.sql',
+        'scripts/clues-touring-city.sql',
     ]
 
     grand_total = 0
