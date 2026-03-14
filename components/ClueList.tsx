@@ -118,7 +118,7 @@ export default function ClueList({
           <div
             key={i}
             className={`relative ${isSelectable ? "cursor-pointer" : ""}`}
-            style={{ width: "fit-content" }}
+            style={{ width: "min(90vw, 28rem)" }}
             onClick={isSelectable ? () => onSelectClue?.(i) : undefined}
           >
             {/* Clue text — always present for sizing */}

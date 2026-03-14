@@ -6,9 +6,9 @@ const OG_TITLES = [
   "Can you guess?",
   "Take a guess",
   "Any guesses?",
-  "Hmmmm…",
-  "Thoughts?",
-  "Good luck 😏",
+  "What do you think?",
+  "Think you know?",
+  "Know this one?",
 ];
 
 interface Props {
