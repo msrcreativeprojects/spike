@@ -16,19 +16,10 @@ const TAPE_X = [-8, 16, -18, 12, -3];
 
 /* ═══════════════════════════════════════════════════════════════════
    STEP 1 — THE SETUP
-   "Under five pieces of spike tape are five facts about a
-    Broadway [Musical/Play/Actor/Theater]."
+   "Five facts are hidden under five pieces of spike tape."
    ═══════════════════════════════════════════════════════════════════ */
 function StepSetup({ colors }: { colors: ClueColor[] }) {
-  const [wordIndex, setWordIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setWordIndex((i) => (i + 1) % DEMO_CATEGORIES.length);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Cycle: tapes visible → fade away (reveal facts) → fade back
   useEffect(() => {
@@ -60,25 +51,9 @@ function StepSetup({ colors }: { colors: ClueColor[] }) {
   return (
     <div className="flex flex-col items-center">
       <p className="text-base text-white/60 text-center leading-relaxed mb-8">
-        Under five pieces of spike tape
+        Five facts are hidden
         <br />
-        are five facts about a
-        <br />
-        <span
-          className="inline-block overflow-hidden align-bottom"
-          style={{ height: "1.5em" }}
-        >
-          <span
-            key={wordIndex}
-            className="inline-block animate-slot-down font-semibold"
-            style={{
-              color: GLOW_COLOR,
-              textShadow: `0 0 10px ${GLOW_COLOR}50, 0 0 25px ${GLOW_COLOR}20`,
-            }}
-          >
-            {DEMO_CATEGORIES[wordIndex]}.
-          </span>
-        </span>
+        under five pieces of spike tape.
       </p>
 
       {/* Five tape strips covering facts */}

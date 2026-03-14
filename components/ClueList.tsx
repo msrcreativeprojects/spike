@@ -15,6 +15,7 @@ interface ClueListProps {
 }
 
 const ROTATIONS = [-1.5, 2, -1, 1.8, -0.8];
+const TAPE_X = [-8, 14, -18, 12, -6];
 const REVEAL_STAGGER_MS = 300;
 const TAPE_PEEL_MS = 400;
 
@@ -141,9 +142,13 @@ export default function ClueList({
             {/* Tape overlay — peel animation (visible only during animation) */}
             {isPeeling && (
               <div
-                className="absolute inset-0 pointer-events-none"
+                className="absolute pointer-events-none"
                 style={{
-                  transform: `rotate(${rotation}deg)`,
+                  top: 0,
+                  bottom: 0,
+                  left: "2%",
+                  right: "2%",
+                  transform: `translateX(${TAPE_X[i]}px) rotate(${rotation}deg)`,
                   zIndex: 10,
                 }}
               >
@@ -160,9 +165,13 @@ export default function ClueList({
             {/* Tape overlay — static (unrevealed) */}
             {showTape && (
               <div
-                className="absolute inset-0 pointer-events-none"
+                className="absolute pointer-events-none"
                 style={{
-                  transform: `rotate(${rotation}deg)`,
+                  top: 0,
+                  bottom: 0,
+                  left: "2%",
+                  right: "2%",
+                  transform: `translateX(${TAPE_X[i]}px) rotate(${rotation}deg)`,
                   zIndex: 1,
                 }}
               >
@@ -179,9 +188,13 @@ export default function ClueList({
             {/* Tape overlay — falling (wrong guess during gameplay) */}
             {isFalling && !isPeeled && (
               <div
-                className="absolute inset-0 pointer-events-none"
+                className="absolute pointer-events-none"
                 style={{
-                  transform: `rotate(${rotation}deg)`,
+                  top: 0,
+                  bottom: 0,
+                  left: "2%",
+                  right: "2%",
+                  transform: `translateX(${TAPE_X[i]}px) rotate(${rotation}deg)`,
                   zIndex: 10,
                 }}
               >

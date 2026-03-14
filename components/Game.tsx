@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 
 import { Puzzle, GameState, ALL_COLORS, type ClueColor, type TapeStats, type TapeColor } from "@/types/puzzle";
 import { createInitialState, submitGuess } from "@/lib/gameLogic";
-import { loadGameState, saveGameState, clearGameState } from "@/lib/storage";
+import { loadGameState, saveGameState } from "@/lib/storage";
 import { shareResult } from "@/lib/shareResult";
 import { getEncouragement } from "@/data/encouragements";
 import { recordGameCompletion, loadTapeStats, type GameCompletionResult } from "@/lib/tapeService";
@@ -179,20 +179,7 @@ export default function Game({
     [state, puzzle, fireConfetti, dailyColors]
   );
 
-  const handleReset = () => {
-    clearGameState(puzzle.date);
-    setState(createInitialState(puzzle.id));
-    setCelebrating(false);
-    setWaving(false);
-    setRevealing(false);
-    setShareLabel(null);
-    setShareMode(false);
-    setTapeResult(null);
-    setSelectedClue(null);
-    import("canvas-confetti").then((m) => m.default.reset());
-  };
-
-  const handleShare = async () => {
+const handleShare = async () => {
     if (!state || selectedClue === null) return;
     const result = await shareResult(state, puzzle, selectedClue, dailyColors);
     if (result === "shared") {
@@ -260,7 +247,7 @@ export default function Game({
       </div>
 
       {/* Clues board — overflow-hidden clips the tape-fall animation */}
-      <div className="py-1 overflow-hidden">
+      <div className="py-1" style={{ overflowX: "visible", overflowY: "clip" }}>
         <ClueList
           clues={puzzle.clues}
           revealedCount={state.revealedClues}
@@ -328,13 +315,6 @@ export default function Game({
         </div>
       )}
 
-      {/* Dev reset — visible for testing */}
-      <button
-        onClick={handleReset}
-        className="shrink-0 mx-auto mt-1 text-[10px] text-white/20 hover:text-white/50 transition-colors uppercase tracking-widest"
-      >
-        reset puzzle
-      </button>
     </div>
   );
 }

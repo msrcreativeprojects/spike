@@ -8,7 +8,6 @@ import { hasSeenTutorial, markTutorialSeen } from "@/lib/tutorial";
 import { getDailyColors } from "@/lib/dailyColors";
 import Game from "./Game";
 import HowToPlay from "./HowToPlay";
-import Welcome from "./Welcome";
 import AuthGate from "./AuthGate";
 import TapeCounter from "./TapeCounter";
 import TapeStatsModal from "./TapeStatsModal";
@@ -17,10 +16,9 @@ interface GameShellProps {
   puzzle: Puzzle;
 }
 
-type Overlay = "none" | "welcome" | "tutorial" | "auth";
+type Overlay = "none" | "tutorial" | "auth";
 
 export default function GameShell({ puzzle }: GameShellProps) {
-  const [ready, setReady] = useState(false);
   const [overlay, setOverlay] = useState<Overlay>("none");
   const [userId, setUserId] = useState<string | null>(null);
   const [isGuest, setIsGuest] = useState(true); // Start as guest by default
@@ -40,7 +38,6 @@ export default function GameShell({ puzzle }: GameShellProps) {
 
   // Check auth state on mount — no gate, just check quietly
   useEffect(() => {
-    setReady(true);
     const supabase = createClient();
 
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -51,16 +48,11 @@ export default function GameShell({ puzzle }: GameShellProps) {
           setTapeStats(stats);
         });
       }
-      // Show welcome for first-time visitors, otherwise straight to game
-      if (!user && !hasSeenTutorial()) {
-        setOverlay("welcome");
+      // Show tutorial for first-time visitors
+      if (!hasSeenTutorial()) {
+        setOverlay("tutorial");
       }
     });
-  }, []);
-
-  const handleCloseWelcome = useCallback(() => {
-    markTutorialSeen();
-    setOverlay("none");
   }, []);
 
   const handleCloseTutorial = useCallback(() => {
@@ -111,14 +103,6 @@ export default function GameShell({ puzzle }: GameShellProps) {
     setOverlay("auth");
   }, []);
 
-  if (!ready) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-white/60" />
-      </div>
-    );
-  }
-
   return (
     <>
       {/* Game always renders — blurred + dimmed when an overlay is active */}
@@ -150,12 +134,7 @@ export default function GameShell({ puzzle }: GameShellProps) {
         </div>
       )}
 
-      {/* Welcome overlay (first visit only) */}
-      {overlay === "welcome" && (
-        <Welcome onClose={handleCloseWelcome} dailyColors={dailyColors} />
-      )}
-
-      {/* Tutorial overlay */}
+{/* Tutorial overlay */}
       {overlay === "tutorial" && (
         <HowToPlay onClose={handleCloseTutorial} dailyColors={dailyColors} />
       )}
