@@ -1,5 +1,7 @@
-import { createClient } from "@/lib/supabase/server";
 import { Puzzle } from "@/types/puzzle";
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 // DEV OVERRIDE: change this to test different days (set to "" for real date)
 const DEV_DATE_OVERRIDE = "";
@@ -16,17 +18,26 @@ function getLocalDateString(): string {
 
 export async function getTodayPuzzle(): Promise<Puzzle | null> {
   const today = getLocalDateString();
-  const supabase = await createClient();
 
-  const { data } = await supabase
-    .from("puzzles")
-    .select("id, date, answer, category, clues, aliases, theme, puzzle_number")
-    .eq("date", today)
-    .eq("status", "approved")
-    .single();
+  // Puzzle data is public — use direct REST fetch so Next.js can cache it.
+  // The Supabase SSR client reads cookies(), which is incompatible with caching.
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/puzzles?date=eq.${today}&status=eq.approved&select=id,date,answer,category,clues,aliases,theme,puzzle_number`,
+    {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+      next: { revalidate: 3600, tags: ["puzzle-today"] },
+    }
+  );
 
-  if (!data) return null;
+  if (!res.ok) return null;
 
+  const rows = await res.json();
+  if (!rows.length) return null;
+
+  const data = rows[0];
   return {
     id: data.id,
     date: data.date,

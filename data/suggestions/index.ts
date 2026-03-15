@@ -3,6 +3,7 @@ import { BROADWAY_PLAYS } from "./broadway-play";
 import { BROADWAY_ACTORS } from "./broadway-actor";
 import { BROADWAY_THEATERS } from "./broadway-theater";
 import { TOURING_CITIES } from "./touring-city";
+import { BEST_PICTURE_WINNERS } from "./best-picture-winner";
 
 const BANKS: Record<string, string[]> = {
   "Broadway Musical": BROADWAY_MUSICALS,
@@ -10,6 +11,7 @@ const BANKS: Record<string, string[]> = {
   "Broadway Actor": BROADWAY_ACTORS,
   "Broadway Theater": BROADWAY_THEATERS,
   "Touring City": TOURING_CITIES,
+  "Best Picture Winner": BEST_PICTURE_WINNERS,
 };
 
 export function getSuggestionBank(category: string): string[] {

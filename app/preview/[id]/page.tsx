@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import { fetchPuzzleById } from "@/lib/fetchPuzzleEdge";
 import GameShell from "@/components/GameShell";
 
@@ -6,6 +8,12 @@ interface Props {
 }
 
 export default async function PreviewPage({ params }: Props) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    redirect("/");
+  }
+
   const { id } = await params;
   const puzzleId = parseInt(id, 10);
 

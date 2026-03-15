@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { fetchPuzzleById } from "@/lib/fetchPuzzleEdge";
-import ClientRedirect from "./redirect";
+import ShareLanding from "./redirect";
 
 const OG_TITLES = [
   "Can you guess?",
@@ -52,10 +52,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /**
- * This page exists only to serve OG metadata + image for link previews.
- * Human visitors are immediately redirected to the main game via
- * client-side redirect (so crawlers still see the meta tags).
+ * Share link landing page.
+ *
+ * Serves OG metadata + image for link previews (crawlers see the meta tags).
+ * Human visitors either see the tutorial (new players) or redirect to the
+ * game (returning players). The tutorial IS the onboarding — the share link
+ * becomes the front door.
  */
-export default function SharePage() {
-  return <ClientRedirect />;
+export default async function SharePage({ params }: Props) {
+  const { id } = await params;
+  const puzzleId = parseInt(id, 10);
+
+  // Fetch puzzle date so the tutorial can show today's colors
+  let puzzleDate: string | undefined;
+  if (!isNaN(puzzleId)) {
+    const puzzle = await fetchPuzzleById(puzzleId);
+    puzzleDate = puzzle?.date;
+  }
+
+  return <ShareLanding puzzleDate={puzzleDate} />;
 }

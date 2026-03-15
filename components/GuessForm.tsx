@@ -4,6 +4,15 @@ import { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import { getSuggestionBank } from "@/data/suggestions";
 import { matchSuggestions } from "@/lib/suggestions";
 
+const GUESS_PHRASES = [
+  "Take a guess",
+  "Try again",
+  "You've got this",
+  "So close",
+  "Last chance",
+  "Final shot",
+];
+
 interface GuessFormProps {
   onGuess: (guess: string) => void;
   disabled: boolean;
@@ -14,6 +23,14 @@ interface GuessFormProps {
   resolved?: boolean;
   puzzleId?: number;
   isFinalGuess?: boolean;
+  /** When set, input renders with transparent bg inside a tape-colored container */
+  tapeColor?: string;
+  /** When true, autocomplete dropdown opens upward */
+  dropdownUp?: boolean;
+  /** When true, use dark (black) text for contrast on light tape colors */
+  darkText?: boolean;
+  /** Number of guesses made so far — drives sequential placeholder phrases */
+  guessCount?: number;
 }
 
 export default function GuessForm({
@@ -26,6 +43,10 @@ export default function GuessForm({
   resolved,
   puzzleId,
   isFinalGuess,
+  tapeColor,
+  dropdownUp,
+  darkText,
+  guessCount = 0,
 }: GuessFormProps) {
   const [value, setValue] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -36,14 +57,21 @@ export default function GuessForm({
   const isLocked = !!(solved || failed || resolved);
   const showGlow = !isLocked && !disabled;
   const showFinalGlow = !!(isFinalGuess && showGlow);
+  const isInline = !!tapeColor;
 
   const displayValue = isLocked ? lockedValue ?? "" : value;
-  const showCustomPlaceholder = !isLocked && !displayValue && !isFinalGuess && category;
-  const showFinalPlaceholder = !isLocked && !displayValue && isFinalGuess;
+  const phraseIndex = Math.min(guessCount, GUESS_PHRASES.length - 1);
+  const showPhrasePlaceholder = !isLocked && !displayValue && isInline;
 
   // Suggestion bank for current category
   const bank = useMemo(() => getSuggestionBank(category ?? ""), [category]);
   const suggestions = useMemo(() => matchSuggestions(value, bank), [value, bank]);
+
+  // Check if current value exactly matches a bank item (canonical match)
+  const isValidSelection = useMemo(
+    () => bank.some((name) => name.toLowerCase() === value.toLowerCase()),
+    [value, bank],
+  );
 
   const dropdownVisible = showDropdown && suggestions.length > 0 && !isLocked && !disabled;
 
@@ -68,9 +96,11 @@ export default function GuessForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!value.trim() || disabled || isLocked) return;
+    if (!value.trim() || disabled || isLocked || !isValidSelection) return;
     setShowDropdown(false);
-    onGuess(value);
+    // Submit the canonical bank name (preserving its original casing)
+    const canonical = bank.find((name) => name.toLowerCase() === value.toLowerCase()) ?? value;
+    onGuess(canonical);
     setValue("");
   };
 
@@ -82,11 +112,21 @@ export default function GuessForm({
   const handleFocus = () => {
     if (blurTimeout.current) clearTimeout(blurTimeout.current);
     if (value.length >= 2) setShowDropdown(true);
+    // Scroll into view when inline (mid-page)
+    if (isInline) {
+      setTimeout(() => {
+        inputRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+      }, 300);
+    }
   };
 
   const handleBlur = () => {
     // Delay to allow click/tap on suggestion to register before closing
     blurTimeout.current = setTimeout(() => setShowDropdown(false), 150);
+  };
+
+  const blockPaste = (e: React.ClipboardEvent | React.DragEvent) => {
+    e.preventDefault();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -106,6 +146,64 @@ export default function GuessForm({
     }
   };
 
+  // Input styling based on mode
+  const textColor = darkText ? "text-black placeholder-black/40" : "text-white placeholder-white/50";
+  const inputClassName = isInline
+    ? `
+      w-full rounded-none border-0
+      px-4 py-3 text-base
+      outline-none transition-all duration-500
+      bg-transparent ${textColor}
+      disabled:opacity-40 disabled:cursor-not-allowed
+      ${showFinalGlow ? "final-guess-glow placeholder-amber-300/60" : ""}
+    `
+    : `
+      w-full rounded-none border border-r-0
+      px-4 py-3 text-base
+      outline-none transition-all duration-500
+      ${
+        resolved
+          ? "border-white/10 bg-white/[0.06] text-white/90 font-bold"
+          : solved
+            ? "border-green-500/30 bg-green-500/15 text-green-300 opacity-100"
+            : failed
+              ? "border-red-500/30 bg-red-500/10 text-red-300 opacity-100"
+              : showFinalGlow
+                ? "border-amber-500/40 bg-amber-500/[0.08] final-guess-glow text-white placeholder-amber-300/60 disabled:opacity-40 disabled:cursor-not-allowed"
+                : showGlow
+                  ? "border-white/10 bg-white/[0.06] guess-glow text-white placeholder-white/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  : "border-white/10 bg-white/[0.06] text-white placeholder-white/50 focus:border-white/25 focus:bg-white/[0.08] disabled:opacity-40 disabled:cursor-not-allowed"
+      }
+    `;
+
+  // Submit button styling based on mode
+  const btnText = darkText ? "text-black/80" : "text-white/90";
+  const buttonClassName = isInline
+    ? `
+      rounded-none px-5 py-3 text-sm font-semibold
+      transition-all duration-500
+      bg-black/20 ${btnText} hover:bg-black/30 active:scale-[0.98]
+      disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-black/20 disabled:active:scale-100
+    `
+    : `
+      rounded-none px-5 py-3 text-sm font-semibold
+      transition-all duration-500
+      ${
+        resolved
+          ? "bg-white/[0.06] border border-l-0 border-white/10 text-white/30 cursor-default tracking-widest"
+          : solved
+            ? "bg-green-500/80 text-white cursor-default"
+            : failed
+              ? "bg-red-500/40 text-white/60 cursor-default"
+              : "bg-white/90 text-black hover:bg-white active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-white/90 disabled:active:scale-100"
+      }
+    `;
+
+  // Dropdown positioning
+  const dropdownPositionClass = dropdownUp
+    ? "bottom-full mb-0.5 animate-dropdown-in-up"
+    : "top-full mt-0.5 animate-dropdown-in";
+
   return (
     <form onSubmit={handleSubmit} className="flex gap-0">
       <div className="relative flex-1">
@@ -117,6 +215,8 @@ export default function GuessForm({
           onFocus={handleFocus}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
+          onPaste={blockPaste}
+          onDrop={blockPaste}
           disabled={disabled || isLocked}
           readOnly={isLocked}
           placeholder={!category ? "Type your guess..." : undefined}
@@ -134,43 +234,23 @@ export default function GuessForm({
               ? `suggestion-${highlightIndex}`
               : undefined
           }
-          className={`
-            w-full rounded-none border border-r-0
-            px-4 py-3 text-base
-            outline-none transition-all duration-500
-            ${
-              resolved
-                ? "border-white/10 bg-white/[0.06] text-white/90 font-bold"
-                : solved
-                  ? "border-green-500/30 bg-green-500/15 text-green-300 opacity-100"
-                  : failed
-                    ? "border-red-500/30 bg-red-500/10 text-red-300 opacity-100"
-                    : showFinalGlow
-                      ? "border-amber-500/40 bg-amber-500/[0.08] final-guess-glow text-white placeholder-amber-300/60 disabled:opacity-40 disabled:cursor-not-allowed"
-                      : showGlow
-                        ? "border-white/10 bg-white/[0.06] guess-glow text-white placeholder-white/50 disabled:opacity-40 disabled:cursor-not-allowed"
-                        : "border-white/10 bg-white/[0.06] text-white placeholder-white/50 focus:border-white/25 focus:bg-white/[0.08] disabled:opacity-40 disabled:cursor-not-allowed"
-            }
-          `}
+          className={inputClassName}
         />
-        {/* Custom placeholder — category portion is brighter */}
-        {showCustomPlaceholder && (
+        {/* Sequential encouraging placeholder */}
+        {showPhrasePlaceholder && (
           <div
             className="absolute inset-0 flex items-center px-4 text-base pointer-events-none"
             aria-hidden="true"
           >
-            <span className="text-white/40">Guess a&nbsp;</span>
-            <span className="text-white/70">{category}</span>
-            <span className="text-white/40">...</span>
-          </div>
-        )}
-        {/* Final guess placeholder — amber-tinted "Last guess..." */}
-        {showFinalPlaceholder && (
-          <div
-            className="absolute inset-0 flex items-center px-4 text-base pointer-events-none"
-            aria-hidden="true"
-          >
-            <span className="text-amber-400/70">Last guess...</span>
+            <span className={
+              isFinalGuess
+                ? "text-amber-400/70"
+                : darkText
+                  ? "text-black/40"
+                  : "text-white/40"
+            }>
+              {GUESS_PHRASES[phraseIndex]}...
+            </span>
           </div>
         )}
         {/* Autocomplete dropdown */}
@@ -178,7 +258,8 @@ export default function GuessForm({
           <ul
             id="suggestion-list"
             role="listbox"
-            className="absolute left-0 right-0 top-full z-50 mt-0.5 border border-white/15 bg-[#141418] overflow-hidden max-h-[240px] overflow-y-auto animate-dropdown-in"
+            className={`absolute left-0 right-0 z-50 border border-white/15 overflow-hidden max-h-[240px] overflow-y-auto shadow-lg ${dropdownPositionClass}`}
+            style={{ backgroundColor: "#141418" }}
           >
             {suggestions.map((name, i) => (
               <li
@@ -207,20 +288,8 @@ export default function GuessForm({
       </div>
       <button
         type="submit"
-        disabled={disabled || isLocked || !value.trim()}
-        className={`
-          rounded-none px-5 py-3 text-sm font-semibold
-          transition-all duration-500
-          ${
-            resolved
-              ? "bg-white/[0.06] border border-l-0 border-white/10 text-white/30 cursor-default tracking-widest"
-              : solved
-                ? "bg-green-500/80 text-white cursor-default"
-                : failed
-                  ? "bg-red-500/40 text-white/60 cursor-default"
-                  : "bg-white/90 text-black hover:bg-white active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-white/90 disabled:active:scale-100"
-          }
-        `}
+        disabled={disabled || isLocked || !isValidSelection}
+        className={buttonClassName}
       >
         {resolved && puzzleId
           ? `#${String(puzzleId).padStart(3, "0")}`

@@ -9,8 +9,7 @@ import { shareResult } from "@/lib/shareResult";
 import { getEncouragement } from "@/data/encouragements";
 import { recordGameCompletion, loadTapeStats, type GameCompletionResult } from "@/lib/tapeService";
 import { getColorHex, getEarnedColors } from "@/lib/colors";
-import ClueList from "./ClueList";
-import GuessForm from "./GuessForm";
+import ClueBoard from "./ClueBoard";
 import TapeResult from "./TapeResult";
 
 /* ─── Timing constants (ms) ─── */
@@ -199,7 +198,7 @@ const handleShare = async () => {
     );
   }
 
-  const lastGuess = state.guesses[state.guesses.length - 1] ?? "";
+  const puzzleNumber = puzzle.puzzle_number ?? puzzle.id;
 
   return (
     <div className="flex flex-1 min-h-0 flex-col">
@@ -229,26 +228,59 @@ const handleShare = async () => {
             );
           })}
         </h1>
+
+        {/* Category subtitle / answer reveal */}
+        <div className="relative h-7 overflow-hidden mt-1">
+          {shareMode ? (
+            <p
+              key="answer"
+              className={`text-sm font-bold tracking-wide uppercase animate-slot-in ${
+                state.solved ? "text-green-300" : "text-red-300"
+              }`}
+            >
+              {puzzle.answer}
+              <span className="text-white/30 ml-2 text-xs tracking-widest">
+                #{String(puzzleNumber).padStart(3, "0")}
+              </span>
+            </p>
+          ) : (
+            <p key="category" className="text-sm text-white/70 tracking-wide uppercase">
+              {puzzle.category}
+            </p>
+          )}
+        </div>
       </header>
 
-      {/* Guess area — same box throughout, just transitions visual state */}
-      <div className="shrink-0 mb-1 relative z-20">
-        <GuessForm
-          onGuess={handleGuess}
-          disabled={state.completed}
-          lockedValue={shareMode ? puzzle.answer : state.completed ? lastGuess : undefined}
-          solved={!shareMode && state.solved}
-          failed={!shareMode && state.completed && !state.solved}
-          category={puzzle.category}
-          resolved={shareMode}
-          puzzleId={puzzle.puzzle_number ?? puzzle.id}
-          isFinalGuess={state.revealedClues >= 5 && !state.completed}
-        />
+      {/* Guess history chips — fixed height so nothing shifts */}
+      <div className="shrink-0 h-7 flex items-center gap-1.5 px-1 overflow-x-auto">
+        {state.guesses.map((g, i) => {
+          const isCorrect = i === state.guesses.length - 1 && state.solved;
+          return (
+            <span
+              key={i}
+              className={`
+                inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-sm whitespace-nowrap
+                animate-fade-in
+                ${isCorrect
+                  ? "bg-green-500/15 text-green-300/80 border border-green-500/20"
+                  : "bg-white/[0.04] text-white/30 border border-white/[0.06]"
+                }
+              `}
+            >
+              {isCorrect ? (
+                <svg className="w-2.5 h-2.5 shrink-0" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 5.5L4.5 8L8 2.5"/></svg>
+              ) : (
+                <svg className="w-2.5 h-2.5 shrink-0 opacity-50" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2.5 2.5l5 5M7.5 2.5l-5 5"/></svg>
+              )}
+              {g}
+            </span>
+          );
+        })}
       </div>
 
-      {/* Clues board — overflow-hidden clips the tape-fall animation */}
-      <div className="py-1" style={{ overflowX: "visible", overflowY: "clip" }}>
-        <ClueList
+      {/* Clue board with inline guess input */}
+      <div className="py-1">
+        <ClueBoard
           clues={puzzle.clues}
           revealedCount={state.revealedClues}
           completed={state.completed}
@@ -257,6 +289,10 @@ const handleShare = async () => {
           shareMode={shareMode}
           selectedClue={selectedClue}
           onSelectClue={setSelectedClue}
+          onGuess={handleGuess}
+          disabled={state.completed}
+          category={puzzle.category}
+          guessCount={state.guesses.length}
         />
       </div>
 

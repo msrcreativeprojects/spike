@@ -48,6 +48,11 @@ export const ALL_COLOR_NAMES: ClueColor[] = [
   "pink", "purple", "blue", "green", "lime", "yellow", "orange", "red",
 ];
 
+/** Colors that need dark (black) text for readability on tape */
+export const DARK_TEXT_COLORS: Set<ClueColor> = new Set([
+  "gold", "lime", "yellow", "green",
+]);
+
 export const GLOW_COLOR = "#c8ffc8";
 export const WHITE_TAPE_COLOR = "#e0e0e0";
 
